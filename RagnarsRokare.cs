@@ -22,11 +22,12 @@ namespace ValheimMod
             harmony.PatchAll();
         }
 
-        internal static IEnumerable<GameObject> GetFilteredItemList()
+        internal static IEnumerable<ItemDrop> GetFilteredItemList()
         {
             return ObjectDB.instance.m_items
-                .Where(i => i.GetComponent<ItemDrop>().m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Material)
-                .Where(i => i.GetComponent<ItemDrop>().m_itemData.m_shared.m_icons.Length > 0);
+                .Select(i => i.GetComponent<ItemDrop>())
+                .Where(i => i.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Material || i.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie)
+                .Where(i => i.m_itemData.m_shared.m_icons.Length > 0);
         }
 
         [HarmonyPatch(typeof(Player), nameof(Player.OnSpawned))]
@@ -40,7 +41,7 @@ namespace ValheimMod
                     foreach (var item in GetFilteredItemList())
                     {
                         //Debug.Log($"Item:{item.GetComponent<ItemDrop>().name}, Type:{item.GetComponent<ItemDrop>().m_itemData.m_shared.m_itemType}");
-                        item.GetComponent<ItemDrop>().m_autoPickup = !blockedItemNames.Any(v => v == item.name);
+                        item.m_autoPickup = !blockedItemNames.Any(v => v == item.name);
                     }
                 }
             }
@@ -53,7 +54,6 @@ namespace ValheimMod
             static void Postfix()
             {
                 AutoPickupBlockList.Value = GetFilteredItemList()
-                    .Select(i => i.GetComponent<ItemDrop>())
                     .Where(i => i.m_autoPickup == false)
                     .Select(i => i.name)
                     .Aggregate((list, name) => list + ";" + name);
@@ -80,9 +80,9 @@ namespace ValheimMod
 
             private static IEnumerable<GameObject> CreateItemTiles(GameObject elementPrefab, RectTransform itemListRoot, float tileWidth, float tileBaseSize)
             {
-                Debug.Log($"m_trophieListSpace:{tileWidth}");
-                Debug.Log($"m_trophieListBaseSize:{tileBaseSize}");
-                Debug.Log($"m_trophieListRoot:{itemListRoot.rect.width}x{itemListRoot.rect.height}");
+                //Debug.Log($"m_trophieListSpace:{tileWidth}");
+                //Debug.Log($"m_trophieListBaseSize:{tileBaseSize}");
+                //Debug.Log($"m_trophieListRoot:{itemListRoot.rect.width}x{itemListRoot.rect.height}");
                 var itemTiles = new List<GameObject>();
                 if (Player.m_localPlayer == null)
                 {
@@ -93,9 +93,8 @@ namespace ValheimMod
                 int rowCount = 0;
                 int xMargin = 0;
                 int yMargin = -10;
-                foreach (var item in GetFilteredItemList())
+                foreach (var component in GetFilteredItemList().OrderBy(i => i.m_itemData.m_shared.m_itemType))
                 {
-                    ItemDrop component = item.GetComponent<ItemDrop>();
                     GameObject gameObject = Instantiate(elementPrefab, itemListRoot);
 
                     gameObject.SetActive(value: true);
