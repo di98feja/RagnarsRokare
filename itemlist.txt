@@ -1,260 +1,257 @@
-﻿[Info   : Unity Log] m_trophieListSpace:180
-[Info   : Unity Log] m_trophieListBaseSize:650
-[Info   : Unity Log] m_trophieListRoot:1260x900
-[Info   : Unity Log] Added item:Amber at 180, -180
-[Info   : Unity Log] Added item:AmberPearl at 360, -180
-[Info   : Unity Log] Added item:AncientSeed at 540, -180
-[Info   : Unity Log] Added item:ArmorBronzeChest at 180, -360
-[Info   : Unity Log] Added item:ArmorBronzeLegs at 360, -360
-[Info   : Unity Log] Added item:ArmorIronChest at 540, -360
-[Info   : Unity Log] Added item:ArmorIronLegs at 180, -540
-[Info   : Unity Log] Added item:ArmorLeatherChest at 360, -540
-[Info   : Unity Log] Added item:ArmorLeatherLegs at 540, -540
-[Info   : Unity Log] Added item:ArmorPaddedCuirass at 180, -720
-[Info   : Unity Log] Added item:ArmorPaddedGreaves at 360, -720
-[Info   : Unity Log] Added item:ArmorRagsChest at 540, -720
-[Info   : Unity Log] Added item:ArmorRagsLegs at 180, -900
-[Info   : Unity Log] Added item:ArmorTrollLeatherChest at 360, -900
-[Info   : Unity Log] Added item:ArmorTrollLeatherLegs at 540, -900
-[Info   : Unity Log] Added item:ArmorWolfChest at 180, -1080
-[Info   : Unity Log] Added item:ArmorWolfLegs at 360, -1080
-[Info   : Unity Log] Added item:ArrowBronze at 540, -1080
-[Info   : Unity Log] Added item:ArrowFire at 180, -1260
-[Info   : Unity Log] Added item:ArrowFlint at 360, -1260
-[Info   : Unity Log] Added item:ArrowFrost at 540, -1260
-[Info   : Unity Log] Added item:ArrowIron at 180, -1440
-[Info   : Unity Log] Added item:ArrowNeedle at 360, -1440
-[Info   : Unity Log] Added item:ArrowObsidian at 540, -1440
-[Info   : Unity Log] Added item:ArrowPoison at 180, -1620
-[Info   : Unity Log] Added item:ArrowSilver at 360, -1620
-[Info   : Unity Log] Added item:ArrowWood at 540, -1620
-[Info   : Unity Log] Added item:AtgeirBlackmetal at 180, -1800
-[Info   : Unity Log] Added item:AtgeirBronze at 360, -1800
-[Info   : Unity Log] Added item:AtgeirIron at 540, -1800
-[Info   : Unity Log] Added item:AxeBlackMetal at 180, -1980
-[Info   : Unity Log] Added item:AxeBronze at 360, -1980
-[Info   : Unity Log] Added item:AxeFlint at 540, -1980
-[Info   : Unity Log] Added item:AxeIron at 180, -2160
-[Info   : Unity Log] Added item:AxeStone at 360, -2160
-[Info   : Unity Log] Added item:Barley at 540, -2160
-[Info   : Unity Log] Added item:BarleyFlour at 180, -2340
-[Info   : Unity Log] Added item:BarleyWine at 360, -2340
-[Info   : Unity Log] Added item:BarleyWineBase at 540, -2340
-[Info   : Unity Log] Added item:Battleaxe at 180, -2520
-[Info   : Unity Log] Added item:BeechSeeds at 360, -2520
-[Info   : Unity Log] Added item:BeltStrength at 540, -2520
-[Info   : Unity Log] Added item:BlackMetal at 180, -2700
-[Info   : Unity Log] Added item:BlackMetalScrap at 360, -2700
-[Info   : Unity Log] Added item:Bloodbag at 540, -2700
-[Info   : Unity Log] Added item:BloodPudding at 180, -2880
-[Info   : Unity Log] Added item:Blueberries at 360, -2880
-[Info   : Unity Log] Added item:BombOoze at 540, -2880
-[Info   : Unity Log] Added item:BoneFragments at 180, -3060
-[Info   : Unity Log] Added item:Bow at 360, -3060
-[Info   : Unity Log] Added item:BowDraugrFang at 540, -3060
-[Info   : Unity Log] Added item:BowFineWood at 180, -3240
-[Info   : Unity Log] Added item:BowHuntsman at 360, -3240
-[Info   : Unity Log] Added item:Bread at 540, -3240
-[Info   : Unity Log] Added item:Bronze at 180, -3420
-[Info   : Unity Log] Added item:BronzeNails at 360, -3420
-[Info   : Unity Log] Added item:CapeDeerHide at 540, -3420
-[Info   : Unity Log] Added item:CapeLinen at 180, -3600
-[Info   : Unity Log] Added item:CapeLox at 360, -3600
-[Info   : Unity Log] Added item:CapeOdin at 540, -3600
-[Info   : Unity Log] Added item:CapeTest at 180, -3780
-[Info   : Unity Log] Added item:CapeTrollHide at 360, -3780
-[Info   : Unity Log] Added item:CapeWolf at 540, -3780
-[Info   : Unity Log] Added item:Carrot at 180, -3960
-[Info   : Unity Log] Added item:CarrotSeeds at 360, -3960
-[Info   : Unity Log] Added item:CarrotSoup at 540, -3960
-[Info   : Unity Log] Added item:Chain at 180, -4140
-[Info   : Unity Log] Added item:Chitin at 360, -4140
-[Info   : Unity Log] Added item:Cloudberry at 540, -4140
-[Info   : Unity Log] Added item:Club at 180, -4320
-[Info   : Unity Log] Added item:Coal at 360, -4320
-[Info   : Unity Log] Added item:Coins at 540, -4320
-[Info   : Unity Log] Added item:CookedLoxMeat at 180, -4500
-[Info   : Unity Log] Added item:CookedMeat at 360, -4500
-[Info   : Unity Log] Added item:Copper at 540, -4500
-[Info   : Unity Log] Added item:CopperOre at 180, -4680
-[Info   : Unity Log] Added item:CryptKey at 360, -4680
-[Info   : Unity Log] Added item:Crystal at 540, -4680
-[Info   : Unity Log] Added item:Cultivator at 180, -4860
-[Info   : Unity Log] Added item:Dandelion at 360, -4860
-[Info   : Unity Log] Added item:DeerHide at 540, -4860
-[Info   : Unity Log] Added item:DragonEgg at 180, -5040
-[Info   : Unity Log] Added item:DragonTear at 360, -5040
-[Info   : Unity Log] Added item:ElderBark at 540, -5040
-[Info   : Unity Log] Added item:Entrails at 180, -5220
-[Info   : Unity Log] Added item:Feathers at 360, -5220
-[Info   : Unity Log] Added item:FineWood at 540, -5220
-[Info   : Unity Log] Added item:FirCone at 180, -5400
-[Info   : Unity Log] Added item:FishCooked at 360, -5400
-[Info   : Unity Log] Added item:FishingBait at 540, -5400
-[Info   : Unity Log] Added item:FishingRod at 180, -5580
-[Info   : Unity Log] Added item:FishRaw at 360, -5580
-[Info   : Unity Log] Added item:FishWraps at 540, -5580
-[Info   : Unity Log] Added item:Flametal at 180, -5760
-[Info   : Unity Log] Added item:FlametalOre at 360, -5760
-[Info   : Unity Log] Added item:Flax at 540, -5760
-[Info   : Unity Log] Added item:Flint at 180, -5940
-[Info   : Unity Log] Added item:FreezeGland at 360, -5940
-[Info   : Unity Log] Added item:GoblinTotem at 540, -5940
-[Info   : Unity Log] Added item:GreydwarfEye at 180, -6120
-[Info   : Unity Log] Added item:Guck at 360, -6120
-[Info   : Unity Log] Added item:Hammer at 540, -6120
-[Info   : Unity Log] Added item:HardAntler at 180, -6300
-[Info   : Unity Log] Added item:HealthUpgrade_Bonemass at 360, -6300
-[Info   : Unity Log] Added item:HealthUpgrade_GDKing at 540, -6300
-[Info   : Unity Log] Added item:HelmetBronze at 180, -6480
-[Info   : Unity Log] Added item:HelmetDrake at 360, -6480
-[Info   : Unity Log] Added item:HelmetDverger at 540, -6480
-[Info   : Unity Log] Added item:HelmetIron at 180, -6660
-[Info   : Unity Log] Added item:HelmetLeather at 360, -6660
-[Info   : Unity Log] Added item:HelmetOdin at 540, -6660
-[Info   : Unity Log] Added item:HelmetPadded at 180, -6840
-[Info   : Unity Log] Added item:HelmetTrollLeather at 360, -6840
-[Info   : Unity Log] Added item:HelmetYule at 540, -6840
-[Info   : Unity Log] Added item:Hoe at 180, -7020
-[Info   : Unity Log] Added item:Honey at 360, -7020
-[Info   : Unity Log] Added item:Iron at 540, -7020
-[Info   : Unity Log] Added item:IronNails at 180, -7200
-[Info   : Unity Log] Added item:IronOre at 360, -7200
-[Info   : Unity Log] Added item:IronScrap at 540, -7200
-[Info   : Unity Log] Added item:KnifeBlackMetal at 180, -7380
-[Info   : Unity Log] Added item:KnifeChitin at 360, -7380
-[Info   : Unity Log] Added item:KnifeCopper at 540, -7380
-[Info   : Unity Log] Added item:KnifeFlint at 180, -7560
-[Info   : Unity Log] Added item:LeatherScraps at 360, -7560
-[Info   : Unity Log] Added item:LinenThread at 540, -7560
-[Info   : Unity Log] Added item:LoxMeat at 180, -7740
-[Info   : Unity Log] Added item:LoxPelt at 360, -7740
-[Info   : Unity Log] Added item:LoxPie at 540, -7740
-[Info   : Unity Log] Added item:MaceBronze at 180, -7920
-[Info   : Unity Log] Added item:MaceIron at 360, -7920
-[Info   : Unity Log] Added item:MaceNeedle at 540, -7920
-[Info   : Unity Log] Added item:MaceSilver at 180, -8100
-[Info   : Unity Log] Added item:MeadBaseFrostResist at 360, -8100
-[Info   : Unity Log] Added item:MeadBaseHealthMedium at 540, -8100
-[Info   : Unity Log] Added item:MeadBaseHealthMinor at 180, -8280
-[Info   : Unity Log] Added item:MeadBasePoisonResist at 360, -8280
-[Info   : Unity Log] Added item:MeadBaseStaminaMedium at 540, -8280
-[Info   : Unity Log] Added item:MeadBaseStaminaMinor at 180, -8460
-[Info   : Unity Log] Added item:MeadBaseTasty at 360, -8460
-[Info   : Unity Log] Added item:MeadFrostResist at 540, -8460
-[Info   : Unity Log] Added item:MeadHealthMedium at 180, -8640
-[Info   : Unity Log] Added item:MeadHealthMinor at 360, -8640
-[Info   : Unity Log] Added item:MeadPoisonResist at 540, -8640
-[Info   : Unity Log] Added item:MeadStaminaMedium at 180, -8820
-[Info   : Unity Log] Added item:MeadStaminaMinor at 360, -8820
-[Info   : Unity Log] Added item:MeadTasty at 540, -8820
-[Info   : Unity Log] Added item:Mushroom at 180, -9000
-[Info   : Unity Log] Added item:MushroomBlue at 360, -9000
-[Info   : Unity Log] Added item:MushroomYellow at 540, -9000
-[Info   : Unity Log] Added item:NeckTail at 180, -9180
-[Info   : Unity Log] Added item:NeckTailGrilled at 360, -9180
-[Info   : Unity Log] Added item:Needle at 540, -9180
-[Info   : Unity Log] Added item:Obsidian at 180, -9360
-[Info   : Unity Log] Added item:Ooze at 360, -9360
-[Info   : Unity Log] Added item:PickaxeAntler at 540, -9360
-[Info   : Unity Log] Added item:PickaxeBronze at 180, -9540
-[Info   : Unity Log] Added item:PickaxeIron at 360, -9540
-[Info   : Unity Log] Added item:PickaxeStone at 540, -9540
-[Info   : Unity Log] Added item:PineCone at 180, -9720
-[Info   : Unity Log] Added item:PlayerUnarmed at 360, -9720
-[Info   : Unity Log] Added item:QueenBee at 540, -9720
-[Info   : Unity Log] Added item:QueensJam at 180, -9900
-[Info   : Unity Log] Added item:Raspberry at 360, -9900
-[Info   : Unity Log] Added item:RawMeat at 540, -9900
-[Info   : Unity Log] Added item:Resin at 180, -10080
-[Info   : Unity Log] Added item:RoundLog at 360, -10080
-[Info   : Unity Log] Added item:Ruby at 540, -10080
-[Info   : Unity Log] Added item:Sausages at 180, -10260
-[Info   : Unity Log] Added item:SerpentMeat at 360, -10260
-[Info   : Unity Log] Added item:SerpentMeatCooked at 540, -10260
-[Info   : Unity Log] Added item:SerpentScale at 180, -10440
-[Info   : Unity Log] Added item:SerpentStew at 360, -10440
-[Info   : Unity Log] Added item:SharpeningStone at 540, -10440
-[Info   : Unity Log] Added item:ShieldBanded at 180, -10620
-[Info   : Unity Log] Added item:ShieldBlackmetal at 360, -10620
-[Info   : Unity Log] Added item:ShieldBlackmetalTower at 540, -10620
-[Info   : Unity Log] Added item:ShieldBronzeBuckler at 180, -10800
-[Info   : Unity Log] Added item:ShieldIronSquare at 360, -10800
-[Info   : Unity Log] Added item:ShieldIronTower at 540, -10800
-[Info   : Unity Log] Added item:ShieldKnight at 180, -10980
-[Info   : Unity Log] Added item:ShieldSerpentscale at 360, -10980
-[Info   : Unity Log] Added item:ShieldSilver at 540, -10980
-[Info   : Unity Log] Added item:ShieldWood at 180, -11160
-[Info   : Unity Log] Added item:ShieldWoodTower at 360, -11160
-[Info   : Unity Log] Added item:Silver at 540, -11160
-[Info   : Unity Log] Added item:SilverNecklace at 180, -11340
-[Info   : Unity Log] Added item:SilverOre at 360, -11340
-[Info   : Unity Log] Added item:SledgeIron at 540, -11340
-[Info   : Unity Log] Added item:SledgeStagbreaker at 180, -11520
-[Info   : Unity Log] Added item:SpearBronze at 360, -11520
-[Info   : Unity Log] Added item:SpearChitin at 540, -11520
-[Info   : Unity Log] Added item:SpearElderbark at 180, -11700
-[Info   : Unity Log] Added item:SpearFlint at 360, -11700
-[Info   : Unity Log] Added item:SpearWolfFang at 540, -11700
-[Info   : Unity Log] Added item:StaminaUpgrade_Greydwarf at 180, -11880
-[Info   : Unity Log] Added item:StaminaUpgrade_Troll at 360, -11880
-[Info   : Unity Log] Added item:StaminaUpgrade_Wraith at 540, -11880
-[Info   : Unity Log] Added item:Stone at 180, -12060
-[Info   : Unity Log] Added item:SurtlingCore at 360, -12060
-[Info   : Unity Log] Added item:SwordBlackmetal at 540, -12060
-[Info   : Unity Log] Added item:SwordBronze at 180, -12240
-[Info   : Unity Log] Added item:SwordCheat at 360, -12240
-[Info   : Unity Log] Added item:SwordIron at 540, -12240
-[Info   : Unity Log] Added item:SwordIronFire at 180, -12420
-[Info   : Unity Log] Added item:SwordSilver at 360, -12420
-[Info   : Unity Log] Added item:Tankard at 540, -12420
-[Info   : Unity Log] Added item:TankardOdin at 180, -12600
-[Info   : Unity Log] Added item:Thistle at 360, -12600
-[Info   : Unity Log] Added item:Tin at 540, -12600
-[Info   : Unity Log] Added item:TinOre at 180, -12780
-[Info   : Unity Log] Added item:Torch at 360, -12780
-[Info   : Unity Log] Added item:TrollHide at 540, -12780
-[Info   : Unity Log] Added item:TrophyBlob at 180, -12960
-[Info   : Unity Log] Added item:TrophyBoar at 360, -12960
-[Info   : Unity Log] Added item:TrophyBonemass at 540, -12960
-[Info   : Unity Log] Added item:TrophyDeathsquito at 180, -13140
-[Info   : Unity Log] Added item:TrophyDeer at 360, -13140
-[Info   : Unity Log] Added item:TrophyDragonQueen at 540, -13140
-[Info   : Unity Log] Added item:TrophyDraugr at 180, -13320
-[Info   : Unity Log] Added item:TrophyDraugrElite at 360, -13320
-[Info   : Unity Log] Added item:TrophyDraugrFem at 540, -13320
-[Info   : Unity Log] Added item:TrophyEikthyr at 180, -13500
-[Info   : Unity Log] Added item:TrophyFenring at 360, -13500
-[Info   : Unity Log] Added item:TrophyForestTroll at 540, -13500
-[Info   : Unity Log] Added item:TrophyFrostTroll at 180, -13680
-[Info   : Unity Log] Added item:TrophyGoblin at 360, -13680
-[Info   : Unity Log] Added item:TrophyGoblinBrute at 540, -13680
-[Info   : Unity Log] Added item:TrophyGoblinKing at 180, -13860
-[Info   : Unity Log] Added item:TrophyGoblinShaman at 360, -13860
-[Info   : Unity Log] Added item:TrophyGreydwarf at 540, -13860
-[Info   : Unity Log] Added item:TrophyGreydwarfBrute at 180, -14040
-[Info   : Unity Log] Added item:TrophyGreydwarfShaman at 360, -14040
-[Info   : Unity Log] Added item:TrophyHatchling at 540, -14040
-[Info   : Unity Log] Added item:TrophyLeech at 180, -14220
-[Info   : Unity Log] Added item:TrophyLox at 360, -14220
-[Info   : Unity Log] Added item:TrophyNeck at 540, -14220
-[Info   : Unity Log] Added item:TrophySerpent at 180, -14400
-[Info   : Unity Log] Added item:TrophySGolem at 360, -14400
-[Info   : Unity Log] Added item:TrophySkeleton at 540, -14400
-[Info   : Unity Log] Added item:TrophySkeletonPoison at 180, -14580
-[Info   : Unity Log] Added item:TrophySurtling at 360, -14580
-[Info   : Unity Log] Added item:TrophyTheElder at 540, -14580
-[Info   : Unity Log] Added item:TrophyWolf at 180, -14760
-[Info   : Unity Log] Added item:TrophyWraith at 360, -14760
-[Info   : Unity Log] Added item:Turnip at 540, -14760
-[Info   : Unity Log] Added item:TurnipSeeds at 180, -14940
-[Info   : Unity Log] Added item:TurnipStew at 360, -14940
-[Info   : Unity Log] Added item:VegvisirShard_Bonemass at 540, -14940
-[Info   : Unity Log] Added item:Wishbone at 180, -15120
-[Info   : Unity Log] Added item:WitheredBone at 360, -15120
-[Info   : Unity Log] Added item:WolfFang at 540, -15120
-[Info   : Unity Log] Added item:WolfPelt at 180, -15300
-[Info   : Unity Log] Added item:Wood at 360, -15300
-[Info   : Unity Log] Added item:YagluthDrop at 540, -15300
-[Info   : Unity Log] Added item:YmirRemains at 180, -15480
-[Info   : Unity Log] SIZE -15660
+﻿Loaded ItemDrops
+Item:Amber, Type:Material
+Item:AmberPearl, Type:Material
+Item:AncientSeed, Type:Material
+Item:ArmorBronzeChest, Type:Chest
+Item:ArmorBronzeLegs, Type:Legs
+Item:ArmorIronChest, Type:Chest
+Item:ArmorIronLegs, Type:Legs
+Item:ArmorLeatherChest, Type:Chest
+Item:ArmorLeatherLegs, Type:Legs
+Item:ArmorPaddedCuirass, Type:Chest
+Item:ArmorPaddedGreaves, Type:Legs
+Item:ArmorRagsChest, Type:Chest
+Item:ArmorRagsLegs, Type:Legs
+Item:ArmorTrollLeatherChest, Type:Chest
+Item:ArmorTrollLeatherLegs, Type:Legs
+Item:ArmorWolfChest, Type:Chest
+Item:ArmorWolfLegs, Type:Legs
+Item:ArrowBronze, Type:Ammo
+Item:ArrowFire, Type:Ammo
+Item:ArrowFlint, Type:Ammo
+Item:ArrowFrost, Type:Ammo
+Item:ArrowIron, Type:Ammo
+Item:ArrowNeedle, Type:Ammo
+Item:ArrowObsidian, Type:Ammo
+Item:ArrowPoison, Type:Ammo
+Item:ArrowSilver, Type:Ammo
+Item:ArrowWood, Type:Ammo
+Item:AtgeirBlackmetal, Type:TwoHandedWeapon
+Item:AtgeirBronze, Type:TwoHandedWeapon
+Item:AtgeirIron, Type:TwoHandedWeapon
+Item:AxeBlackMetal, Type:OneHandedWeapon
+Item:AxeBronze, Type:OneHandedWeapon
+Item:AxeFlint, Type:OneHandedWeapon
+Item:AxeIron, Type:OneHandedWeapon
+Item:AxeStone, Type:OneHandedWeapon
+Item:Barley, Type:Material
+Item:BarleyFlour, Type:Material
+Item:BarleyWine, Type:Consumable
+Item:BarleyWineBase, Type:Material
+Item:Battleaxe, Type:TwoHandedWeapon
+Item:BeechSeeds, Type:Material
+Item:BeltStrength, Type:Utility
+Item:BlackMetal, Type:Material
+Item:BlackMetalScrap, Type:Material
+Item:Bloodbag, Type:Material
+Item:BloodPudding, Type:Consumable
+Item:Blueberries, Type:Consumable
+Item:BombOoze, Type:OneHandedWeapon
+Item:BoneFragments, Type:Material
+Item:Bow, Type:Bow
+Item:BowDraugrFang, Type:Bow
+Item:BowFineWood, Type:Bow
+Item:BowHuntsman, Type:Bow
+Item:Bread, Type:Consumable
+Item:Bronze, Type:Material
+Item:BronzeNails, Type:Material
+Item:CapeDeerHide, Type:Shoulder
+Item:CapeLinen, Type:Shoulder
+Item:CapeLox, Type:Shoulder
+Item:CapeOdin, Type:Shoulder
+Item:CapeTest, Type:Shoulder
+Item:CapeTrollHide, Type:Shoulder
+Item:CapeWolf, Type:Shoulder
+Item:Carrot, Type:Consumable
+Item:CarrotSeeds, Type:Material
+Item:CarrotSoup, Type:Consumable
+Item:Chain, Type:Material
+Item:Chitin, Type:Material
+Item:Cloudberry, Type:Consumable
+Item:Club, Type:OneHandedWeapon
+Item:Coal, Type:Material
+Item:Coins, Type:Material
+Item:CookedLoxMeat, Type:Consumable
+Item:CookedMeat, Type:Consumable
+Item:Copper, Type:Material
+Item:CopperOre, Type:Material
+Item:CryptKey, Type:Misc
+Item:Crystal, Type:Material
+Item:Cultivator, Type:Tool
+Item:Dandelion, Type:Material
+Item:DeerHide, Type:Material
+Item:DragonEgg, Type:Misc
+Item:DragonTear, Type:Material
+Item:ElderBark, Type:Material
+Item:Entrails, Type:Material
+Item:Feathers, Type:Material
+Item:FineWood, Type:Material
+Item:FirCone, Type:Material
+Item:FishCooked, Type:Consumable
+Item:FishingBait, Type:Ammo
+Item:FishingRod, Type:TwoHandedWeapon
+Item:FishRaw, Type:Material
+Item:FishWraps, Type:Consumable
+Item:Flametal, Type:Material
+Item:FlametalOre, Type:Material
+Item:Flax, Type:Material
+Item:Flint, Type:Material
+Item:FreezeGland, Type:Material
+Item:GoblinTotem, Type:Misc
+Item:GreydwarfEye, Type:Material
+Item:Guck, Type:Material
+Item:Hammer, Type:Tool
+Item:HardAntler, Type:Material
+Item:HealthUpgrade_Bonemass, Type:Consumable
+Item:HealthUpgrade_GDKing, Type:Consumable
+Item:HelmetBronze, Type:Helmet
+Item:HelmetDrake, Type:Helmet
+Item:HelmetDverger, Type:Helmet
+Item:HelmetIron, Type:Helmet
+Item:HelmetLeather, Type:Helmet
+Item:HelmetOdin, Type:Helmet
+Item:HelmetPadded, Type:Helmet
+Item:HelmetTrollLeather, Type:Helmet
+Item:HelmetYule, Type:Helmet
+Item:Hoe, Type:Tool
+Item:Honey, Type:Consumable
+Item:Iron, Type:Material
+Item:IronNails, Type:Material
+Item:IronOre, Type:Material
+Item:IronScrap, Type:Material
+Item:KnifeBlackMetal, Type:OneHandedWeapon
+Item:KnifeChitin, Type:OneHandedWeapon
+Item:KnifeCopper, Type:OneHandedWeapon
+Item:KnifeFlint, Type:OneHandedWeapon
+Item:LeatherScraps, Type:Material
+Item:LinenThread, Type:Material
+Item:LoxMeat, Type:Material
+Item:LoxPelt, Type:Material
+Item:LoxPie, Type:Consumable
+Item:MaceBronze, Type:OneHandedWeapon
+Item:MaceIron, Type:OneHandedWeapon
+Item:MaceNeedle, Type:OneHandedWeapon
+Item:MaceSilver, Type:OneHandedWeapon
+Item:MeadBaseFrostResist, Type:Material
+Item:MeadBaseHealthMedium, Type:Material
+Item:MeadBaseHealthMinor, Type:Material
+Item:MeadBasePoisonResist, Type:Material
+Item:MeadBaseStaminaMedium, Type:Material
+Item:MeadBaseStaminaMinor, Type:Material
+Item:MeadBaseTasty, Type:Material
+Item:MeadFrostResist, Type:Consumable
+Item:MeadHealthMedium, Type:Consumable
+Item:MeadHealthMinor, Type:Consumable
+Item:MeadPoisonResist, Type:Consumable
+Item:MeadStaminaMedium, Type:Consumable
+Item:MeadStaminaMinor, Type:Consumable
+Item:MeadTasty, Type:Consumable
+Item:Mushroom, Type:Consumable
+Item:MushroomBlue, Type:Consumable
+Item:MushroomYellow, Type:Consumable
+Item:NeckTail, Type:Material
+Item:NeckTailGrilled, Type:Consumable
+Item:Needle, Type:Material
+Item:Obsidian, Type:Material
+Item:Ooze, Type:Material
+Item:PickaxeAntler, Type:TwoHandedWeapon
+Item:PickaxeBronze, Type:TwoHandedWeapon
+Item:PickaxeIron, Type:TwoHandedWeapon
+Item:PickaxeStone, Type:TwoHandedWeapon
+Item:PineCone, Type:Material
+Item:PlayerUnarmed, Type:OneHandedWeapon
+Item:QueenBee, Type:Material
+Item:QueensJam, Type:Consumable
+Item:Raspberry, Type:Consumable
+Item:RawMeat, Type:Material
+Item:Resin, Type:Material
+Item:RoundLog, Type:Material
+Item:Ruby, Type:Material
+Item:Sausages, Type:Consumable
+Item:SerpentMeat, Type:Material
+Item:SerpentMeatCooked, Type:Consumable
+Item:SerpentScale, Type:Material
+Item:SerpentStew, Type:Consumable
+Item:SharpeningStone, Type:Material
+Item:ShieldBanded, Type:Shield
+Item:ShieldBlackmetal, Type:Shield
+Item:ShieldBlackmetalTower, Type:Shield
+Item:ShieldBronzeBuckler, Type:Shield
+Item:ShieldIronSquare, Type:Shield
+Item:ShieldIronTower, Type:Shield
+Item:ShieldKnight, Type:Shield
+Item:ShieldSerpentscale, Type:Shield
+Item:ShieldSilver, Type:Shield
+Item:ShieldWood, Type:Shield
+Item:ShieldWoodTower, Type:Shield
+Item:Silver, Type:Material
+Item:SilverNecklace, Type:Material
+Item:SilverOre, Type:Material
+Item:SledgeIron, Type:TwoHandedWeapon
+Item:SledgeStagbreaker, Type:TwoHandedWeapon
+Item:SpearBronze, Type:OneHandedWeapon
+Item:SpearChitin, Type:OneHandedWeapon
+Item:SpearElderbark, Type:OneHandedWeapon
+Item:SpearFlint, Type:OneHandedWeapon
+Item:SpearWolfFang, Type:OneHandedWeapon
+Item:StaminaUpgrade_Greydwarf, Type:Consumable
+Item:StaminaUpgrade_Troll, Type:Consumable
+Item:StaminaUpgrade_Wraith, Type:Consumable
+Item:Stone, Type:Material
+Item:SurtlingCore, Type:Material
+Item:SwordBlackmetal, Type:OneHandedWeapon
+Item:SwordBronze, Type:OneHandedWeapon
+Item:SwordCheat, Type:OneHandedWeapon
+Item:SwordIron, Type:OneHandedWeapon
+Item:SwordIronFire, Type:OneHandedWeapon
+Item:SwordSilver, Type:OneHandedWeapon
+Item:Tankard, Type:OneHandedWeapon
+Item:TankardOdin, Type:OneHandedWeapon
+Item:Thistle, Type:Material
+Item:Tin, Type:Material
+Item:TinOre, Type:Material
+Item:Torch, Type:Torch
+Item:TrollHide, Type:Material
+Item:TrophyBlob, Type:Trophie
+Item:TrophyBoar, Type:Trophie
+Item:TrophyBonemass, Type:Trophie
+Item:TrophyDeathsquito, Type:Trophie
+Item:TrophyDeer, Type:Trophie
+Item:TrophyDragonQueen, Type:Trophie
+Item:TrophyDraugr, Type:Trophie
+Item:TrophyDraugrElite, Type:Trophie
+Item:TrophyDraugrFem, Type:Trophie
+Item:TrophyEikthyr, Type:Trophie
+Item:TrophyFenring, Type:Trophie
+Item:TrophyForestTroll, Type:Trophie
+Item:TrophyFrostTroll, Type:Trophie
+Item:TrophyGoblin, Type:Trophie
+Item:TrophyGoblinBrute, Type:Trophie
+Item:TrophyGoblinKing, Type:Trophie
+Item:TrophyGoblinShaman, Type:Trophie
+Item:TrophyGreydwarf, Type:Trophie
+Item:TrophyGreydwarfBrute, Type:Trophie
+Item:TrophyGreydwarfShaman, Type:Trophie
+Item:TrophyHatchling, Type:Trophie
+Item:TrophyLeech, Type:Trophie
+Item:TrophyLox, Type:Trophie
+Item:TrophyNeck, Type:Trophie
+Item:TrophySerpent, Type:Trophie
+Item:TrophySGolem, Type:Trophie
+Item:TrophySkeleton, Type:Trophie
+Item:TrophySkeletonPoison, Type:Trophie
+Item:TrophySurtling, Type:Trophie
+Item:TrophyTheElder, Type:Trophie
+Item:TrophyWolf, Type:Trophie
+Item:TrophyWraith, Type:Trophie
+Item:Turnip, Type:Material
+Item:TurnipSeeds, Type:Material
+Item:TurnipStew, Type:Consumable
+Item:VegvisirShard_Bonemass, Type:Material
+Item:Wishbone, Type:Utility
+Item:WitheredBone, Type:Material
+Item:WolfFang, Type:Material
+Item:WolfPelt, Type:Material
+Item:Wood, Type:Material
+Item:YagluthDrop, Type:Material
+Item:YmirRemains, Type:Material

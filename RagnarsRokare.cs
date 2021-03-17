@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -13,14 +14,54 @@ namespace ValheimMod
     public class RagnarsRokare : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("di98feja.RagnarsRokare");
+        public static ConfigEntry<string> AutoPickupBlockList;
 
         void Awake()
         {
+            AutoPickupBlockList = Config.Bind("General", "AutoPickupBlockList", string.Empty);
             harmony.PatchAll();
         }
 
+        internal static IEnumerable<GameObject> GetFilteredItemList()
+        {
+            return ObjectDB.instance.m_items
+                .Where(i => i.GetComponent<ItemDrop>().m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Material)
+                .Where(i => i.GetComponent<ItemDrop>().m_itemData.m_shared.m_icons.Length > 0);
+        }
+
+        [HarmonyPatch(typeof(Player), nameof(Player.OnSpawned))]
+        class Player_OnSpawn_Patch
+        {
+            static void Postfix()
+            {
+                if (ObjectDB.instance != null)
+                {
+                    var blockedItemNames = AutoPickupBlockList.Value.Split(';');
+                    foreach (var item in GetFilteredItemList())
+                    {
+                        //Debug.Log($"Item:{item.GetComponent<ItemDrop>().name}, Type:{item.GetComponent<ItemDrop>().m_itemData.m_shared.m_itemType}");
+                        item.GetComponent<ItemDrop>().m_autoPickup = !blockedItemNames.Any(v => v == item.name);
+                    }
+                }
+            }
+
+        }
+
+        [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.OnCloseTrophies))]
+        class OnCloseTrophies_Patch
+        {
+            static void Postfix()
+            {
+                AutoPickupBlockList.Value = GetFilteredItemList()
+                    .Select(i => i.GetComponent<ItemDrop>())
+                    .Where(i => i.m_autoPickup == false)
+                    .Select(i => i.name)
+                    .Aggregate((list, name) => list + ";" + name);
+            }
+        }
+
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.OnOpenTrophies))]
-        class Trophies_Patch
+        class OnOpenTrophies_Patch
         {
             static void Postfix(ref float ___m_trophieListSpace, ref float ___m_trophieListBaseSize, ref RectTransform ___m_trophieListRoot, ref List<GameObject> ___m_trophyList, ref GameObject ___m_trophieElementPrefab, ref UnityEngine.UI.Scrollbar ___m_trophyListScroll)
             {
@@ -35,13 +76,6 @@ namespace ValheimMod
                 ___m_trophyList.Clear();
                 ___m_trophyList.AddRange(CreateItemTiles(___m_trophieElementPrefab, ___m_trophieListRoot, ___m_trophieListSpace, ___m_trophieListBaseSize));
                 ___m_trophyListScroll.value = 1f;
-            }
-
-            private static IEnumerable<GameObject> GetFilteredItemList()
-            {
-                return ObjectDB.instance.m_items
-                    .Where(i => i.GetComponent<ItemDrop>().m_itemData.m_shared.m_itemType != ItemDrop.ItemData.ItemType.Customization)
-                    .Where(i => i.GetComponent<ItemDrop>().m_itemData.m_shared.m_icons.Length > 0);
             }
 
             private static IEnumerable<GameObject> CreateItemTiles(GameObject elementPrefab, RectTransform itemListRoot, float tileWidth, float tileBaseSize)
@@ -86,7 +120,7 @@ namespace ValheimMod
                     }));
 
                     itemTiles.Add(gameObject);
-                    Debug.Log($"Added item:{component.name} at {rectTransform.anchoredPosition.x}, {rectTransform.anchoredPosition.y}");
+                    //Debug.Log($"Added item:{component.name} at {rectTransform.anchoredPosition.x}, {rectTransform.anchoredPosition.y}");
                     columnCount++;
                     if ((columnCount + 1) * tileWidth > itemListRoot.rect.width)
                     {
@@ -95,7 +129,6 @@ namespace ValheimMod
                     }
                 }
 
-                Debug.Log((object)("SIZE " + num));
                 float size = Mathf.Max(tileBaseSize, 0f - num);
                 itemListRoot.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size);
 
