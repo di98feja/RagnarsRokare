@@ -30,8 +30,8 @@ namespace ValheimMod
                 .Where(i => i.m_itemData.m_shared.m_icons.Length > 0);
         }
 
-        [HarmonyPatch(typeof(Player), nameof(Player.OnSpawned))]
-        class Player_OnSpawn_Patch
+        [HarmonyPatch(typeof(ObjectDB), "Awake")]
+        class ObjectDB_Awake_Patch
         {
             static void Postfix()
             {
