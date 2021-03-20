@@ -11,16 +11,14 @@ namespace RagnarsRokare_DodgeOnDoubleTap
     public class DodgeOnDoubleTap : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("RagnarsRokare.DodgeOnDoubleTap");
-		public static ConfigEntry<int> DodgeTapPressMin;
-		public static ConfigEntry<int> DodgeTapReleaseMin;
+		public static ConfigEntry<int> DodgeTapHoldMax;
 		public static ConfigEntry<int> DodgeDoubleTapDelay;
 
 		void Awake()
         {
             harmony.PatchAll();
-			DodgeTapPressMin = Config.Bind("General", "DodgeTapPressMin", 100);
-			DodgeTapReleaseMin = Config.Bind("General", "DodgeTapReleaseMin", 100);
-			DodgeDoubleTapDelay = Config.Bind("General", "DodgeDoubleTapDelay", 500);
+			DodgeTapHoldMax = Config.Bind("General", "DodgeTapHoldMax", 200);
+			DodgeDoubleTapDelay = Config.Bind("General", "DodgeDoubleTapDelay", 300);
 		}
 
 		public enum DodgeDirection { None, Forward, Backwards, Left, Right };
@@ -70,16 +68,6 @@ namespace RagnarsRokare_DodgeOnDoubleTap
 			private static float m_leftPressTimer = 0;
 			private static float m_rightPressTimer = 0;
 
-			private static float m_forwardReleaseTimer = 0;
-			private static float m_backwardReleaseTimer = 0;
-			private static float m_leftReleaseTimer = 0;
-			private static float m_rightReleaseTimer = 0;
-
-			private static bool m_forwardTapPressed = false;
-			private static bool m_backwardTapPressed = false;
-			private static bool m_leftTapPressed = false;
-			private static bool m_rightTapPressed = false;
-
 			static bool Prefix(ZNetView ___m_nview, ref Player ___m_character, ref bool ___m_attackWasPressed, ref bool ___m_secondAttackWasPressed, ref bool ___m_blockWasPressed, ref bool ___m_lastJump, ref bool ___m_lastCrouch)
             {
 				if ((bool)___m_nview && !___m_nview.IsOwner())
@@ -96,47 +84,51 @@ namespace RagnarsRokare_DodgeOnDoubleTap
 				bool run = ZInput.GetButton("Run") || ZInput.GetButton("JoyRun");
 				if (ZInput.GetButton("Forward"))
 				{
-					DetectTap(true, (float)(DateTime.Now - m_forwardLastTapCheck).TotalMilliseconds, DodgeTapPressMin.Value, true, ref m_forwardPressTimer, ref m_forwardReleaseTimer, ref m_forwardTapPressed);
+					DetectTap(true, (float)(DateTime.Now - m_forwardLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_forwardPressTimer);
 					m_forwardLastTapCheck = DateTime.Now;
 					zero.z += 1f;
 				}
 				else
                 {
-                    bool isTap = DetectTap(false, (float)(DateTime.Now - m_forwardLastTapCheck).TotalMilliseconds, DodgeTapReleaseMin.Value, true, ref m_forwardPressTimer, ref m_forwardReleaseTimer, ref m_forwardTapPressed);
-                    CheckForDoubleTapDodge(isTap, ref m_forwardLastTapCheck, ref m_forwardPressTimer, ref m_forwardReleaseTimer, ref m_forwardLastTapRegistered, DodgeDirection.Forward);
+					var isTap = DetectTap(false, (float)(DateTime.Now - m_forwardLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_forwardPressTimer);
+					m_forwardLastTapCheck = DateTime.Now;
+					CheckForDoubleTapDodge(isTap, ref m_forwardLastTapRegistered, DodgeDirection.Forward);
                 }
                 if (ZInput.GetButton("Backward"))
 				{
-					DetectTap(true, (float)(DateTime.Now - m_backwardLastTapCheck).TotalMilliseconds, DodgeTapPressMin.Value, true, ref m_backwardPressTimer, ref m_backwardReleaseTimer, ref m_backwardTapPressed);
+					DetectTap(true, (float)(DateTime.Now - m_backwardLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_backwardPressTimer);
 					m_backwardLastTapCheck = DateTime.Now;
 					zero.z -= 1f;
 				}
 				else
 				{
-					bool isTap = DetectTap(false, (float)(DateTime.Now - m_backwardLastTapCheck).TotalMilliseconds, DodgeTapReleaseMin.Value, true, ref m_backwardPressTimer, ref m_backwardReleaseTimer, ref m_backwardTapPressed);
-					CheckForDoubleTapDodge(isTap, ref m_backwardLastTapCheck, ref m_backwardPressTimer, ref m_backwardReleaseTimer, ref m_backwardLastTapRegistered, DodgeDirection.Backwards);
+					bool isTap = DetectTap(false, (float)(DateTime.Now - m_backwardLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_backwardPressTimer);
+					m_backwardLastTapCheck = DateTime.Now;
+					CheckForDoubleTapDodge(isTap, ref m_backwardLastTapRegistered, DodgeDirection.Backwards);
 				}
 				if (ZInput.GetButton("Left"))
 				{
-					DetectTap(true, (float)(DateTime.Now - m_leftLastTapCheck).TotalMilliseconds, DodgeTapPressMin.Value, true, ref m_leftPressTimer, ref m_leftReleaseTimer, ref m_leftTapPressed);
+					DetectTap(true, (float)(DateTime.Now - m_leftLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_leftPressTimer);
 					m_leftLastTapCheck = DateTime.Now;
 					zero.x -= 1f;
 				}
 				else
 				{
-					bool isTap = DetectTap(false, (float)(DateTime.Now - m_leftLastTapCheck).TotalMilliseconds, DodgeTapReleaseMin.Value, true, ref m_leftPressTimer, ref m_leftReleaseTimer, ref m_leftTapPressed);
-					CheckForDoubleTapDodge(isTap, ref m_leftLastTapCheck, ref m_leftPressTimer, ref m_leftReleaseTimer, ref m_leftLastTapRegistered, DodgeDirection.Left);
+					bool isTap = DetectTap(false, (float)(DateTime.Now - m_leftLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_leftPressTimer);
+					m_leftLastTapCheck = DateTime.Now;
+					CheckForDoubleTapDodge(isTap, ref m_leftLastTapRegistered, DodgeDirection.Left);
 				}
 				if (ZInput.GetButton("Right"))
 				{
-					DetectTap(true, (float)(DateTime.Now - m_rightLastTapCheck).TotalMilliseconds, DodgeTapPressMin.Value, true, ref m_rightPressTimer, ref m_rightReleaseTimer, ref m_rightTapPressed);
+					DetectTap(true, (float)(DateTime.Now - m_rightLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_rightPressTimer);
 					m_rightLastTapCheck = DateTime.Now;
 					zero.x += 1f;
 				}
 				else
 				{
-					bool isTap = DetectTap(false, (float)(DateTime.Now - m_rightLastTapCheck).TotalMilliseconds, DodgeTapReleaseMin.Value, true, ref m_rightPressTimer, ref m_rightReleaseTimer, ref m_rightTapPressed);
-					CheckForDoubleTapDodge(isTap, ref m_rightLastTapCheck, ref m_rightPressTimer, ref m_rightReleaseTimer, ref m_rightLastTapRegistered, DodgeDirection.Right);
+					bool isTap = DetectTap(false, (float)(DateTime.Now - m_rightLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_rightPressTimer);
+					m_rightLastTapCheck = DateTime.Now;
+					CheckForDoubleTapDodge(isTap, ref m_rightLastTapRegistered, DodgeDirection.Right);
 				}
 				zero.x += ZInput.GetJoyLeftStickX();
 				zero.z += 0f - ZInput.GetJoyLeftStickY();
@@ -168,58 +160,46 @@ namespace RagnarsRokare_DodgeOnDoubleTap
 				return false;
 			}
 
-            private static void CheckForDoubleTapDodge(bool isTap, ref DateTime lastTapCheck, ref float pressTimer, ref float releaseTimer, ref DateTime? lastTapRegistered, DodgeDirection dodgeDirection)
+            private static void CheckForDoubleTapDodge(bool isTap, ref DateTime? lastTapRegistered, DodgeDirection dodgeDirection)
             {
-                lastTapCheck = DateTime.Now;
                 if (isTap)
                 {
-                    pressTimer = 0;
-                    releaseTimer = 0;
-                    if (lastTapRegistered == null)
+					var milliesSinceLastTap = (DateTime.Now - lastTapRegistered)?.TotalMilliseconds ?? DodgeDoubleTapDelay.Value;
+					if (milliesSinceLastTap < DodgeDoubleTapDelay.Value)
+					{
+						//Debug.Log($"DOUBLETAP! => {milliesSinceLastTap}");
+						DodgeDir = dodgeDirection;
+					}
+					else
+					{
+						lastTapRegistered = null;
+					}
+
+					if (lastTapRegistered == null)
                     {
 						lastTapRegistered = DateTime.Now;
-                    }
-                    else
-                    {
-                        var milliesSinceLastTap = (DateTime.Now - lastTapRegistered)?.TotalMilliseconds ?? 0f;
-                        if (milliesSinceLastTap < DodgeDoubleTapDelay.Value)
-                        {
-                            DodgeDir = dodgeDirection;
-                        }
-                        lastTapRegistered = null;
-                    }
+						//Debug.Log($"TAP! => {lastTapRegistered.Value.ToString("mm:ss:FFF")}");
+					}
                 }
             }
 
-            private static bool DetectTap(bool pressed, float dt, float minPressTime, bool run, ref float pressTimer, ref float releasedTimer, ref bool tapPressed)
-			{
-				bool result = false;
-				if (pressed)
+			private static bool DetectTap(bool isPressed, float timeSinceLastCheck, float maxPressTime, ref float pressTimer)
+            {
+				if (isPressed)
+                {
+					pressTimer += timeSinceLastCheck;
+					//Debug.Log("PRESS");
+					return false;
+                }
+                else if (pressTimer > 0)
 				{
-					if ((releasedTimer > 0f && releasedTimer < minPressTime) & tapPressed)
-					{
-						tapPressed = false;
-						result = true;
-					}
-					pressTimer += dt;
-					releasedTimer = 0f;
+					bool isTap = pressTimer < maxPressTime;
+					pressTimer = 0;
+					//Debug.Log("RELEASE");
+					return isTap;
 				}
-				else
-				{
-					if (pressTimer > 0f)
-					{
-						tapPressed = pressTimer < minPressTime;
-						if (run & tapPressed)
-						{
-							tapPressed = false;
-							result = true;
-						}
-					}
-					releasedTimer += dt;
-					pressTimer = 0f;
-				}
-				return result;
-			}
+				return false;
+            }
 
 			private static bool TakeInput()
 			{
