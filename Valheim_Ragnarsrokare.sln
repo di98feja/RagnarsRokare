@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Valheim_Ragnarsrokare", "Valheim_Ragnarsrokare.csproj", "{1798DAB1-7C3A-4719-AB8E-E82E7B3C26C9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPickupSelector", "AutoPickupSelector\AutoPickupSelector.csproj", "{1798DAB1-7C3A-4719-AB8E-E82E7B3C26C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DodgeOnDoubleTap", "RagnarsRokare_DodgeOnDoubleTap\DodgeOnDoubleTap.csproj", "{04D9A13C-90DB-4588-B383-A909224DFDE4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{1798DAB1-7C3A-4719-AB8E-E82E7B3C26C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1798DAB1-7C3A-4719-AB8E-E82E7B3C26C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1798DAB1-7C3A-4719-AB8E-E82E7B3C26C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{04D9A13C-90DB-4588-B383-A909224DFDE4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{04D9A13C-90DB-4588-B383-A909224DFDE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{04D9A13C-90DB-4588-B383-A909224DFDE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{04D9A13C-90DB-4588-B383-A909224DFDE4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

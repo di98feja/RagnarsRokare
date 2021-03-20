@@ -7,13 +7,13 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace ValheimMod
+namespace RagnarsRokare_AutoPickupSelector
 {
-    [BepInPlugin("di98feja.RagnarsRokare", "RagnarsRökare Valheim Mod", "1.0.0")]
+    [BepInPlugin("RagnarsRokare.AutoPickupSelector", "RagnarsRökare AutoPickupSelector Mod", "1.0.0")]
     [BepInProcess("valheim.exe")]
     public class RagnarsRokare : BaseUnityPlugin
     {
-        private readonly Harmony harmony = new Harmony("di98feja.RagnarsRokare");
+        private readonly Harmony harmony = new Harmony("RagnarsRokare.AutoPickupSelector");
         public static ConfigEntry<string> AutoPickupBlockList;
 
         void Awake()

@@ -7,8 +7,8 @@
     <ProjectGuid>{1798DAB1-7C3A-4719-AB8E-E82E7B3C26C9}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Valheim_Ragnarsrokare</RootNamespace>
-    <AssemblyName>Valheim_Ragnarsrokare</AssemblyName>
+    <RootNamespace>Ragnarsrokare.AutoPickupSelector</RootNamespace>
+    <AssemblyName>Ragnarsrokare_AutoPickupSelector</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
