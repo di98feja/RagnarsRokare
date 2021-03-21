@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoPickupSelector", "AutoP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DodgeOnDoubleTap", "RagnarsRokare_DodgeOnDoubleTap\DodgeOnDoubleTap.csproj", "{04D9A13C-90DB-4588-B383-A909224DFDE4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlaveGreylings", "SlaveGreylings\SlaveGreylings.csproj", "{0439AE94-20B4-446C-A79B-685995C8606E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{04D9A13C-90DB-4588-B383-A909224DFDE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{04D9A13C-90DB-4588-B383-A909224DFDE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{04D9A13C-90DB-4588-B383-A909224DFDE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0439AE94-20B4-446C-A79B-685995C8606E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0439AE94-20B4-446C-A79B-685995C8606E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0439AE94-20B4-446C-A79B-685995C8606E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0439AE94-20B4-446C-A79B-685995C8606E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
