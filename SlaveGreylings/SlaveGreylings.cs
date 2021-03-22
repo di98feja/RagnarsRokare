@@ -9,7 +9,7 @@ using UnityEngine;
 namespace SlaveGreylings
 {
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
-    public class BepInExPlugin : BaseUnityPlugin
+    public class SlaveGreylings : BaseUnityPlugin
     {
         private static readonly bool isDebug = false;
 
@@ -25,12 +25,12 @@ namespace SlaveGreylings
         public static ConfigEntry<bool> isOn;
         public static ConfigEntry<bool> modEnabled;
 
-        private static BepInExPlugin context;
+        private static SlaveGreylings context;
 
         public static void Dbgl(string str = "", bool pref = true)
         {
             if (isDebug)
-                Debug.Log((pref ? typeof(BepInExPlugin).Namespace + " " : "") + str);
+                Debug.Log((pref ? typeof(SlaveGreylings).Namespace + " " : "") + str);
         }
         private void Awake()
         {
@@ -53,27 +53,6 @@ namespace SlaveGreylings
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
 
-        private void Update()
-        {
-            if (CheckKeyDown(toggleKey.Value) && !AedenthornUtils.IgnoreKeyPresses(true))
-            {
-                isOn.Value = !isOn.Value;
-                Config.Save();
-                Player.m_localPlayer.Message(MessageHud.MessageType.Center, string.Format(toggleString.Value, isOn.Value), 0, null);
-            }
-
-        }
-        private static bool CheckKeyDown(string value)
-        {
-            try
-            {
-                return value?.Length > 0 && Input.GetKeyDown(value.ToLower());
-            }
-            catch
-            {
-                return false;
-            }
-        }
         private static string GetPrefabName(string name)
         {
             char[] anyOf = new char[] { '(', ' ' };
