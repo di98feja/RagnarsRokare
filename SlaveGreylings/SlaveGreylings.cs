@@ -89,6 +89,22 @@ namespace SlaveGreylings
             }
         }
 
+        [HarmonyPatch(typeof(Character), "Awake")]
+        static class Character_Awake_Patch
+        {
+            static void Postfix(Character __instance)
+            {
+                if (__instance.name.Contains("Greyling"))
+                {
+                    Debug.Log($"A {__instance.name} just spawned!");
+                    __instance.gameObject.AddComponent<Tameable>();
+                    var tameable = __instance.gameObject.GetComponent<Tameable>();
+
+                    var ai = __instance.GetBaseAI() as MonsterAI;
+                    ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "SilverNecklace").Single());
+                }
+            }
+        }
 
         [HarmonyPatch(typeof(Fireplace), "UpdateFireplace")]
         static class Fireplace_UpdateFireplace_Patch
