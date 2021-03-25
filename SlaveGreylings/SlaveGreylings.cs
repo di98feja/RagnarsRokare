@@ -99,9 +99,12 @@ namespace SlaveGreylings
                     Debug.Log($"A {__instance.name} just spawned!");
                     __instance.gameObject.AddComponent<Tameable>();
                     var tameable = __instance.gameObject.GetComponent<Tameable>();
-
+                    tameable.m_fedDuration = 500;
+                    tameable.m_tamingTime = 1000;
+                    tameable.m_commandable = true;
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "SilverNecklace").Single());
+                    ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Ruby").Single());
                 }
             }
         }
