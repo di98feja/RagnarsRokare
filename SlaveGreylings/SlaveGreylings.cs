@@ -8,6 +8,61 @@ using UnityEngine;
 
 namespace SlaveGreylings
 {
+    [BepInPlugin("RagnarsRokare.SlaveAI", "SlaveAI", "0.1")]
+    public class SlaveAI : MonsterAI
+    {
+        public GameObject m_assignment;
+        public GameObject m_lastassignment;
+        public GameObject m_oldassignment;
+        public bool m_assigned = false;
+        public GameObject m_container1;
+        public GameObject m_container2;
+        public GameObject m_container3;
+        public GameObject m_container4;
+        public GameObject m_container5;
+
+        protected override void UpdateAI(float dt)
+        {
+            base.UpdateAI(dt);
+
+            if (!m_nview.IsOwner() || !m_character.IsTamed())
+                return;
+
+            if (!m_assigned && m_character.IsTamed())
+            {
+                foreach (Collider collider in Physics.OverlapSphere(m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
+                {
+                    Smelter smelter = collider.transform.parent?.gameObject?.GetComponent<Smelter>();
+                    //Debug.Log($"{smelter}");
+                    if (smelter?.GetComponent<ZNetView>()?.IsValid() != true)
+                        continue;
+                    if (smelter?.transform?.position != null && smelter.gameObject != m_assignment && smelter.gameObject != m_lastassignment && smelter.gameObject != m_oldassignment)
+                    {
+                        m_oldassignment = m_lastassignment;
+                        m_lastassignment = m_assignment;
+                        m_assignment = smelter.gameObject;
+                        m_assigned = true;
+                        return;
+                    }
+
+                }
+                m_oldassignment = null;
+                m_lastassignment = null;
+                m_assignment = null;
+            }
+
+            if (m_assigned)
+            {
+                SetFollowTarget(m_assignment.gameObject);
+                if (Vector3.Distance(m_character.transform.position, m_assignment.transform.position) < 4)
+                    m_assigned = false;
+                else
+                    Debug.Log($"{Vector3.Distance(m_character.transform.position, m_assignment.transform.position)}");
+                return;
+            }
+        }
+    }
+
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
@@ -98,6 +153,8 @@ namespace SlaveGreylings
                 {
                     Debug.Log($"A {__instance.name} just spawned!");
                     __instance.gameObject.AddComponent<Tameable>();
+                    __instance.gameObject.AddComponent<SlaveAI>();
+
                     var tameable = __instance.gameObject.GetComponent<Tameable>();
                     tameable.m_fedDuration = 500;
                     tameable.m_tamingTime = 1000;
