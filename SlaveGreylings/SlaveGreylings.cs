@@ -70,9 +70,7 @@ namespace SlaveGreylings
         {
             static MonsterAI_UpdateAI_Patch()
             {
-                m_assignment = new Dictionary<int, Smelter>();
-                m_lastassignment = new Dictionary<int, Smelter>();
-                m_oldassignment = new Dictionary<int, Smelter>();
+                m_assignment = new Dictionary<int, MaxStack<Smelter>>();
                 m_assigned = new Dictionary<int, bool>();
                 m_container1 = new Dictionary<int, Container>();
                 m_container2 = new Dictionary<int, Container>();
@@ -81,11 +79,8 @@ namespace SlaveGreylings
                 m_container5 = new Dictionary<int, Container>();
                 m_fetchitems = new Dictionary<int, List<ItemDrop>>();
             }
-            //public static Dictionary<int, Queue<Smelter>> m_assignment;
+            public static Dictionary<int, MaxStack<Smelter>> m_assignment;
 
-            public static Dictionary<int, Smelter>   m_assignment;
-            public static Dictionary<int, Smelter>   m_lastassignment;
-            public static Dictionary<int, Smelter>   m_oldassignment;
             public static Dictionary<int, bool>      m_assigned;
             public static Dictionary<int, Container> m_container1;
             public static Dictionary<int, Container> m_container2;
@@ -94,11 +89,10 @@ namespace SlaveGreylings
             public static Dictionary<int, Container> m_container5;
             public static Dictionary<int, List<ItemDrop>> m_fetchitems;
 
-            private static string m_aiStatus;
             private static Character m_attacker = null;
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
-                ref float ___m_timeSinceHurt)
+                ref float ___m_timeSinceHurt, ref string ___m_aiStatus)
             {
                 if (!___m_nview.IsOwner())
                 {
@@ -114,13 +108,19 @@ namespace SlaveGreylings
                     UpdateSleep_method.Invoke(__instance, new object[] { dt });
                     return false;
                 }
-                m_aiStatus = "";
+
+                if (!m_assignment.ContainsKey(__instance.GetInstanceID()))
+                {
+                    m_assignment.Add(__instance.GetInstanceID(), new MaxStack<Smelter>(4));
+                }
+
+                ___m_aiStatus = "";
                 Humanoid humanoid = ___m_character as Humanoid;
                 //typeof(MonsterAI).GetMethod("UpdateTarget", BindingFlags.NonPublic |BindingFlags.Instance).Invoke(__instance, new object[] { humanoid, dt });
                 if (___m_character.GetHealthPercentage() < ___m_fleeIfLowHealth && ___m_timeSinceHurt < 20f && m_attacker != null)
                 {
                     typeof(MonsterAI).GetMethod("Flee", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_attacker.transform.position });
-                    m_aiStatus = "Low health, flee";
+                    ___m_aiStatus = "Low health, flee";
                     return false;
                 }
                 //if (m_assignment != null && AvoidFire(dt, m_assignment.transform.position))
@@ -131,13 +131,13 @@ namespace SlaveGreylings
                 var UpdateConsumeItem_method = typeof(MonsterAI).GetMethod("UpdateConsumeItem", BindingFlags.NonPublic | BindingFlags.Instance);
                 if (!__instance.IsAlerted() && (bool)UpdateConsumeItem_method.Invoke(__instance, new object[] { humanoid, dt }))
                 {
-                    m_aiStatus = "Consume item";
+                    ___m_aiStatus = "Consume item";
                     return false;
                 }
                 if ((bool)__instance.GetFollowTarget())
                 {
                     typeof(MonsterAI).GetMethod("Follow", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { __instance.GetFollowTarget(), dt });
-                    m_aiStatus = "Follow";
+                    ___m_aiStatus = "Follow";
                     return false;
                 }
 
@@ -149,32 +149,31 @@ namespace SlaveGreylings
                         //Debug.Log($"{smelter}");
                         if (smelter?.GetComponent<ZNetView>()?.IsValid() != true)
                             continue;
-                        if (smelter?.transform?.position != null && smelter != m_assignment[__instance.GetInstanceID()] && smelter != m_lastassignment[__instance.GetInstanceID()] && smelter != m_oldassignment[__instance.GetInstanceID()])
+                        if (smelter?.transform?.position != null && !m_assignment[__instance.GetInstanceID()].Contains(smelter))
                         {
-                            m_oldassignment[__instance.GetInstanceID()] = m_lastassignment[__instance.GetInstanceID()];
-                            m_lastassignment[__instance.GetInstanceID()] = m_assignment[__instance.GetInstanceID()];
-                            m_assignment[__instance.GetInstanceID()] = smelter;
+                            m_assignment[__instance.GetInstanceID()].Push(smelter);
                             m_assigned[__instance.GetInstanceID()] = true;
+                            ___m_aiStatus = string.Concat("Doing assignment");
+
                             return false;
                         }
 
                     }
-                    m_oldassignment = null;
-                    m_lastassignment = null;
-                    m_assignment = null;
+                    m_assignment[__instance.GetInstanceID()] = null;
                 }
 
                 if (m_assigned[__instance.GetInstanceID()])
                 {
-                    typeof(MonsterAI).GetMethod("MoveTo", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_assignment[__instance.GetInstanceID()].transform.position, 0, false });
-                    if (Vector3.Distance(___m_character.transform.position, m_assignment[__instance.GetInstanceID()].transform.position) < 4)
+                    typeof(MonsterAI).GetMethod("MoveTo", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_assignment[__instance.GetInstanceID()].Peek().transform.position, 0, false });
+                    if (Vector3.Distance(___m_character.transform.position, m_assignment[__instance.GetInstanceID()].Pop().transform.position) < 4)
+                    {
                         m_assigned[__instance.GetInstanceID()] = false;
-                    //Debug.Log($"{Vector3.Distance(___m_character.transform.position, m_assignment.transform.position)}");
+                    }
                     return false;
                 }
 
 
-                m_aiStatus = string.Concat("Random movement");
+                ___m_aiStatus = string.Concat("Random movement");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 return false;
             }
