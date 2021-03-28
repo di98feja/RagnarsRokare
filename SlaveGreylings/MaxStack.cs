@@ -3,7 +3,7 @@ using System.Linq;
 
 namespace SlaveGreylings
 {
-    public class MaxStack<T>
+    public class MaxStack<T> : IEnumerable<T>
     {
         private Stack<T> m_stack;
         public int MaxSize { get; private set; }
@@ -41,6 +41,16 @@ namespace SlaveGreylings
         public bool Contains(T item)
         {
             return m_stack.Contains(item);
+        }
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return m_stack.GetEnumerator();
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        {
+            return m_stack.GetEnumerator();
         }
     }
 }
