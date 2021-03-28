@@ -11,7 +11,7 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = false;
+        private static readonly bool isDebug = true;
 
         public static ConfigEntry<float> dropRange;
         public static ConfigEntry<float> containerRange;
@@ -98,22 +98,25 @@ namespace SlaveGreylings
                 {
                     return false;
                 }
+                Dbgl("Owned ok");
                 if (!___m_character.IsTamed())
                 {
                     return true;
                 }
+                Dbgl("Tamed ok");
                 if (__instance.IsSleeping())
                 {
                     var UpdateSleep_method = __instance.GetType().GetMethod("UpdateSleep", BindingFlags.NonPublic | BindingFlags.Instance);
                     UpdateSleep_method.Invoke(__instance, new object[] { dt });
                     return false;
                 }
-
+                Dbgl("Sleep ok");
                 if (!m_assignment.ContainsKey(__instance.GetInstanceID()))
                 {
                     m_assignment.Add(__instance.GetInstanceID(), new MaxStack<Smelter>(4));
+                    m_assigned.Add(__instance.GetInstanceID(), false);
                 }
-
+                Dbgl("GetInstanceID ok");
                 ___m_aiStatus = "";
                 Humanoid humanoid = ___m_character as Humanoid;
                 //typeof(MonsterAI).GetMethod("UpdateTarget", BindingFlags.NonPublic |BindingFlags.Instance).Invoke(__instance, new object[] { humanoid, dt });
@@ -123,25 +126,28 @@ namespace SlaveGreylings
                     ___m_aiStatus = "Low health, flee";
                     return false;
                 }
+                Dbgl("Flee ok");
                 //if (m_assignment != null && AvoidFire(dt, m_assignment.transform.position))
                 //{
                 //    m_aiStatus = "Avoiding fire";
                 //    return;
                 //}
+                //Dbgl("Fire ok");
                 var UpdateConsumeItem_method = typeof(MonsterAI).GetMethod("UpdateConsumeItem", BindingFlags.NonPublic | BindingFlags.Instance);
                 if (!__instance.IsAlerted() && (bool)UpdateConsumeItem_method.Invoke(__instance, new object[] { humanoid, dt }))
                 {
                     ___m_aiStatus = "Consume item";
                     return false;
                 }
+                Dbgl("Consume ok");
                 if ((bool)__instance.GetFollowTarget())
                 {
                     typeof(MonsterAI).GetMethod("Follow", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { __instance.GetFollowTarget(), dt });
                     ___m_aiStatus = "Follow";
                     return false;
                 }
-
-                if (!m_assigned[__instance.GetInstanceID()] && ___m_character.IsTamed())
+                Dbgl("Follow ok");
+                if (!m_assigned[__instance.GetInstanceID()])
                 {
                     foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
                     {
@@ -159,9 +165,9 @@ namespace SlaveGreylings
                         }
 
                     }
-                    m_assignment[__instance.GetInstanceID()] = null;
+                    m_assignment[__instance.GetInstanceID()].Clear();
                 }
-
+                Dbgl("Unassigned ok");
                 if (m_assigned[__instance.GetInstanceID()])
                 {
                     typeof(MonsterAI).GetMethod("MoveTo", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_assignment[__instance.GetInstanceID()].Peek().transform.position, 0, false });
@@ -171,11 +177,12 @@ namespace SlaveGreylings
                     }
                     return false;
                 }
-
+                Dbgl("Assigned ok");
 
                 ___m_aiStatus = string.Concat("Random movement");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 return false;
+                Dbgl("Random Movement ok");
             }
 
             //protected bool AvoidFire(float dt, Vector3 targetPosition)
