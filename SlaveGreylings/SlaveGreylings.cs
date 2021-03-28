@@ -109,25 +109,26 @@ namespace SlaveGreylings
                     return false;
                 }
 
-                if (!m_assignment.ContainsKey(__instance.GetInstanceID()))
+                int instanceId = __instance.GetInstanceID();
+                if (!m_assignment.ContainsKey(instanceId))
                 {
-                    m_assignment.Add(__instance.GetInstanceID(), new MaxStack<Smelter>(4));
+                    m_assignment.Add(instanceId, new MaxStack<Smelter>(4));
+
                 }
 
                 ___m_aiStatus = "";
                 Humanoid humanoid = ___m_character as Humanoid;
-                //typeof(MonsterAI).GetMethod("UpdateTarget", BindingFlags.NonPublic |BindingFlags.Instance).Invoke(__instance, new object[] { humanoid, dt });
                 if (___m_character.GetHealthPercentage() < ___m_fleeIfLowHealth && ___m_timeSinceHurt < 20f && m_attacker != null)
                 {
                     typeof(MonsterAI).GetMethod("Flee", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_attacker.transform.position });
                     ___m_aiStatus = "Low health, flee";
                     return false;
                 }
-                //if (m_assignment != null && AvoidFire(dt, m_assignment.transform.position))
-                //{
-                //    m_aiStatus = "Avoiding fire";
-                //    return;
-                //}
+                if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
+                {
+                    ___m_aiStatus = "Avoiding fire";
+                    return false;
+                }
                 var UpdateConsumeItem_method = typeof(MonsterAI).GetMethod("UpdateConsumeItem", BindingFlags.NonPublic | BindingFlags.Instance);
                 if (!__instance.IsAlerted() && (bool)UpdateConsumeItem_method.Invoke(__instance, new object[] { humanoid, dt }))
                 {
@@ -141,7 +142,7 @@ namespace SlaveGreylings
                     return false;
                 }
 
-                if (!m_assigned[__instance.GetInstanceID()] && ___m_character.IsTamed())
+                if (!m_assigned[instanceId] && ___m_character.IsTamed())
                 {
                     foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
                     {
@@ -149,25 +150,25 @@ namespace SlaveGreylings
                         //Debug.Log($"{smelter}");
                         if (smelter?.GetComponent<ZNetView>()?.IsValid() != true)
                             continue;
-                        if (smelter?.transform?.position != null && !m_assignment[__instance.GetInstanceID()].Contains(smelter))
+                        if (smelter?.transform?.position != null && !m_assignment[instanceId].Contains(smelter))
                         {
-                            m_assignment[__instance.GetInstanceID()].Push(smelter);
-                            m_assigned[__instance.GetInstanceID()] = true;
+                            m_assignment[instanceId].Push(smelter);
+                            m_assigned[instanceId] = true;
                             ___m_aiStatus = string.Concat("Doing assignment");
 
                             return false;
                         }
 
                     }
-                    m_assignment[__instance.GetInstanceID()] = null;
+                    m_assignment[instanceId].Clear();
                 }
 
-                if (m_assigned[__instance.GetInstanceID()])
+                if (m_assigned[instanceId])
                 {
-                    typeof(MonsterAI).GetMethod("MoveTo", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_assignment[__instance.GetInstanceID()].Peek().transform.position, 0, false });
-                    if (Vector3.Distance(___m_character.transform.position, m_assignment[__instance.GetInstanceID()].Pop().transform.position) < 4)
+                    typeof(MonsterAI).GetMethod("MoveTo", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_assignment[instanceId].Peek().m_outputPoint.position, 0, false });
+                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Pop().m_outputPoint.position) < 1)
                     {
-                        m_assigned[__instance.GetInstanceID()] = false;
+                        m_assigned[instanceId] = false;
                     }
                     return false;
                 }
@@ -178,21 +179,20 @@ namespace SlaveGreylings
                 return false;
             }
 
-            //protected bool AvoidFire(float dt, Vector3 targetPosition)
-            //{
-            //    EffectArea effectArea2 = EffectArea.IsPointInsideArea(base.transform.position, EffectArea.Type.Fire, 3f);
-            //    if ((bool)effectArea2)
-            //    {
-            //        if (targetPosition != null && (bool)EffectArea.IsPointInsideArea(targetPosition, EffectArea.Type.Fire))
-            //        {
-            //            RandomMovementArroundPoint(dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f + 1f, IsAlerted());
-            //            return true;
-            //        }
-            //        RandomMovementArroundPoint(dt, effectArea2.transform.position, (effectArea2.GetRadius() + 3f) * 1.5f, IsAlerted());
-            //        return true;
-            //    }
-            //    return false;
-            //}
+            static bool AvoidFire(MonsterAI instance, float dt, Vector3 targetPosition)
+            {
+                //EffectArea effectArea2 = EffectArea.IsPointInsideArea(instance.transform.position, EffectArea.Type.Fire, 3f);
+                //if ((bool)effectArea2)
+                //{
+                //    if (targetPosition != null && (bool)EffectArea.IsPointInsideArea(targetPosition, EffectArea.Type.Fire))
+                //    {
+                //        //typeof(MonsterAI).GetMethod("RandomMovementArroundPoint", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, new object[] { dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f + 1f, instance.IsAlerted() });
+                //        return true;
+                //    }
+                //    return true;
+                //}
+                return false;
+            }
         }
     
 
