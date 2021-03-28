@@ -98,20 +98,18 @@ namespace SlaveGreylings
                 {
                     return false;
                 }
-                Dbgl("Owned ok");
                 if (!___m_character.IsTamed())
                 {
                     return true;
                 }
-                Dbgl("Tamed ok");
                 if (__instance.IsSleeping())
                 {
                     var UpdateSleep_method = __instance.GetType().GetMethod("UpdateSleep", BindingFlags.NonPublic | BindingFlags.Instance);
                     UpdateSleep_method.Invoke(__instance, new object[] { dt });
                     return false;
                 }
-                Dbgl("Sleep ok");
                 int instanceId = __instance.GetInstanceID();
+                Dbgl($"{instanceId} Sleep ok");
                 if (!m_assignment.ContainsKey(instanceId))
                 {
                     m_assignment.Add(instanceId, new MaxStack<Smelter>(4));
@@ -171,7 +169,7 @@ namespace SlaveGreylings
                 if (m_assigned[instanceId])
                 {
                     typeof(MonsterAI).GetMethod("MoveTo", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_assignment[instanceId].Peek().m_outputPoint.position, 0, false });
-                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Pop().m_outputPoint.position) < 1)
+                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1)
                     {
                         m_assigned[instanceId] = false;
                     }
@@ -181,8 +179,9 @@ namespace SlaveGreylings
 
                 ___m_aiStatus = string.Concat("Random movement");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
-                return false;
                 Dbgl("Random Movement ok");
+                return false;
+                
             }
 
             static bool AvoidFire(MonsterAI instance, float dt, Vector3 targetPosition)
