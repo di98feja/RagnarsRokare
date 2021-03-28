@@ -1,6 +1,7 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -104,30 +105,26 @@ namespace SlaveGreylings
                 }
                 if (__instance.IsSleeping())
                 {
-                    var UpdateSleep_method = __instance.GetType().GetMethod("UpdateSleep", BindingFlags.NonPublic | BindingFlags.Instance);
-                    UpdateSleep_method.Invoke(__instance, new object[] { dt });
+                    Invoke(__instance, "UpdateSleep", new object[] { dt });
+                    Dbgl($"{__instance.GetInstanceID()} Sleep updated");
                     return false;
                 }
-                int instanceId = __instance.GetInstanceID();
-                Dbgl($"{instanceId} Sleep ok");
-                if (!m_assignment.ContainsKey(instanceId))
-                {
-                    m_assignment.Add(instanceId, new MaxStack<Smelter>(4));
-                    m_assigned.Add(__instance.GetInstanceID(), false);
-                }
+
+                int instanceId = InitInstanceIfNeeded(__instance);
                 Dbgl("GetInstanceID ok");
+
                 ___m_aiStatus = "";
-                Humanoid humanoid = ___m_character as Humanoid;
+
                 if (___m_character.GetHealthPercentage() < ___m_fleeIfLowHealth && ___m_timeSinceHurt < 20f && m_attacker != null)
                 {
-                    typeof(MonsterAI).GetMethod("Flee", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_attacker.transform.position });
+                    Invoke(__instance, "Flee", new object[] { dt, m_attacker.transform.position });
                     ___m_aiStatus = "Low health, flee";
                     return false;
                 }
                 Dbgl("Flee ok");
                 if ((bool)__instance.GetFollowTarget())
                 {
-                    typeof(MonsterAI).GetMethod("Follow", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { __instance.GetFollowTarget(), dt });
+                    Invoke(__instance, "Follow", new object[] { __instance.GetFollowTarget(), dt });
                     ___m_aiStatus = "Follow";
                     return false;
                 }
@@ -138,8 +135,7 @@ namespace SlaveGreylings
                     return false;
                 }
                 Dbgl("Fire ok");
-                var UpdateConsumeItem_method = typeof(MonsterAI).GetMethod("UpdateConsumeItem", BindingFlags.NonPublic | BindingFlags.Instance);
-                if (!__instance.IsAlerted() && (bool)UpdateConsumeItem_method.Invoke(__instance, new object[] { humanoid, dt }))
+                if (!__instance.IsAlerted() && (bool)Invoke(__instance, "UpdateConsumeItem", new object[] { ___m_character as Humanoid, dt }))
                 {
                     ___m_aiStatus = "Consume item";
                     return false;
@@ -167,7 +163,7 @@ namespace SlaveGreylings
                 Dbgl("Unassigned ok");
                 if (m_assigned[instanceId])
                 {
-                    typeof(MonsterAI).GetMethod("MoveTo", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt, m_assignment[instanceId].Peek().m_outputPoint.position, 0, false });
+                    Invoke(__instance, "MoveTo", new object[] { dt, m_assignment[instanceId].Peek().m_outputPoint.position, 0, false });
                     if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1)
                     {
                         m_assigned[instanceId] = false;
@@ -181,6 +177,23 @@ namespace SlaveGreylings
                 Dbgl("Random Movement ok");
                 return false;
                 
+            }
+
+            private static object Invoke(MonsterAI instance, string methodName, object[] argumentList)
+            {
+                return typeof(MonsterAI).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
+            }
+
+            private static int InitInstanceIfNeeded(MonsterAI instance)
+            {
+                int instanceId = instance.GetInstanceID();
+                bool isNewInstance = !m_assignment.ContainsKey(instanceId);
+                if (isNewInstance)
+                {
+                    m_assignment.Add(instanceId, new MaxStack<Smelter>(4));
+                    m_assigned.Add(instance.GetInstanceID(), false);
+                }
+                return instanceId;
             }
 
             static bool AvoidFire(MonsterAI instance, float dt, Vector3 targetPosition)
