@@ -92,7 +92,7 @@ namespace SlaveGreylings
             private static Character m_attacker = null;
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
-                ref float ___m_timeSinceHurt, ref string ___m_aiStatus)
+                ref float ___m_timeSinceHurt, ref string ___m_aiStatus, ref Vector3 ___arroundPointTarget)
             {
                 if (!___m_nview.IsOwner())
                 {
@@ -125,6 +125,13 @@ namespace SlaveGreylings
                     return false;
                 }
                 Dbgl("Flee ok");
+                if ((bool)__instance.GetFollowTarget())
+                {
+                    typeof(MonsterAI).GetMethod("Follow", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { __instance.GetFollowTarget(), dt });
+                    ___m_aiStatus = "Follow";
+                    return false;
+                }
+                Dbgl("Follow ok");
                 if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
                 {
                     ___m_aiStatus = "Avoiding fire";
@@ -138,19 +145,11 @@ namespace SlaveGreylings
                     return false;
                 }
                 Dbgl("Consume ok");
-                if ((bool)__instance.GetFollowTarget())
-                {
-                    typeof(MonsterAI).GetMethod("Follow", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { __instance.GetFollowTarget(), dt });
-                    ___m_aiStatus = "Follow";
-                    return false;
-                }
-                Dbgl("Follow ok");
                 if (!m_assigned[instanceId] && ___m_character.IsTamed())
                 {
                     foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
                     {
                         Smelter smelter = collider.transform.parent?.gameObject?.GetComponent<Smelter>();
-                        //Debug.Log($"{smelter}");
                         if (smelter?.GetComponent<ZNetView>()?.IsValid() != true)
                             continue;
                         if (smelter?.transform?.position != null && !m_assignment[instanceId].Contains(smelter))
@@ -186,16 +185,12 @@ namespace SlaveGreylings
 
             static bool AvoidFire(MonsterAI instance, float dt, Vector3 targetPosition)
             {
-                //EffectArea effectArea2 = EffectArea.IsPointInsideArea(instance.transform.position, EffectArea.Type.Fire, 3f);
-                //if ((bool)effectArea2)
-                //{
-                //    if (targetPosition != null && (bool)EffectArea.IsPointInsideArea(targetPosition, EffectArea.Type.Fire))
-                //    {
-                //        //typeof(MonsterAI).GetMethod("RandomMovementArroundPoint", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, new object[] { dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f + 1f, instance.IsAlerted() });
-                //        return true;
-                //    }
-                //    return true;
-                //}
+                EffectArea effectArea2 = EffectArea.IsPointInsideArea(instance.transform.position, EffectArea.Type.Burning, 3f);
+                if ((bool)effectArea2)
+                {
+                    typeof(MonsterAI).GetMethod("RandomMovementArroundPoint", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, new object[] { dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f + 1f, true });
+                    return true;
+                }
                 return false;
             }
         }
