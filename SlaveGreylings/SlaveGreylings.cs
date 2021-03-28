@@ -12,7 +12,7 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = true;
+        private static readonly bool isDebug = false;
 
         public static ConfigEntry<float> dropRange;
         public static ConfigEntry<float> containerRange;
@@ -226,11 +226,43 @@ namespace SlaveGreylings
                     tameable.m_tamingTime = 1000;
                     tameable.m_commandable = true;
                     var ai = __instance.GetBaseAI() as MonsterAI;
-                    ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "SilverNecklace").Single());
-                    ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Ruby").Single());
+                    ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "SilverNecklace").FirstOrDefault());
+                    ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Ruby").FirstOrDefault());
                 }
             }
         }
+
+        [HarmonyPatch(typeof(MonsterAI), "MakeTame")]
+        static class MonsterAI_MakeTame_Patch
+        {
+            static void Postfix(MonsterAI __instance)
+            {
+                if (__instance.name.Contains("Greyling"))
+                {
+                    Dbgl($"{__instance.name} was tamed!");
+                    __instance.m_consumeItems.Clear();
+                    __instance.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Character), "GetHoverName")]
+        static class Character_GetHoverName_Patch
+        {
+            static bool Prefix(Character __instance, ref string __result)
+            {
+                if (__instance.name.Contains("Greyling") && __instance.IsTamed())
+                {
+                    __result = "Snyggve";
+                    return false;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+        }
+
 
         //[HarmonyPatch(typeof(Fireplace), "UpdateFireplace")]
         //static class Fireplace_UpdateFireplace_Patch
