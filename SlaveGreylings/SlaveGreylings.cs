@@ -168,13 +168,13 @@ namespace SlaveGreylings
                 if (m_assigned[instanceId])
                 {
                     Smelter assignment = m_assignment[instanceId].Peek();
-                    if (!m_fetchitems[instanceId].Any() ||  m_carrying != null)
+                    if ((!m_fetchitems[instanceId].Any() ||  m_carrying != null) && m_spottedItem[instanceId] == null && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) > 1)
                     {
                         Invoke(__instance, "MoveTo", new object[] { dt, assignment.m_outputPoint.position, 0, false });
                         return false;
                     }
                     
-                    if (!m_fetchitems[instanceId].Any() && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1)
+                    if (!m_fetchitems[instanceId].Any())
                     {
                         Dbgl("fetchitem empty");
                         int missingOre = assignment.m_maxOre - Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>();
@@ -219,13 +219,13 @@ namespace SlaveGreylings
                         }
                     }
                     
-                    if (m_spottedItem[instanceId] != null)
+                    if (m_spottedItem[instanceId] != null && Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) > 1)
                     {
                         Invoke(__instance, "MoveTo", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
                         return false;
                     }
                     
-                    if (m_spottedItem[instanceId] != null && Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) <1)
+                    if (m_spottedItem[instanceId] != null)
                     {
                         m_spottedItem[instanceId] = null;
                         m_fetchitems[instanceId].Clear();
