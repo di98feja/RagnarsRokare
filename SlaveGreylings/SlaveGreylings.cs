@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 namespace SlaveGreylings
@@ -66,6 +67,35 @@ namespace SlaveGreylings
             return result;
         }
 
+        [HarmonyPatch(typeof(BaseAI), "UpdateAI")]
+        class BaseAI_UpdateAI_ReversePatch
+        {
+            [HarmonyReversePatch]
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            public static void UpdateAI(BaseAI instance, float dt, ZNetView m_nview, ref float m_jumpInterval, ref float m_jumpTimer,
+                ref float m_randomMoveUpdateTimer, ref float m_timeSinceHurt, ref bool m_alerted)
+            {
+                if (m_nview.IsOwner())
+                {
+                    instance.UpdateTakeoffLanding(dt);
+                    if (m_jumpInterval > 0f)
+                    {
+                        m_jumpTimer += dt;
+                    }
+                    if (m_randomMoveUpdateTimer > 0f)
+                    {
+                        m_randomMoveUpdateTimer -= dt;
+                    }
+                    typeof(BaseAI).GetMethod("UpdateRegeneration", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, new object[] { dt });
+                    m_timeSinceHurt += dt;
+                }
+                else
+                {
+                    m_alerted = m_nview.GetZDO().GetBool("alert");
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(MonsterAI), "UpdateAI")]
         static class MonsterAI_UpdateAI_Patch
         {
@@ -93,7 +123,8 @@ namespace SlaveGreylings
             private static Character m_attacker = null;
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
-                ref float ___m_timeSinceHurt, ref string ___m_aiStatus, ref Vector3 ___arroundPointTarget)
+                ref float ___m_timeSinceHurt, ref string ___m_aiStatus, ref Vector3 ___arroundPointTarget, ref float ___m_jumpInterval, ref float ___m_jumpTimer,
+                ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted)
             {
                 if (!___m_nview.IsOwner())
                 {
@@ -103,12 +134,18 @@ namespace SlaveGreylings
                 {
                     return true;
                 }
+                if (!__instance.name.Contains("Greyling"))
+                {
+                    return true;
+                }
                 if (__instance.IsSleeping())
                 {
                     Invoke(__instance, "UpdateSleep", new object[] { dt });
                     Dbgl($"{__instance.GetInstanceID()} Sleep updated");
                     return false;
                 }
+
+                BaseAI_UpdateAI_ReversePatch.UpdateAI(__instance, dt, ___m_nview, ref ___m_jumpInterval, ref ___m_jumpTimer, ref ___m_randomMoveUpdateTimer, ref ___m_timeSinceHurt, ref ___m_alerted);
 
                 int instanceId = InitInstanceIfNeeded(__instance);
                 Dbgl("GetInstanceID ok");
@@ -219,7 +256,6 @@ namespace SlaveGreylings
                 {
                     Debug.Log($"A {__instance.name} just spawned!");
                     __instance.gameObject.AddComponent<Tameable>();
-                    //__instance.gameObject.AddComponent<SlaveAI>();
 
                     var tameable = __instance.gameObject.GetComponent<Tameable>();
                     tameable.m_fedDuration = 500;
@@ -246,23 +282,145 @@ namespace SlaveGreylings
             }
         }
 
+        public static Dictionary<int, string> NameDictionary { get; } = new Dictionary<int, string>();
+
         [HarmonyPatch(typeof(Character), "GetHoverName")]
         static class Character_GetHoverName_Patch
         {
-            static bool Prefix(Character __instance, ref string __result)
+            static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
             {
-                if (__instance.name.Contains("Greyling") && __instance.IsTamed())
+                if (__instance.name.Contains("Greyling") && __instance.IsTamed() && NameDictionary.ContainsKey(__instance.GetInstanceID()))
                 {
-                    __result = "Snyggve";
+                    Debug.Log("Getting name from NameDict");
+                    __result = NameDictionary[__instance.GetInstanceID()];
                     return false;
                 }
                 else
                 {
+                    Debug.Log("Using default name");
                     return true;
                 }
             }
         }
 
+        class MyTextReceiver : TextReceiver
+        {
+            private readonly int m_characterInstanceId;
+            private readonly ZNetView m_nview;
+
+            public MyTextReceiver(int characterInstanceId, ZNetView nview)
+            {
+                m_characterInstanceId = characterInstanceId;
+                this.m_nview = nview;
+            }
+
+            public string GetText()
+            {
+                return NameDictionary.ContainsKey(m_characterInstanceId) ? NameDictionary[m_characterInstanceId] : "";
+
+            }
+
+            public void SetText(string text)
+            {
+                if (!NameDictionary.ContainsKey(m_characterInstanceId))
+                {
+                    NameDictionary.Add(m_characterInstanceId, text);
+                }
+                else
+                {
+                    NameDictionary[m_characterInstanceId] = text;
+                }
+                m_nview.ClaimOwnership();
+            }
+        }
+
+        [HarmonyPatch(typeof(Humanoid), "EquipItem")]
+        static class Humanoid_EquipItem_Patch
+        {
+            static bool Prefix(Humanoid __instance, ItemDrop.ItemData item, ref ItemDrop.ItemData ___m_rightItem, ref ZNetView ___m_nview, ref VisEquipment ___m_visEquipment)
+            {
+                if (!__instance.name.Contains("Greyling")) return true;
+                if (!__instance.IsTamed()) return true;
+
+                Debug.Log($"Patch equip {item.m_shared.m_name}:{item.m_dropPrefab?.name ?? string.Empty}");
+
+                if (___m_visEquipment == null)
+                {
+                    __instance.gameObject.AddComponent<VisEquipment>();
+                    ___m_visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+                }
+
+                ___m_rightItem = item;
+                ___m_rightItem.m_equiped = true;
+                Debug.Log("Trying to show item in right hand");
+                ___m_visEquipment.SetRightItem(item.m_dropPrefab.name);
+                return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Tameable), "Interact")]
+        static class Tameable_Interact_Patch
+        {
+            static bool Prefix(Tameable __instance, ref bool __result, Humanoid user, bool hold, ZNetView ___m_nview, Character ___m_character,
+                ref float ___m_lastPetTime)
+            {
+                if (!__instance.name.Contains("Greyling")) return true;
+
+                if (!___m_nview.IsValid())
+                {
+                    __result = false;
+                    return false;
+                }
+                string hoverName = ___m_character.GetHoverName();
+                if (___m_character.IsTamed())
+                {
+                    if (hold)
+                    {
+                        TextInput.instance.RequestText(new MyTextReceiver(___m_character.GetInstanceID(), ___m_character.GetComponent<ZNetView>()), "Name", 15);
+                        __result = false;
+
+                        var coal = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Coal").FirstOrDefault();
+                        //Debug.Log($"About to drop {coal.name}:{coal.m_itemData.m_shared.m_itemType}");
+                        var humanoid = ___m_character as Humanoid;
+                        //var itemDrop = UnityEngine.Object.Instantiate(coal.gameObject, __instance.transform.position + __instance.transform.forward + __instance.transform.up, __instance.transform.rotation).GetComponent<ItemDrop>();
+                        //Debug.Log($"Trying to Pickup {itemDrop.gameObject.name}");
+                        //itemDrop.Pickup(humanoid);
+                        //Debug.Log($"Inventory {humanoid.GetInventory().GetAllItems().Select(i => i.m_shared.m_name).Join()}");
+
+                        Debug.Log($"Can add {coal.m_itemData.m_shared.m_name}:{humanoid.GetInventory().CanAddItem(coal.m_itemData)}");
+                        humanoid.GetInventory().AddItem(coal.m_itemData);
+                        Debug.Log("Inventory:");
+                        humanoid.GetInventory().Print();
+                        Debug.Log("----------");
+                        humanoid.EquipItem(coal.m_itemData);
+                        Debug.Log($"Is {coal.m_itemData.m_shared.m_name} equiped:{humanoid.IsItemEquiped(coal.m_itemData)}");
+                        Debug.Log($"Equiped item left:{humanoid.GetLeftItem()}, Equiped item right:{humanoid.GetRightItem()}");
+                        humanoid.ShowHandItems();
+                        return false;
+                    }
+
+                    if (Time.time - ___m_lastPetTime > 1f)
+                    {
+                        ___m_lastPetTime = Time.time;
+                        __instance.m_petEffect.Create(___m_character.GetCenterPoint(), Quaternion.identity);
+                        if (__instance.m_commandable)
+                        {
+                            typeof(Tameable).GetMethod("Command", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { user });
+                        }
+                        else
+                        {
+                            user.Message(MessageHud.MessageType.Center, hoverName + " $hud_tamelove");
+                        }
+                        __result = true;
+                        return false;
+                    }
+                    __result = false;
+                    return false;
+                }
+                __result = false;
+                return false;
+            }
+        }
 
         //[HarmonyPatch(typeof(Fireplace), "UpdateFireplace")]
         //static class Fireplace_UpdateFireplace_Patch
