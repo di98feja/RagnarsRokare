@@ -266,7 +266,16 @@ namespace SlaveGreylings
                     {
                         m_spottedItem[instanceId] = null;
                         m_fetchitems[instanceId].Clear();
-                        m_assigned[instanceId] = false;
+
+                        var humanoid = ___m_character as Humanoid;
+                        Debug.Log($"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
+                        Debug.Log($"Can add {m_spottedItem[instanceId].m_itemData.m_shared.m_name}:{humanoid.GetInventory().CanAddItem(m_spottedItem[instanceId].m_itemData)}");
+                        humanoid.PickupPrefab(m_spottedItem[instanceId].m_itemData.m_dropPrefab);
+                        Debug.Log("Inventory:");
+                        humanoid.GetInventory().Print();
+                        Debug.Log("----------");
+                        humanoid.EquipItem(m_spottedItem[instanceId].m_itemData);
+                        //m_assigned[instanceId] = false;
                         return false;
                     }
 
@@ -449,24 +458,6 @@ namespace SlaveGreylings
                     {
                         TextInput.instance.RequestText(new MyTextReceiver(___m_character.GetInstanceID(), ___m_character.GetComponent<ZNetView>()), "Name", 15);
                         __result = false;
-
-                        var coal = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Coal").FirstOrDefault();
-                        //Debug.Log($"About to drop {coal.name}:{coal.m_itemData.m_shared.m_itemType}");
-                        var humanoid = ___m_character as Humanoid;
-                        //var itemDrop = UnityEngine.Object.Instantiate(coal.gameObject, __instance.transform.position + __instance.transform.forward + __instance.transform.up, __instance.transform.rotation).GetComponent<ItemDrop>();
-                        //Debug.Log($"Trying to Pickup {itemDrop.gameObject.name}");
-                        //itemDrop.Pickup(humanoid);
-                        //Debug.Log($"Inventory {humanoid.GetInventory().GetAllItems().Select(i => i.m_shared.m_name).Join()}");
-
-                        Debug.Log($"Can add {coal.m_itemData.m_shared.m_name}:{humanoid.GetInventory().CanAddItem(coal.m_itemData)}");
-                        humanoid.GetInventory().AddItem(coal.m_itemData);
-                        Debug.Log("Inventory:");
-                        humanoid.GetInventory().Print();
-                        Debug.Log("----------");
-                        humanoid.EquipItem(coal.m_itemData);
-                        Debug.Log($"Is {coal.m_itemData.m_shared.m_name} equiped:{humanoid.IsItemEquiped(coal.m_itemData)}");
-                        Debug.Log($"Equiped item left:{humanoid.GetLeftItem()}, Equiped item right:{humanoid.GetRightItem()}");
-                        humanoid.ShowHandItems();
                         return false;
                     }
 
