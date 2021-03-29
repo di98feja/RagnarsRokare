@@ -108,7 +108,9 @@ namespace SlaveGreylings
                 m_container3 = new Dictionary<int, Container>();
                 m_container4 = new Dictionary<int, Container>();
                 m_container5 = new Dictionary<int, Container>();
-                m_fetchitems = new Dictionary<int, List<ItemDrop>>();
+                m_fetchitems = new Dictionary<int, List<string>>();
+                m_carrying = new Dictionary<int, ItemDrop>();
+                m_spottedItem = new Dictionary<int, ItemDrop>();
             }
             public static Dictionary<int, MaxStack<Smelter>> m_assignment;
 
@@ -118,7 +120,9 @@ namespace SlaveGreylings
             public static Dictionary<int, Container> m_container3;
             public static Dictionary<int, Container> m_container4;
             public static Dictionary<int, Container> m_container5;
-            public static Dictionary<int, List<ItemDrop>> m_fetchitems;
+            public static Dictionary<int, List<string>> m_fetchitems;
+            public static Dictionary<int, ItemDrop> m_carrying;
+            public static Dictionary<int, ItemDrop> m_spottedItem;
 
             private static Character m_attacker = null;
 
@@ -200,11 +204,75 @@ namespace SlaveGreylings
                 Dbgl("Unassigned ok");
                 if (m_assigned[instanceId])
                 {
-                    Invoke(__instance, "MoveTo", new object[] { dt, m_assignment[instanceId].Peek().m_outputPoint.position, 0, false });
-                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1)
+                    Smelter assignment = m_assignment[instanceId].Peek();
+                    if (!m_fetchitems[instanceId].Any() ||  m_carrying != null)
                     {
-                        m_assigned[instanceId] = false;
+                        Invoke(__instance, "MoveTo", new object[] { dt, assignment.m_outputPoint.position, 0, false });
+                        return false;
                     }
+                    
+                    if (!m_fetchitems[instanceId].Any() && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1)
+                    {
+                        Dbgl("fetchitem empty");
+                        int missingOre = assignment.m_maxOre - Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>();
+                        int missingFuel = assignment.m_maxFuel - Mathf.CeilToInt(assignment.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
+                        Debug.Log($"{missingOre} {missingFuel}");
+                        if (missingOre != 0)
+                        {
+                            foreach (Smelter.ItemConversion itemConversion in assignment.m_conversion)
+                            {
+                                string ore = itemConversion.m_from.m_itemData.m_shared.m_name;
+                                m_fetchitems[instanceId].Add(ore);
+                            }
+                        }
+                        if (missingFuel != 0)
+                        {
+                            string fuel =  assignment.m_fuelItem.m_itemData.m_shared.m_name;
+                            m_fetchitems[instanceId].Add(fuel);
+                        }
+                        return false;
+                    }
+                    
+                    if (m_fetchitems[instanceId].Any() && m_spottedItem[instanceId] == null)
+                    {
+                        //Search the ground
+                        Dbgl("fetchitem not empty");
+                        foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 20, LayerMask.GetMask(new string[] { "item" })))
+                        {
+                            if (collider?.attachedRigidbody)
+                            {
+                                ItemDrop item = collider.attachedRigidbody.GetComponent<ItemDrop>();
+                                if (item?.GetComponent<ZNetView>()?.IsValid() != true)
+                                    continue;
+
+                                string name = item.m_itemData.m_shared.m_name;
+                                if (m_fetchitems[instanceId].Contains(name))
+                                {
+                                    Debug.Log($"nearby item spotted: {name}");
+                                    m_spottedItem[instanceId] = item;
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (m_spottedItem[instanceId] != null)
+                    {
+                        Invoke(__instance, "MoveTo", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
+                        return false;
+                    }
+                    
+                    if (m_spottedItem[instanceId] != null && Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) <1)
+                    {
+                        m_spottedItem[instanceId] = null;
+                        m_fetchitems[instanceId].Clear();
+                        m_assigned[instanceId] = false;
+                        return false;
+                    }
+
+                    Debug.Log($"Assigned end"); 
+                    m_fetchitems[instanceId].Clear();
+                    m_assigned[instanceId] = false;
                     return false;
                 }
                 Dbgl("Assigned ok");
@@ -228,7 +296,10 @@ namespace SlaveGreylings
                 if (isNewInstance)
                 {
                     m_assignment.Add(instanceId, new MaxStack<Smelter>(4));
-                    m_assigned.Add(instance.GetInstanceID(), false);
+                    m_assigned.Add(instanceId, false);
+                    m_fetchitems.Add(instanceId, new List<string>());
+                    m_carrying.Add(instanceId, null);
+                    m_spottedItem.Add(instanceId, null);
                 }
                 return instanceId;
             }
