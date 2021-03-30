@@ -264,9 +264,6 @@ namespace SlaveGreylings
                     
                     if (m_spottedItem[instanceId] != null)
                     {
-                        m_spottedItem[instanceId] = null;
-                        m_fetchitems[instanceId].Clear();
-
                         var humanoid = ___m_character as Humanoid;
                         Debug.Log($"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
                         Debug.Log($"Can add {m_spottedItem[instanceId].m_itemData.m_shared.m_name}:{humanoid.GetInventory().CanAddItem(m_spottedItem[instanceId].m_itemData)}");
@@ -275,6 +272,9 @@ namespace SlaveGreylings
                         humanoid.GetInventory().Print();
                         Debug.Log("----------");
                         humanoid.EquipItem(m_spottedItem[instanceId].m_itemData);
+
+                        m_spottedItem[instanceId] = null;
+                        m_fetchitems[instanceId].Clear();
                         //m_assigned[instanceId] = false;
                         return false;
                     }
@@ -434,6 +434,15 @@ namespace SlaveGreylings
                 ___m_rightItem.m_equiped = true;
                 Debug.Log("Trying to show item in right hand");
                 ___m_visEquipment.SetRightItem(item.m_dropPrefab.name);
+                var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
+                Debug.Log($"rightHand transform:{rightHand}");
+                ___m_visEquipment.m_rightHand = rightHand;
+
+                Debug.Log($"Hash:{StringExtensionMethods.GetStableHashCode(item.m_dropPrefab.name)}");
+                //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
+
+                ___m_visEquipment.GetType().GetMethod("SetRightHandEquiped", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(___m_visEquipment, new object[] { StringExtensionMethods.GetStableHashCode(item.m_dropPrefab.name) });
+                ___m_visEquipment.GetType().GetMethod("UpdateLodgroup", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(___m_visEquipment, new object[] { });
                 return false;
             }
         }
