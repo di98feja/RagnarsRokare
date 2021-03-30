@@ -13,7 +13,7 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = true;
+        private static readonly bool isDebug = false;
 
         public static ConfigEntry<float> dropRange;
         public static ConfigEntry<float> containerRange;
@@ -167,6 +167,8 @@ namespace SlaveGreylings
                 {
                     Invoke(__instance, "Follow", new object[] { __instance.GetFollowTarget(), dt });
                     ___m_aiStatus = "Follow";
+                    m_fetchitems[instanceId].Clear();
+                    m_assigned[instanceId] = false;
                     return false;
                 }
                 Dbgl("Follow ok");
@@ -219,7 +221,7 @@ namespace SlaveGreylings
                         string name = GetPrefabName(m_carrying[instanceId].gameObject.name);
                         //string name = m_carrying[instanceId].m_itemData.m_shared.m_name;
 
-                        if (assignment.m_maxFuel > 0  && name == assignment.m_fuelItem.m_itemData.m_shared.m_name)
+                        if (assignment.m_maxFuel > 0  && m_carrying[instanceId].m_itemData.m_shared.m_name == assignment.m_fuelItem.m_itemData.m_shared.m_name)
                         {
                             Dbgl(" Fuel");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
@@ -236,6 +238,7 @@ namespace SlaveGreylings
                         }
                         humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId].m_itemData);
                         m_carrying[instanceId] = null;
+                        m_fetchitems[instanceId].Clear();
                         return false;
                     }
 
@@ -290,7 +293,7 @@ namespace SlaveGreylings
                         return false;
                     }
                     
-                    if (m_spottedItem[instanceId] != null)
+                    if (m_spottedItem[instanceId] != null && Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) < 1)
                     {
                         var humanoid = ___m_character as Humanoid;
                         Debug.Log($"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
@@ -300,6 +303,10 @@ namespace SlaveGreylings
                         humanoid.GetInventory().Print();
                         Debug.Log("----------");
                         humanoid.EquipItem(m_spottedItem[instanceId].m_itemData);
+                        if (m_spottedItem[instanceId].m_itemData.m_stack == 1)
+                            Destroy(m_spottedItem[instanceId].gameObject);
+                        else
+                            m_spottedItem[instanceId].m_itemData.m_stack--;
                         m_carrying[instanceId] = m_spottedItem[instanceId];
                         m_spottedItem[instanceId] = null;
                         m_fetchitems[instanceId].Clear();
