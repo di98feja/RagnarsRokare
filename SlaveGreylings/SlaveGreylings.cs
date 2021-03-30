@@ -13,7 +13,7 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = false;
+        private static readonly bool isDebug = true;
 
         public static ConfigEntry<float> dropRange;
         public static ConfigEntry<float> containerRange;
@@ -205,13 +205,41 @@ namespace SlaveGreylings
                 if (m_assigned[instanceId])
                 {
                     Smelter assignment = m_assignment[instanceId].Peek();
-                    if ((!m_fetchitems[instanceId].Any() ||  m_carrying != null) && m_spottedItem[instanceId] == null && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) > 1)
+                    if ((!m_fetchitems[instanceId].Any() ||  m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) > 1)
                     {
+                        Dbgl("Move To Smelter");
                         Invoke(__instance, "MoveTo", new object[] { dt, assignment.m_outputPoint.position, 0, false });
                         return false;
                     }
-                    
-                    if (!m_fetchitems[instanceId].Any())
+
+                    if (m_carrying[instanceId] != null && Vector3.Distance(___m_character.transform.position, assignment.m_outputPoint.position) < 1)
+                    {
+                        Dbgl("Unload to Smelter");
+                        var humanoid = ___m_character as Humanoid;
+                        string name = GetPrefabName(m_carrying[instanceId].gameObject.name);
+                        //string name = m_carrying[instanceId].m_itemData.m_shared.m_name;
+
+                        if (assignment.m_maxFuel > 0  && name == assignment.m_fuelItem.m_itemData.m_shared.m_name)
+                        {
+                            Dbgl(" Fuel");
+                            assignment.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+                        }
+                        foreach (Smelter.ItemConversion itemConversion in assignment.m_conversion)
+                        {
+                            string ore = itemConversion.m_from.m_itemData.m_shared.m_name;
+                            m_fetchitems[instanceId].Add(ore);
+                            if (m_fetchitems[instanceId].Contains(name));
+                            {
+                                Dbgl(" Ore");
+                                assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { name });
+                            }
+                        }
+                        humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId].m_itemData);
+                        m_carrying[instanceId] = null;
+                        return false;
+                    }
+
+                    if (!m_fetchitems[instanceId].Any() && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1)
                     {
                         Dbgl("fetchitem empty");
                         int missingOre = assignment.m_maxOre - Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>();
@@ -233,7 +261,7 @@ namespace SlaveGreylings
                         return false;
                     }
                     
-                    if (m_fetchitems[instanceId].Any() && m_spottedItem[instanceId] == null)
+                    if (m_fetchitems[instanceId].Any() && m_spottedItem[instanceId] == null && m_carrying[instanceId] == null)
                     {
                         //Search the ground
                         Dbgl("fetchitem not empty");
@@ -264,9 +292,6 @@ namespace SlaveGreylings
                     
                     if (m_spottedItem[instanceId] != null)
                     {
-                        m_spottedItem[instanceId] = null;
-                        m_fetchitems[instanceId].Clear();
-
                         var humanoid = ___m_character as Humanoid;
                         Debug.Log($"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
                         Debug.Log($"Can add {m_spottedItem[instanceId].m_itemData.m_shared.m_name}:{humanoid.GetInventory().CanAddItem(m_spottedItem[instanceId].m_itemData)}");
@@ -275,7 +300,9 @@ namespace SlaveGreylings
                         humanoid.GetInventory().Print();
                         Debug.Log("----------");
                         humanoid.EquipItem(m_spottedItem[instanceId].m_itemData);
-                        //m_assigned[instanceId] = false;
+                        m_carrying[instanceId] = m_spottedItem[instanceId];
+                        m_spottedItem[instanceId] = null;
+                        m_fetchitems[instanceId].Clear();
                         return false;
                     }
 
