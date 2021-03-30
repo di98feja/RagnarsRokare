@@ -230,7 +230,7 @@ namespace SlaveGreylings
                         {
                             string ore = itemConversion.m_from.m_itemData.m_shared.m_name;
                             m_fetchitems[instanceId].Add(ore);
-                            if (m_fetchitems[instanceId].Contains(name));
+                            if (m_fetchitems[instanceId].Contains(name))
                             {
                                 Dbgl(" Ore");
                                 assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { name });
