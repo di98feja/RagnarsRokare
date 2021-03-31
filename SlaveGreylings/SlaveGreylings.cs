@@ -13,7 +13,7 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = true;
+        private static readonly bool isDebug = false;
 
         public static ConfigEntry<float> dropRange;
         public static ConfigEntry<float> containerRange;
@@ -114,7 +114,7 @@ namespace SlaveGreylings
             }
             public static Dictionary<int, MaxStack<Smelter>> m_assignment;
 
-            public static Dictionary<int, bool>      m_assigned;
+            public static Dictionary<int, bool> m_assigned;
             public static Dictionary<int, Container> m_container1;
             public static Dictionary<int, Container> m_container2;
             public static Dictionary<int, Container> m_container3;
@@ -207,7 +207,7 @@ namespace SlaveGreylings
                 if (m_assigned[instanceId])
                 {
                     Smelter assignment = m_assignment[instanceId].Peek();
-                    if ((!m_fetchitems[instanceId].Any() ||  m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) > 1)
+                    if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) > 1)
                     {
                         Dbgl("Move To Smelter");
                         Invoke(__instance, "MoveTo", new object[] { dt, assignment.m_outputPoint.position, 0, false });
@@ -216,40 +216,45 @@ namespace SlaveGreylings
 
                     if (m_carrying[instanceId] != null && Vector3.Distance(___m_character.transform.position, assignment.m_outputPoint.position) < 1.5)
                     {
-                        Dbgl("Unload to Smelter");
+                        Dbgl("Unload to Smelter ->");
                         var humanoid = ___m_character as Humanoid;
-                        string name = GetPrefabName(m_carrying[instanceId].gameObject.name);
-                        //string name = m_carrying[instanceId].m_itemData.m_shared.m_name;
 
-                        if (assignment.m_maxFuel > 0  && m_carrying[instanceId].gameObject.name == assignment.m_fuelItem.gameObject.name)
+                        bool isCarryingFuel = assignment.m_maxFuel > 0 && m_carrying[instanceId].gameObject.name.StartsWith(assignment.m_fuelItem.gameObject.name);
+                        bool isCarryingMatchingOre = assignment.m_conversion.Any(c => m_carrying[instanceId].gameObject.name.StartsWith(c.m_from.gameObject.name));
+                        bool isNotFull = Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>() < assignment.m_maxOre;
+
+                        if (isCarryingFuel)
                         {
                             Dbgl(" Fuel");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+                            humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId].m_itemData);
                         }
-                        assignment.m_conversion.Any(c => c.m_from.gameObject.name == m_carrying[instanceId].gameObject.name)
-                        foreach (Smelter.ItemConversion itemConversion in assignment.m_conversion)
+                        else if (isCarryingMatchingOre && isNotFull)
                         {
-                            string ore = itemConversion.m_from.m_itemData.m_shared.m_name;
-                            m_fetchitems[instanceId].Add(ore);
-                            if (m_fetchitems[instanceId].Contains(name))
-                            {
-                                Dbgl(" Ore");
-                                assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { name });
-                            }
+                            Dbgl(" Ore");
+                            assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying[instanceId].gameObject.name) });
+                            humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId].m_itemData);
                         }
-                        humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId].m_itemData);
+                        else
+                        {
+                            Debug.Log($"Dropping {m_carrying[instanceId].gameObject.name} on the ground");
+                            humanoid.DropItem(humanoid.GetInventory(), m_carrying[instanceId].m_itemData, 1);
+                        }
+
                         humanoid.UnequipItem(m_carrying[instanceId].m_itemData, false);
                         m_carrying[instanceId] = null;
                         m_fetchitems[instanceId].Clear();
                         return false;
                     }
 
-                    if (!m_fetchitems[instanceId].Any() && Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1)
+                    bool isCloseToSmelter = Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().m_outputPoint.position) < 1.5;
+                    bool isEmptyHanded = !m_fetchitems[instanceId].Any();
+                    if (isEmptyHanded && isCloseToSmelter)
                     {
-                        Dbgl("fetchitem empty");
+                        Dbgl("Check what is missing in smelter");
                         int missingOre = assignment.m_maxOre - Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>();
                         int missingFuel = assignment.m_maxFuel - Mathf.CeilToInt(assignment.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
-                        Debug.Log($"{missingOre} {missingFuel}");
+                        Debug.Log($"Ore:{Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>()}/{assignment.m_maxOre}, Fuel:{Mathf.CeilToInt(assignment.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f))}/{assignment.m_maxFuel}");
                         if (missingOre != 0)
                         {
                             foreach (Smelter.ItemConversion itemConversion in assignment.m_conversion)
@@ -265,11 +270,11 @@ namespace SlaveGreylings
                         }
                         return false;
                     }
-                    
-                    if (m_fetchitems[instanceId].Any() && m_spottedItem[instanceId] == null && m_carrying[instanceId] == null)
+
+                    bool searchGroundForItemToPickup = m_fetchitems[instanceId].Any() && m_spottedItem[instanceId] == null && m_carrying[instanceId] == null;
+                    if (searchGroundForItemToPickup)
                     {
-                        //Search the ground
-                        Dbgl("fetchitem not empty");
+                        Dbgl("Search the ground for item to pickup");
                         foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 20, LayerMask.GetMask(new string[] { "item" })))
                         {
                             if (collider?.attachedRigidbody)
@@ -288,33 +293,47 @@ namespace SlaveGreylings
                             }
                         }
                     }
-                    
-                    if (m_spottedItem[instanceId] != null && Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) > 1)
-                    {
-                        Invoke(__instance, "MoveTo", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
-                        return false;
-                    }
-                    
-                    if (m_spottedItem[instanceId] != null && Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) < 1)
-                    {
-                        var humanoid = ___m_character as Humanoid;
-                        Dbgl($"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
-                        Dbgl($"Can add {m_spottedItem[instanceId].m_itemData.m_shared.m_name}:{humanoid.GetInventory().CanAddItem(m_spottedItem[instanceId].m_itemData)}");
-                        humanoid.PickupPrefab(m_spottedItem[instanceId].m_itemData.m_dropPrefab);
 
-                        humanoid.EquipItem(m_spottedItem[instanceId].m_itemData);
-                        if (m_spottedItem[instanceId].m_itemData.m_stack == 1)
-                            Destroy(m_spottedItem[instanceId].gameObject);
-                        else
-                            m_spottedItem[instanceId].m_itemData.m_stack--;
-                        Traverse.Create(m_spottedItem[instanceId]).Method("Save").GetValue();
-                        m_carrying[instanceId] = m_spottedItem[instanceId];
-                        m_spottedItem[instanceId] = null;
-                        m_fetchitems[instanceId].Clear();
-                        return false;
-                    }
+                    bool hasSpottedAnItem = m_spottedItem[instanceId] != null;
+                    if (hasSpottedAnItem)
+                    {
+                        bool isHeadingToPickupItem = Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) > 1.5;
+                        if (isHeadingToPickupItem)
+                        {
+                            Invoke(__instance, "MoveTo", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
+                            return false;
+                        }
+                        else // Pickup item from ground
+                        {
+                            var humanoid = ___m_character as Humanoid;
+                            Dbgl($"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
+                            Dbgl($"Can add {m_spottedItem[instanceId].m_itemData.m_shared.m_name}:{humanoid.GetInventory().CanAddItem(m_spottedItem[instanceId].m_itemData)}");
+                            humanoid.PickupPrefab(m_spottedItem[instanceId].m_itemData.m_dropPrefab);
 
-                    Dbgl($"Assigned end"); 
+                            humanoid.EquipItem(m_spottedItem[instanceId].m_itemData);
+                            if (m_spottedItem[instanceId].m_itemData.m_stack == 1)
+                            {
+                                if (___m_nview.GetZDO() == null)
+                                {
+                                    Destroy(m_spottedItem[instanceId].gameObject);
+                                }
+                                else
+                                {
+                                    ZNetScene.instance.Destroy(m_spottedItem[instanceId].gameObject);
+                                }
+                            }
+                            else
+                            {
+                                m_spottedItem[instanceId].m_itemData.m_stack--;
+                                Traverse.Create(m_spottedItem[instanceId]).Method("Save").GetValue();
+                            }
+                            m_carrying[instanceId] = m_spottedItem[instanceId];
+                            m_spottedItem[instanceId] = null;
+                            m_fetchitems[instanceId].Clear();
+                            return false;
+                        }
+                    }
+                    Dbgl($"Assigned end");
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
                     return false;
@@ -325,7 +344,7 @@ namespace SlaveGreylings
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 Dbgl("Random Movement ok");
                 return false;
-                
+
             }
 
             private static object Invoke(MonsterAI instance, string methodName, object[] argumentList)
@@ -359,7 +378,7 @@ namespace SlaveGreylings
                 return false;
             }
         }
-    
+
 
 
         [HarmonyPatch(typeof(Character), "Awake")]
