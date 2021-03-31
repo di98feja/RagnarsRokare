@@ -13,7 +13,7 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = false;
+        private static readonly bool isDebug = true;
 
         public static ConfigEntry<float> dropRange;
         public static ConfigEntry<float> containerRange;
@@ -214,18 +214,19 @@ namespace SlaveGreylings
                         return false;
                     }
 
-                    if (m_carrying[instanceId] != null && Vector3.Distance(___m_character.transform.position, assignment.m_outputPoint.position) < 1)
+                    if (m_carrying[instanceId] != null && Vector3.Distance(___m_character.transform.position, assignment.m_outputPoint.position) < 1.5)
                     {
                         Dbgl("Unload to Smelter");
                         var humanoid = ___m_character as Humanoid;
                         string name = GetPrefabName(m_carrying[instanceId].gameObject.name);
                         //string name = m_carrying[instanceId].m_itemData.m_shared.m_name;
 
-                        if (assignment.m_maxFuel > 0  && m_carrying[instanceId].m_itemData.m_shared.m_name == assignment.m_fuelItem.m_itemData.m_shared.m_name)
+                        if (assignment.m_maxFuel > 0  && m_carrying[instanceId].gameObject.name == assignment.m_fuelItem.gameObject.name)
                         {
                             Dbgl(" Fuel");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                         }
+                        assignment.m_conversion.Any(c => c.m_from.gameObject.name == m_carrying[instanceId].gameObject.name)
                         foreach (Smelter.ItemConversion itemConversion in assignment.m_conversion)
                         {
                             string ore = itemConversion.m_from.m_itemData.m_shared.m_name;
@@ -253,13 +254,13 @@ namespace SlaveGreylings
                         {
                             foreach (Smelter.ItemConversion itemConversion in assignment.m_conversion)
                             {
-                                string ore = itemConversion.m_from.m_itemData.m_shared.m_name;
+                                string ore = GetPrefabName(itemConversion.m_from.gameObject.name);
                                 m_fetchitems[instanceId].Add(ore);
                             }
                         }
                         if (missingFuel != 0)
                         {
-                            string fuel =  assignment.m_fuelItem.m_itemData.m_shared.m_name;
+                            string fuel = GetPrefabName(assignment.m_fuelItem.gameObject.name);
                             m_fetchitems[instanceId].Add(fuel);
                         }
                         return false;
@@ -277,7 +278,7 @@ namespace SlaveGreylings
                                 if (item?.GetComponent<ZNetView>()?.IsValid() != true)
                                     continue;
 
-                                string name = item.m_itemData.m_shared.m_name;
+                                string name = GetPrefabName(item.gameObject.name);
                                 if (m_fetchitems[instanceId].Contains(name))
                                 {
                                     Debug.Log($"nearby item spotted: {name}");
@@ -306,6 +307,7 @@ namespace SlaveGreylings
                             Destroy(m_spottedItem[instanceId].gameObject);
                         else
                             m_spottedItem[instanceId].m_itemData.m_stack--;
+                        Traverse.Create(m_spottedItem[instanceId]).Method("Save").GetValue();
                         m_carrying[instanceId] = m_spottedItem[instanceId];
                         m_spottedItem[instanceId] = null;
                         m_fetchitems[instanceId].Clear();
