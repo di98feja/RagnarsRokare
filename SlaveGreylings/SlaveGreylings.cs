@@ -185,6 +185,7 @@ namespace SlaveGreylings
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Follow");
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
+                    m_spottedItem[instanceId] = null;
                     return false;
                 }
                 if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
