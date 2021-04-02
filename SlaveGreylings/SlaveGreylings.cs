@@ -226,7 +226,7 @@ namespace SlaveGreylings
                     if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && !isCloseToAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(instanceId, "Move To Assignment");
-                        Invoke(__instance, "MoveTo", new object[] { dt, assignment.m_outputPoint.position, 0.5f, false });
+                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.m_outputPoint.position, 0.5f, false });
                         return false;
                     }
 
@@ -315,7 +315,7 @@ namespace SlaveGreylings
                         if (isHeadingToPickupItem)
                         {
                             ___m_aiStatus = UpdateAiStatus(instanceId, "Heading to pickup item");
-                            Invoke(__instance, "MoveTo", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
+                            Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
                             return false;
                         }
                         else // Pickup item from ground
@@ -417,6 +417,7 @@ namespace SlaveGreylings
                     {
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
+                        ai.m_randomMoveRange = 5;
                     }
                     else
                     {
@@ -442,17 +443,17 @@ namespace SlaveGreylings
             }
         }
 
-        public static Dictionary<int, string> NameDictionary { get; } = new Dictionary<int, string>();
-
         [HarmonyPatch(typeof(Character), "GetHoverName")]
         static class Character_GetHoverName_Patch
         {
             static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
             {
-                if (__instance.name.Contains("Greyling") && __instance.IsTamed() && NameDictionary.ContainsKey(__instance.GetInstanceID()))
+                string givenName = ___m_nview?.GetZDO()?.GetString("givenName");
+                if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
                 {
-                    Debug.Log("Getting name from NameDict");
-                    __result = NameDictionary[__instance.GetInstanceID()];
+                    
+                    Debug.Log("Using name from ZDO");
+                    __result = givenName;
                     return false;
                 }
                 else
@@ -476,21 +477,13 @@ namespace SlaveGreylings
 
             public string GetText()
             {
-                return NameDictionary.ContainsKey(m_characterInstanceId) ? NameDictionary[m_characterInstanceId] : "";
-
+                return m_nview.GetZDO().GetString("givenName");
             }
 
             public void SetText(string text)
             {
-                if (!NameDictionary.ContainsKey(m_characterInstanceId))
-                {
-                    NameDictionary.Add(m_characterInstanceId, text);
-                }
-                else
-                {
-                    NameDictionary[m_characterInstanceId] = text;
-                }
                 m_nview.ClaimOwnership();
+                m_nview.GetZDO().Set("givenName", text);
             }
         }
 
