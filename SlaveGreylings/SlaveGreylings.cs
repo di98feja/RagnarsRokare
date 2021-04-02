@@ -208,11 +208,19 @@ namespace SlaveGreylings
                 {
                     foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
                     {
-                        GameObject gameObject = collider.transform?.parent?.gameObject;
                         Smelter smelter = collider.transform?.parent?.gameObject.GetComponent<Smelter>();
-                        Fireplace fireplace = collider.transform?.parent?.gameObject.GetComponent<Fireplace>();
-
-                        if (smelter?.GetComponent<ZNetView>()?.IsValid() != true && fireplace?.GetComponent<ZNetView>()?.IsValid() != true)
+                        Fireplace fireplace = collider?.gameObject?.GetComponent<Fireplace>();
+                        Fireplace torch = collider.transform?.parent?.gameObject.GetComponent<Fireplace>();
+                        GameObject gameObject = null;
+                        if ((smelter?.GetComponent<ZNetView>()?.IsValid() ?? false) || (torch?.GetComponent<ZNetView>()?.IsValid() ?? false))
+                        {
+                            gameObject = collider.transform?.parent?.gameObject;
+                        }
+                        else if (fireplace?.GetComponent<ZNetView>()?.IsValid() ?? false)
+                        {
+                            gameObject = collider?.gameObject;
+                        }
+                        else 
                         {
                             continue;
                         }
@@ -544,7 +552,27 @@ namespace SlaveGreylings
                     __result = null;
                     return false;
                 }
-                Transform child = itemPrefab.transform.GetChild(0);
+                if (itemPrefab.transform.childCount == 0)
+                {
+                    __result = null;
+                    return false;
+                }
+
+                Transform child = null;
+                for (int i = 0; i < itemPrefab.transform.childCount; i++)
+                {
+                    child = itemPrefab.transform.GetChild(i);
+                    if (child.gameObject.name == "attach" || child.gameObject.name == "attach_skin")
+                    {
+                        break;
+                    }
+                }
+
+                if (null == child)
+                {
+                    child = itemPrefab.transform.GetChild(0);
+                }
+
                 var gameObject = child.gameObject;
                 if (gameObject == null)
                 {
@@ -553,7 +581,7 @@ namespace SlaveGreylings
                 }
                 GameObject gameObject2 = UnityEngine.Object.Instantiate(gameObject);
                 gameObject2.SetActive(value: true);
-                Collider[] componentsInChildren = __instance.GetComponentsInChildren<Collider>();
+                Collider[] componentsInChildren = gameObject2.GetComponentsInChildren<Collider>();
                 for (int i = 0; i < componentsInChildren.Length; i++)
                 {
                     componentsInChildren[i].enabled = false;
@@ -562,8 +590,8 @@ namespace SlaveGreylings
                 gameObject2.transform.localPosition = Vector3.zero;
                 gameObject2.transform.localRotation = Quaternion.identity;
 
-                //gameObject2.GetComponentInChildren<IEquipmentVisual>()?.Setup(variant);
-                return gameObject2;
+                __result = gameObject2;
+                return false;
             }
         }
 
