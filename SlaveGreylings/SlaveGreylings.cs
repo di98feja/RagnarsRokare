@@ -244,7 +244,7 @@ namespace SlaveGreylings
                         assignmentPosition = smelter.m_outputPoint.position;
                     }
                     
-                    bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignmentPosition) < 1.5f;
+                    bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignmentPosition) < 2.0f;
                     if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && !isCloseToAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.GetComponent<ZNetView>().GetPrefabName()} ");
@@ -255,27 +255,38 @@ namespace SlaveGreylings
                     if (m_carrying[instanceId] != null && isCloseToAssignment)
                     {
                         var humanoid = ___m_character as Humanoid;
+                        bool isCarryingFuel = false;
+                        bool isCarryingMatchingOre = false;
+                        bool OreisNotFull = false;
+                        bool FuelisNotFull = false;
 
-                        bool isCarryingFueltoSmelter = smelterAssignment && smelter.m_maxFuel > 0 && m_carrying[instanceId].m_dropPrefab.name == smelter.m_fuelItem.gameObject.name;
-                        bool isCarryingMatchingOretoSmelter = smelterAssignment && smelter.m_conversion.Any(c => m_carrying[instanceId].m_dropPrefab.name == c.m_from.gameObject.name);
-                        bool smelterOreisNotFull = Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>() < smelter.m_maxOre;
-                        bool smelterFuelisNotFull = Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < smelter.m_maxFuel;
-                        bool isCarryingFueltoFireplace = fireplaceAssignment && m_carrying[instanceId].m_dropPrefab.name == fireplace.m_fuelItem.gameObject.name;
-                        bool fireplaceisNotFull = Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < fireplace.m_maxFuel;
+                        if (smelterAssignment)
+                        {
+                            isCarryingFuel = smelterAssignment && smelter.m_maxFuel > 0 && m_carrying[instanceId].m_dropPrefab.name == smelter.m_fuelItem.gameObject.name;
+                            isCarryingMatchingOre = smelterAssignment && smelter.m_conversion.Any(c => m_carrying[instanceId].m_dropPrefab.name == c.m_from.gameObject.name);
+                            OreisNotFull = Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>() < smelter.m_maxOre;
+                            FuelisNotFull = Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < smelter.m_maxFuel;
+                        }
+                        
+                        if (fireplaceAssignment)
+                        {
+                            isCarryingFuel = fireplaceAssignment && m_carrying[instanceId].m_dropPrefab.name == fireplace.m_fuelItem.gameObject.name;
+                            FuelisNotFull = Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < fireplace.m_maxFuel;
+                        }
 
-                        if (isCarryingFueltoSmelter && smelterFuelisNotFull)
+                        if (smelterAssignment && isCarryingFuel && FuelisNotFull)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Fuel");
                             smelter.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
-                        else if (isCarryingFueltoFireplace && fireplaceisNotFull)
+                        else if (fireplaceAssignment && isCarryingFuel && FuelisNotFull)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Taking Care of the Fireplace");
-                            fireplace.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
+                            fireplace.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
-                        else if (isCarryingMatchingOretoSmelter && smelterOreisNotFull)
+                        else if (smelterAssignment && isCarryingMatchingOre && OreisNotFull)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Ore");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
