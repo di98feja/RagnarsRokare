@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace SlaveGreylings
 {
@@ -15,17 +16,7 @@ namespace SlaveGreylings
     {
         private static readonly bool isDebug = false;
 
-        public static ConfigEntry<float> dropRange;
-        public static ConfigEntry<float> containerRange;
-        public static ConfigEntry<string> fuelDisallowTypes;
-        public static ConfigEntry<string> oreDisallowTypes;
-        public static ConfigEntry<string> toggleKey;
-        public static ConfigEntry<string> toggleString;
-        public static ConfigEntry<bool> refuelStandingTorches;
-        public static ConfigEntry<bool> refuelWallTorches;
-        public static ConfigEntry<bool> refuelFirePits;
-        public static ConfigEntry<bool> isOn;
-        public static ConfigEntry<bool> modEnabled;
+        public static ConfigEntry<string> lastServerIPAddress;
 
         private static SlaveGreylings context;
 
@@ -38,20 +29,7 @@ namespace SlaveGreylings
         private void Awake()
         {
             context = this;
-            dropRange = Config.Bind<float>("General", "DropRange", 5f, "The maximum range to pull dropped fuel");
-            containerRange = Config.Bind<float>("General", "ContainerRange", 5f, "The maximum range to pull fuel from containers");
-            fuelDisallowTypes = Config.Bind<string>("General", "FuelDisallowTypes", "RoundLog,FineWood", "Types of item to disallow as fuel (i.e. anything that is consumed), comma-separated.");
-            oreDisallowTypes = Config.Bind<string>("General", "OreDisallowTypes", "RoundLog,FineWood", "Types of item to disallow as ore (i.e. anything that is transformed), comma-separated).");
-            toggleString = Config.Bind<string>("General", "ToggleString", "Auto Fuel: {0}", "Text to show on toggle. {0} is replaced with true/false");
-            toggleKey = Config.Bind<string>("General", "ToggleKey", "", "Key to toggle behaviour. Leave blank to disable the toggle key. Use https://docs.unity3d.com/Manual/ConventionalGameInput.html");
-            refuelStandingTorches = Config.Bind<bool>("General", "RefuelStandingTorches", true, "Refuel standing torches");
-            refuelWallTorches = Config.Bind<bool>("General", "RefuelWallTorches", true, "Refuel wall torches");
-            refuelFirePits = Config.Bind<bool>("General", "RefuelFirePits", true, "Refuel fire pits");
-            isOn = Config.Bind<bool>("General", "IsOn", true, "Behaviour is currently on or not");
-            modEnabled = Config.Bind<bool>("General", "Enabled", true, "Enable this mod");
-
-            if (!modEnabled.Value)
-                return;
+            lastServerIPAddress = Config.Bind<string>("General", "LastUsedServerIPAdress", "", "The last used IP adress of server");
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
@@ -220,7 +198,7 @@ namespace SlaveGreylings
                         {
                             gameObject = collider?.gameObject;
                         }
-                        else 
+                        else
                         {
                             continue;
                         }
@@ -251,7 +229,7 @@ namespace SlaveGreylings
                     {
                         assignmentPosition = smelter.m_outputPoint.position;
                     }
-                    
+
                     bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignmentPosition) < 2.0f;
                     if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && !isCloseToAssignment)
                     {
@@ -275,7 +253,7 @@ namespace SlaveGreylings
                             OreisNotFull = Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>() < smelter.m_maxOre;
                             FuelisNotFull = Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < smelter.m_maxFuel;
                         }
-                        
+
                         if (fireplaceAssignment)
                         {
                             isCarryingFuel = fireplaceAssignment && m_carrying[instanceId].m_dropPrefab.name == fireplace.m_fuelItem.gameObject.name;
@@ -517,6 +495,77 @@ namespace SlaveGreylings
                 }
             }
         }
+
+        [HarmonyPatch(typeof(ZNet), "OnNewConnection")]
+        static class ZNet_OnNewConnection_Patch
+        {
+            private static RectTransform m_connectingDialog;
+            private static RectTransform m_passwordDialog;
+            private static ZRpc m_tempPasswordRPC;
+            private static ZNet m_instance;
+
+            static void Postfix(ZNet __instance, ref ZNetPeer peer, ref RectTransform ___m_connectingDialog, ref RectTransform ___m_passwordDialog, ref ZRpc ___m_tempPasswordRPC)
+            {
+                Debug.Log("Trying to Autofill password");
+                peer.m_rpc.Register<bool>("ClientHandshake", RPC_ClientHandshake);
+                m_connectingDialog = ___m_connectingDialog;
+                m_passwordDialog = ___m_passwordDialog;
+                m_instance = __instance;
+            }
+            private static void RPC_ClientHandshake(ZRpc rpc, bool needPassword)
+            {
+                m_connectingDialog.gameObject.SetActive(value: false);
+                if (needPassword)
+                {
+                    m_passwordDialog.gameObject.SetActive(value: true);
+                    InputField componentInChildren = m_passwordDialog.GetComponentInChildren<InputField>();
+                    var args = Environment.GetCommandLineArgs();
+                    for (int i = 0; i < args.Length; i++)
+                    {
+                        if (args[i] == "pwd" && args.Length > i)
+                        {
+                            Debug.Log("Autofill password");
+                            m_passwordDialog.GetComponentInChildren<InputField>().text = args[i + 1];
+                        }
+                    }
+                    componentInChildren.ActivateInputField();
+                    m_passwordDialog.GetComponentInChildren<InputFieldSubmit>().m_onSubmit = (pwd) =>
+                    {
+                        if (m_tempPasswordRPC.IsConnected())
+                        {
+                            m_passwordDialog.gameObject.SetActive(value: false);
+                            Traverse.Create(m_instance).Method("SendPeerInfo", new object[] { m_tempPasswordRPC, pwd }).GetValue();
+                            m_tempPasswordRPC = null;
+                        }
+                    };
+                    m_tempPasswordRPC = rpc;
+                }
+                else
+                {
+                    Traverse.Create(m_instance).Method("SendPeerInfo", new object[] { rpc }).GetValue();
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(FejdStartup), "OnJoinIPOpen")]
+        static class FejdStartup_OnJoinIPStartup_Patch
+        {
+            static void Postfix(FejdStartup __instance, ref InputField ___m_joinIPAddress)
+            {
+                ___m_joinIPAddress.text = lastServerIPAddress.Value;
+            }
+        }
+
+        [HarmonyPatch(typeof(FejdStartup), "OnJoinIPConnect")]
+        static class FejdStartup_OnJoinIPConnect_Patch
+        {
+            static void Prefix(FejdStartup __instance, ref InputField ___m_joinIPAddress)
+            {
+                lastServerIPAddress.Value = ___m_joinIPAddress.text;
+            }
+        }
+
+
 
         class MyTextReceiver : TextReceiver
         {
