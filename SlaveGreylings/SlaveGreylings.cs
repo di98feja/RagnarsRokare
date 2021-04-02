@@ -163,11 +163,16 @@ namespace SlaveGreylings
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Follow");
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
+                    m_spottedItem[instanceId] = null;
                     return false;
                 }
                 if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
+                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().transform.position) < 5.0f)
+                    {
+                        m_assigned[instanceId] = false;
+                    }
                     return false;
                 }
                 if (!__instance.IsAlerted() && (bool)Invoke(__instance, "UpdateConsumeItem", new object[] { ___m_character as Humanoid, dt }))
@@ -202,10 +207,7 @@ namespace SlaveGreylings
                         {
                             continue;
                         }
-                        Debug.Log($"Game Object: {gameObject.GetComponent<ZNetView>().GetPrefabName()}");
-                        bool fireplaceAssignment = fireplace?.GetComponent<ZNetView>()?.IsValid() == true;
-                        bool smelterAssignment = smelter?.GetComponent<ZNetView>()?.IsValid() == true;
-                        if (gameObject.transform.position != null && (fireplaceAssignment || smelterAssignment) && !m_assignment[instanceId].Contains(gameObject))
+                        if (gameObject.transform.position != null && !m_assignment[instanceId].Contains(gameObject))
                         {
                             m_assignment[instanceId].Push(gameObject);
                             m_assigned[instanceId] = true;
@@ -310,10 +312,20 @@ namespace SlaveGreylings
                             string fuel = GetPrefabName(smelter.m_fuelItem.gameObject.name);
                             m_fetchitems[instanceId].Add(fuel);
                         }
+                        m_assigned[instanceId] = false;
                         return false;
                     }
                     if (isEmptyHanded && isCloseToAssignment && fireplaceAssignment)
                     {
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
+                        int missingFuel = Mathf.FloorToInt(fireplace.m_maxFuel - fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
+                        Debug.Log($"Fuel:{Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f))}/{fireplace.m_maxFuel}");
+                        if (missingFuel != 0)
+                        {
+                            string fuel = GetPrefabName(fireplace.m_fuelItem.gameObject.name);
+                            m_fetchitems[instanceId].Add(fuel);
+                        }
+                        m_assigned[instanceId] = false;
                         return false;
                     }
 
