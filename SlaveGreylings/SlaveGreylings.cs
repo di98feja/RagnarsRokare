@@ -160,7 +160,7 @@ namespace SlaveGreylings
                 if (__instance.IsSleeping())
                 {
                     Invoke(__instance, "UpdateSleep", new object[] { dt });
-                    Dbgl($"{__instance.GetInstanceID()} Sleep updated");
+                    Dbgl($"{___m_character.GetHoverName()}: Sleep updated");
                     return false;
                 }
 
@@ -502,11 +502,81 @@ namespace SlaveGreylings
                     ___m_visEquipment.m_rightHand = rightHand;
                 }
 
+                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(item.m_dropPrefab.name);
+                bool hasAttachPoint = HasAttachTransform(itemPrefab);
+                if (!hasAttachPoint)
+                {
+                    itemPrefab.transform.
+                }
                 ___m_rightItem = item;
                 ___m_rightItem.m_equiped = item != null;
                 ___m_visEquipment.SetRightItem(item?.m_dropPrefab?.name);
                 Debug.Log($"Set right item prefab to {item?.m_dropPrefab?.name}");
                 ___m_visEquipment.GetType().GetMethod("UpdateEquipmentVisuals", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(___m_visEquipment, new object[] { });
+                return false;
+            }
+
+            protected GameObject AttachItem(int itemHash, int variant, Transform joint, bool enableEquipEffects = true)
+            {
+                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(itemHash);
+                if (itemPrefab == null)
+                {
+                    ZLog.Log((object)("Missing attach item: " + itemHash + "  ob:" + base.gameObject.name + "  joint:" + (joint ? joint.name : "none")));
+                    return null;
+                }
+                GameObject gameObject = null;
+                int childCount = itemPrefab.transform.childCount;
+                for (int i = 0; i < childCount; i++)
+                {
+                    Transform child = itemPrefab.transform.GetChild(i);
+                    if (child.gameObject.name == "attach" || child.gameObject.name == "attach_skin")
+                    {
+                        gameObject = child.gameObject;
+                        break;
+                    }
+                }
+                if (gameObject == null)
+                {
+                    return null;
+                }
+                GameObject gameObject2 = UnityEngine.Object.Instantiate(gameObject);
+                gameObject2.SetActive(value: true);
+                CleanupInstance(gameObject2);
+                if (enableEquipEffects)
+                {
+                    EnableEquipedEffects(gameObject2);
+                }
+                if (gameObject.name == "attach_skin")
+                {
+                    gameObject2.transform.SetParent(m_bodyModel.transform.parent);
+                    gameObject2.transform.localPosition = Vector3.zero;
+                    gameObject2.transform.localRotation = Quaternion.identity;
+                    SkinnedMeshRenderer[] componentsInChildren = gameObject2.GetComponentsInChildren<SkinnedMeshRenderer>();
+                    foreach (SkinnedMeshRenderer obj in componentsInChildren)
+                    {
+                        obj.rootBone = m_bodyModel.rootBone;
+                        obj.bones = m_bodyModel.bones;
+                    }
+                }
+                else
+                {
+                    gameObject2.transform.SetParent(joint);
+                    gameObject2.transform.localPosition = Vector3.zero;
+                    gameObject2.transform.localRotation = Quaternion.identity;
+                }
+                gameObject2.GetComponentInChildren<IEquipmentVisual>()?.Setup(variant);
+                return gameObject2;
+            }
+            private static bool HasAttachTransform(GameObject itemPrefab)
+            {
+                for (int i = 0; i < itemPrefab.transform.childCount; i++)
+                {
+                    var childTransform = itemPrefab.transform.GetChild(i);
+                    if (childTransform.gameObject.name.Contains("attach"))
+                    {
+                        return true;
+                    }
+                }
                 return false;
             }
         }
@@ -525,7 +595,7 @@ namespace SlaveGreylings
                 string aiStatus = ___m_nview.GetZDO().GetString("aiStatus") ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
                 string str = Localization.instance.Localize(___m_character.GetHoverName());
                 str += Localization.instance.Localize(" ( $hud_tame, " + aiStatus + " )");
-                __result = str + Localization.instance.Localize("\n[<color=yellow><b>$KEY_Use</b></color>] $hud_pet");
+                __result = str + Localization.instance.Localize("\n[<color=yellow><b>$KEY_Use</b></color>] $hud_pet" + "\n[<color=yellow>Hold E</color>] to change name");
 
                 return false;
             }
