@@ -100,12 +100,14 @@ namespace SlaveGreylings
         [HarmonyPatch(typeof(MonsterAI), "UpdateAI")]
         static class MonsterAI_UpdateAI_Patch
         {
-            public static string UpdateAiStatus(int instanceId, string newStatus)
+            public static string UpdateAiStatus(ZNetView nview, string newStatus)
             {
-                if (m_aiStatus[instanceId] != newStatus)
+                string currentAiStatus = nview?.GetZDO()?.GetString("aiStatus");
+                if (currentAiStatus != newStatus)
                 {
-                    Debug.Log($"{instanceId}: {newStatus}");
-                    m_aiStatus[instanceId] = newStatus;
+                    string name = nview?.GetZDO()?.GetString("givenName");
+                    Debug.Log($"{name}: {newStatus}");
+                    nview.GetZDO().Set("aiStatus", newStatus);
                 }
                 return newStatus;
             }
@@ -172,30 +174,30 @@ namespace SlaveGreylings
                 if (___m_character.GetHealthPercentage() < ___m_fleeIfLowHealth && ___m_timeSinceHurt < 20f && m_attacker != null)
                 {
                     Invoke(__instance, "Flee", new object[] { dt, m_attacker.transform.position });
-                    ___m_aiStatus = UpdateAiStatus(instanceId, "Low health, flee");
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Low health, flee");
                     return false;
                 }
                 if ((bool)__instance.GetFollowTarget())
                 {
                     Invoke(__instance, "Follow", new object[] { __instance.GetFollowTarget(), dt });
-                    ___m_aiStatus = UpdateAiStatus(instanceId, "Follow");
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Follow");
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
                     return false;
                 }
                 if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
                 {
-                    ___m_aiStatus = UpdateAiStatus(instanceId, "Avoiding fire");
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
                     return false;
                 }
                 if (!__instance.IsAlerted() && (bool)Invoke(__instance, "UpdateConsumeItem", new object[] { ___m_character as Humanoid, dt }))
                 {
-                    ___m_aiStatus = UpdateAiStatus(instanceId, "Consume item");
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Consume item");
                     return false;
                 }
                 if (___m_tamable.IsHungry())
                 {
-                    ___m_aiStatus = UpdateAiStatus(instanceId, "Is hungry, no work a do");
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Is hungry, no work a do");
                     
                     return false;
                 }
@@ -211,7 +213,7 @@ namespace SlaveGreylings
                         {
                             m_assignment[instanceId].Push(smelter);
                             m_assigned[instanceId] = true;
-                            ___m_aiStatus = UpdateAiStatus(instanceId, "Doing assignment");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Doing assignment");
 
                             return false;
                         }
@@ -225,7 +227,7 @@ namespace SlaveGreylings
                     bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignment.m_outputPoint.position) < 1.5f;
                     if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && !isCloseToAssignment)
                     {
-                        ___m_aiStatus = UpdateAiStatus(instanceId, "Move To Assignment");
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Move To Assignment");
                         Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.m_outputPoint.position, 0.5f, false });
                         return false;
                     }
@@ -240,19 +242,19 @@ namespace SlaveGreylings
 
                         if (isCarryingFuel)
                         {
-                            ___m_aiStatus = UpdateAiStatus(instanceId, "Unload to Smelter -> Fuel");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Fuel");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
                         else if (isCarryingMatchingOre && isNotFull)
                         {
-                            ___m_aiStatus = UpdateAiStatus(instanceId, "Unload to Smelter -> Ore");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Ore");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
                         else
                         {
-                            ___m_aiStatus = UpdateAiStatus(instanceId, $"Dropping {m_carrying[instanceId].m_dropPrefab.name} on the ground");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Dropping {m_carrying[instanceId].m_dropPrefab.name} on the ground");
                             humanoid.DropItem(humanoid.GetInventory(), m_carrying[instanceId], 1);
                         }
 
@@ -265,7 +267,7 @@ namespace SlaveGreylings
                     bool isEmptyHanded = !m_fetchitems[instanceId].Any();
                     if (isEmptyHanded && isCloseToAssignment)
                     {
-                        ___m_aiStatus = UpdateAiStatus(instanceId, "Checking assignment for task");
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
                         int missingOre = assignment.m_maxOre - Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>();
                         int missingFuel = assignment.m_maxFuel - Mathf.CeilToInt(assignment.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
                         Debug.Log($"Ore:{Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>()}/{assignment.m_maxOre}, Fuel:{Mathf.CeilToInt(assignment.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f))}/{assignment.m_maxFuel}");
@@ -288,7 +290,7 @@ namespace SlaveGreylings
                     bool searchGroundForItemToPickup = m_fetchitems[instanceId].Any() && m_spottedItem[instanceId] == null && m_carrying[instanceId] == null;
                     if (searchGroundForItemToPickup)
                     {
-                        ___m_aiStatus = UpdateAiStatus(instanceId, "Search the ground for item to pickup");
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
                         foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 20, LayerMask.GetMask(new string[] { "item" })))
                         {
                             if (collider?.attachedRigidbody)
@@ -314,14 +316,14 @@ namespace SlaveGreylings
                         bool isHeadingToPickupItem = Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) > 2.5;
                         if (isHeadingToPickupItem)
                         {
-                            ___m_aiStatus = UpdateAiStatus(instanceId, "Heading to pickup item");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to pickup item");
                             Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
                             return false;
                         }
                         else // Pickup item from ground
                         {
                             var humanoid = ___m_character as Humanoid;
-                            ___m_aiStatus = UpdateAiStatus(instanceId, $"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
                             var pickedUpInstance = humanoid.PickupPrefab(m_spottedItem[instanceId].m_itemData.m_dropPrefab);
 
                             humanoid.GetInventory().Print();
@@ -349,13 +351,13 @@ namespace SlaveGreylings
                             return false;
                         }
                     }
-                    ___m_aiStatus = UpdateAiStatus(instanceId, $"Done with assignment");
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, $"Done with assignment");
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
                     return false;
                 }
 
-                ___m_aiStatus = UpdateAiStatus(instanceId, "Random movement");
+                ___m_aiStatus = UpdateAiStatus(___m_nview, "Random movement");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 return false;
             }
@@ -451,14 +453,12 @@ namespace SlaveGreylings
                 string givenName = ___m_nview?.GetZDO()?.GetString("givenName");
                 if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
                 {
-                    
-                    Debug.Log("Using name from ZDO");
                     __result = givenName;
                     return false;
                 }
                 else
                 {
-                    Debug.Log("Using default name");
+                    // Run original method
                     return true;
                 }
             }
@@ -466,12 +466,10 @@ namespace SlaveGreylings
 
         class MyTextReceiver : TextReceiver
         {
-            private readonly int m_characterInstanceId;
             private readonly ZNetView m_nview;
 
-            public MyTextReceiver(int characterInstanceId, ZNetView nview)
+            public MyTextReceiver(ZNetView nview)
             {
-                m_characterInstanceId = characterInstanceId;
                 this.m_nview = nview;
             }
 
@@ -512,8 +510,27 @@ namespace SlaveGreylings
                 return false;
             }
         }
+        [HarmonyPatch(typeof(Tameable), "GetHoverText")]
+        static class Tameable_GetHoverName_Patch
+        {
+            static bool Prefix(Tameable __instance, ref string __result, ZNetView ___m_nview, Character ___m_character)
+            {
+                if (!__instance.name.Contains("Greyling")) return true;
+                if (!___m_character.IsTamed()) return true;
+                if (!___m_nview.IsValid())
+                {
+                    __result = string.Empty;
+                    return false;
+                }
+                string aiStatus = ___m_nview.GetZDO().GetString("aiStatus") ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
+                string str = Localization.instance.Localize(___m_character.GetHoverName());
+                str += Localization.instance.Localize(" ( $hud_tame, " + aiStatus + " )");
+                __result = str + Localization.instance.Localize("\n[<color=yellow><b>$KEY_Use</b></color>] $hud_pet");
 
-        [HarmonyPatch(typeof(Tameable), "Interact")]
+                return false;
+            }
+        }
+                [HarmonyPatch(typeof(Tameable), "Interact")]
         static class Tameable_Interact_Patch
         {
             static bool Prefix(Tameable __instance, ref bool __result, Humanoid user, bool hold, ZNetView ___m_nview, Character ___m_character,
@@ -531,7 +548,7 @@ namespace SlaveGreylings
                 {
                     if (hold)
                     {
-                        TextInput.instance.RequestText(new MyTextReceiver(___m_character.GetInstanceID(), ___m_character.GetComponent<ZNetView>()), "Name", 15);
+                        TextInput.instance.RequestText(new MyTextReceiver(___m_character.GetComponent<ZNetView>()), "Name", 15);
                         __result = false;
                         return false;
                     }
