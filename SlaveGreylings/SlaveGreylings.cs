@@ -141,7 +141,7 @@ namespace SlaveGreylings
 
             private static Character m_attacker = null;
             private static List<string> m_fireplaces = new List<string>() { "fire_pit", "groundtorch", "walltorch" };
-            private static List<string> m_smelters = new List<string>() { "smelter", "charcoal_kiln"};
+            private static List<string> m_smelters = new List<string>() { "smelter", "charcoal_kiln" };
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
                 ref float ___m_timeSinceHurt, ref string ___m_aiStatus, ref Vector3 ___arroundPointTarget, ref float ___m_jumpInterval, ref float ___m_jumpTimer,
@@ -200,7 +200,7 @@ namespace SlaveGreylings
                 if (___m_tamable.IsHungry())
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Is hungry, no work a do");
-                    
+
                     return false;
                 }
 
@@ -243,7 +243,7 @@ namespace SlaveGreylings
                     {
                         assignmentPosition = smelter.m_outputPoint.position;
                     }
-                    
+
                     bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignmentPosition) < 1.5f;
                     if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && !isCloseToAssignment)
                     {
@@ -453,6 +453,7 @@ namespace SlaveGreylings
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
                         ai.m_randomMoveRange = 5;
+                        ai.m_consumeSearchRange = 50;
                     }
                     else
                     {
@@ -474,6 +475,7 @@ namespace SlaveGreylings
                     Dbgl($"{__instance.name} was tamed!");
                     __instance.m_consumeItems.Clear();
                     __instance.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
+                    __instance.m_consumeSearchRange = 50;
                 }
             }
         }
@@ -518,6 +520,42 @@ namespace SlaveGreylings
             }
         }
 
+        [HarmonyPatch(typeof(VisEquipment), "AttachItem")]
+        static class VisEquipment_AttachItem_Patch
+        {
+            public static bool Prefix(VisEquipment __instance, int itemHash, int variant, Transform joint, ref GameObject __result, ref SkinnedMeshRenderer ___m_bodyModel, bool enableEquipEffects = true)
+            {
+                if (!__instance.name.Contains("Greyling")) return true;
+
+                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(itemHash);
+                if (itemPrefab == null)
+                {
+                    __result = null;
+                    return false;
+                }
+                Transform child = itemPrefab.transform.GetChild(0);
+                var gameObject = child.gameObject;
+                if (gameObject == null)
+                {
+                    __result = null;
+                    return false;
+                }
+                GameObject gameObject2 = UnityEngine.Object.Instantiate(gameObject);
+                gameObject2.SetActive(value: true);
+                Collider[] componentsInChildren = __instance.GetComponentsInChildren<Collider>();
+                for (int i = 0; i < componentsInChildren.Length; i++)
+                {
+                    componentsInChildren[i].enabled = false;
+                }
+                gameObject2.transform.SetParent(joint);
+                gameObject2.transform.localPosition = Vector3.zero;
+                gameObject2.transform.localRotation = Quaternion.identity;
+
+                //gameObject2.GetComponentInChildren<IEquipmentVisual>()?.Setup(variant);
+                return gameObject2;
+            }
+        }
+
         [HarmonyPatch(typeof(Humanoid), "EquipItem")]
         static class Humanoid_EquipItem_Patch
         {
@@ -535,12 +573,6 @@ namespace SlaveGreylings
                     ___m_visEquipment.m_rightHand = rightHand;
                 }
 
-                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(item.m_dropPrefab.name);
-                bool hasAttachPoint = HasAttachTransform(itemPrefab);
-                if (!hasAttachPoint)
-                {
-                    itemPrefab.transform.
-                }
                 ___m_rightItem = item;
                 ___m_rightItem.m_equiped = item != null;
                 ___m_visEquipment.SetRightItem(item?.m_dropPrefab?.name);
@@ -549,57 +581,6 @@ namespace SlaveGreylings
                 return false;
             }
 
-            protected GameObject AttachItem(int itemHash, int variant, Transform joint, bool enableEquipEffects = true)
-            {
-                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(itemHash);
-                if (itemPrefab == null)
-                {
-                    ZLog.Log((object)("Missing attach item: " + itemHash + "  ob:" + base.gameObject.name + "  joint:" + (joint ? joint.name : "none")));
-                    return null;
-                }
-                GameObject gameObject = null;
-                int childCount = itemPrefab.transform.childCount;
-                for (int i = 0; i < childCount; i++)
-                {
-                    Transform child = itemPrefab.transform.GetChild(i);
-                    if (child.gameObject.name == "attach" || child.gameObject.name == "attach_skin")
-                    {
-                        gameObject = child.gameObject;
-                        break;
-                    }
-                }
-                if (gameObject == null)
-                {
-                    return null;
-                }
-                GameObject gameObject2 = UnityEngine.Object.Instantiate(gameObject);
-                gameObject2.SetActive(value: true);
-                CleanupInstance(gameObject2);
-                if (enableEquipEffects)
-                {
-                    EnableEquipedEffects(gameObject2);
-                }
-                if (gameObject.name == "attach_skin")
-                {
-                    gameObject2.transform.SetParent(m_bodyModel.transform.parent);
-                    gameObject2.transform.localPosition = Vector3.zero;
-                    gameObject2.transform.localRotation = Quaternion.identity;
-                    SkinnedMeshRenderer[] componentsInChildren = gameObject2.GetComponentsInChildren<SkinnedMeshRenderer>();
-                    foreach (SkinnedMeshRenderer obj in componentsInChildren)
-                    {
-                        obj.rootBone = m_bodyModel.rootBone;
-                        obj.bones = m_bodyModel.bones;
-                    }
-                }
-                else
-                {
-                    gameObject2.transform.SetParent(joint);
-                    gameObject2.transform.localPosition = Vector3.zero;
-                    gameObject2.transform.localRotation = Quaternion.identity;
-                }
-                gameObject2.GetComponentInChildren<IEquipmentVisual>()?.Setup(variant);
-                return gameObject2;
-            }
             private static bool HasAttachTransform(GameObject itemPrefab)
             {
                 for (int i = 0; i < itemPrefab.transform.childCount; i++)
@@ -633,7 +614,7 @@ namespace SlaveGreylings
                 return false;
             }
         }
-                [HarmonyPatch(typeof(Tameable), "Interact")]
+        [HarmonyPatch(typeof(Tameable), "Interact")]
         static class Tameable_Interact_Patch
         {
             static bool Prefix(Tameable __instance, ref bool __result, Humanoid user, bool hold, ZNetView ___m_nview, Character ___m_character,
