@@ -449,6 +449,7 @@ namespace SlaveGreylings
                     {
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
+                        ai.m_randomMoveRange = 5;
                     }
                     else
                     {
@@ -474,17 +475,17 @@ namespace SlaveGreylings
             }
         }
 
-        public static Dictionary<int, string> NameDictionary { get; } = new Dictionary<int, string>();
-
         [HarmonyPatch(typeof(Character), "GetHoverName")]
         static class Character_GetHoverName_Patch
         {
             static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
             {
-                if (__instance.name.Contains("Greyling") && __instance.IsTamed() && NameDictionary.ContainsKey(__instance.GetInstanceID()))
+                string givenName = ___m_nview?.GetZDO()?.GetString("givenName");
+                if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
                 {
-                    Debug.Log("Getting name from NameDict");
-                    __result = NameDictionary[__instance.GetInstanceID()];
+                    
+                    Debug.Log("Using name from ZDO");
+                    __result = givenName;
                     return false;
                 }
                 else
@@ -508,21 +509,13 @@ namespace SlaveGreylings
 
             public string GetText()
             {
-                return NameDictionary.ContainsKey(m_characterInstanceId) ? NameDictionary[m_characterInstanceId] : "";
-
+                return m_nview.GetZDO().GetString("givenName");
             }
 
             public void SetText(string text)
             {
-                if (!NameDictionary.ContainsKey(m_characterInstanceId))
-                {
-                    NameDictionary.Add(m_characterInstanceId, text);
-                }
-                else
-                {
-                    NameDictionary[m_characterInstanceId] = text;
-                }
                 m_nview.ClaimOwnership();
+                m_nview.GetZDO().Set("givenName", text);
             }
         }
 
