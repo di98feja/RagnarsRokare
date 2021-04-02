@@ -114,7 +114,7 @@ namespace SlaveGreylings
 
             static MonsterAI_UpdateAI_Patch()
             {
-                m_assignment = new Dictionary<int, MaxStack<Smelter>>();
+                m_assignment = new Dictionary<int, MaxStack<GameObject>>();
                 m_assigned = new Dictionary<int, bool>();
                 m_container1 = new Dictionary<int, Container>();
                 m_container2 = new Dictionary<int, Container>();
@@ -126,7 +126,7 @@ namespace SlaveGreylings
                 m_spottedItem = new Dictionary<int, ItemDrop>();
                 m_aiStatus = new Dictionary<int, string>();
             }
-            public static Dictionary<int, MaxStack<Smelter>> m_assignment;
+            public static Dictionary<int, MaxStack<GameObject>> m_assignment;
 
             public static Dictionary<int, bool> m_assigned;
             public static Dictionary<int, Container> m_container1;
@@ -140,6 +140,8 @@ namespace SlaveGreylings
             public static Dictionary<int, string> m_aiStatus;
 
             private static Character m_attacker = null;
+            private static List<string> m_fireplaces = new List<string>() { "fire_pit", "groundtorch", "walltorch" };
+            private static List<string> m_smelters = new List<string>() { "smelter", "charcoal_kiln"};
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
                 ref float ___m_timeSinceHurt, ref string ___m_aiStatus, ref Vector3 ___arroundPointTarget, ref float ___m_jumpInterval, ref float ___m_jumpTimer,
@@ -202,51 +204,78 @@ namespace SlaveGreylings
                     return false;
                 }
 
-                if (!m_assigned[instanceId] && ___m_character.IsTamed())
+                if (!m_assigned[instanceId])
                 {
                     foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
                     {
-                        Smelter smelter = collider.transform.parent?.gameObject?.GetComponent<Smelter>();
-                        if (smelter?.GetComponent<ZNetView>()?.IsValid() != true)
-                            continue;
-                        if (smelter?.transform?.position != null && !m_assignment[instanceId].Contains(smelter))
+                        GameObject gameObject = collider.transform?.parent?.gameObject;
+                        Smelter smelter = collider.transform?.parent?.gameObject.GetComponent<Smelter>();
+                        Fireplace fireplace = collider.transform?.parent?.gameObject.GetComponent<Fireplace>();
+
+                        if (smelter?.GetComponent<ZNetView>()?.IsValid() != true && fireplace?.GetComponent<ZNetView>()?.IsValid() != true)
                         {
-                            m_assignment[instanceId].Push(smelter);
+                            continue;
+                        }
+                        Debug.Log($"Game Object: {gameObject.GetComponent<ZNetView>().GetPrefabName()}");
+                        bool fireplaceAssignment = fireplace?.GetComponent<ZNetView>()?.IsValid() == true;
+                        bool smelterAssignment = smelter?.GetComponent<ZNetView>()?.IsValid() == true;
+                        if (gameObject.transform.position != null && (fireplaceAssignment || smelterAssignment) && !m_assignment[instanceId].Contains(gameObject))
+                        {
+                            m_assignment[instanceId].Push(gameObject);
                             m_assigned[instanceId] = true;
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Doing assignment");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Doing assignment: {gameObject.GetComponent<ZNetView>().GetPrefabName()}");
 
                             return false;
                         }
-
                     }
                     m_assignment[instanceId].Clear();
                 }
                 if (m_assigned[instanceId])
                 {
-                    Smelter assignment = m_assignment[instanceId].Peek();
-                    bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignment.m_outputPoint.position) < 1.5f;
+                    GameObject assignment = m_assignment[instanceId].Peek();
+                    Vector3 assignmentPosition = assignment.transform.position;
+                    Smelter smelter = assignment?.GetComponent<Smelter>();
+                    Fireplace fireplace = assignment?.GetComponent<Fireplace>();
+
+                    bool fireplaceAssignment = fireplace?.GetComponent<ZNetView>()?.IsValid() == true;
+                    bool smelterAssignment = smelter?.GetComponent<ZNetView>()?.IsValid() == true;
+                    if (smelterAssignment)
+                    {
+                        assignmentPosition = smelter.m_outputPoint.position;
+                    }
+                    
+                    bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignmentPosition) < 1.5f;
                     if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && !isCloseToAssignment)
                     {
-                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Move To Assignment");
-                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.m_outputPoint.position, 0.5f, false });
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.GetComponent<ZNetView>().GetPrefabName()} ");
+                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignmentPosition, 0.5f, false });
                         return false;
                     }
 
-                    if (m_carrying[instanceId] != null && Vector3.Distance(___m_character.transform.position, assignment.m_outputPoint.position) < 2.0f)
+                    if (m_carrying[instanceId] != null && isCloseToAssignment)
                     {
                         var humanoid = ___m_character as Humanoid;
 
-                        bool isCarryingFuel = assignment.m_maxFuel > 0 && m_carrying[instanceId].m_dropPrefab.name == assignment.m_fuelItem.gameObject.name;
-                        bool isCarryingMatchingOre = assignment.m_conversion.Any(c => m_carrying[instanceId].m_dropPrefab.name == c.m_from.gameObject.name);
-                        bool isNotFull = Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>() < assignment.m_maxOre;
+                        bool isCarryingFueltoSmelter = smelterAssignment && smelter.m_maxFuel > 0 && m_carrying[instanceId].m_dropPrefab.name == smelter.m_fuelItem.gameObject.name;
+                        bool isCarryingMatchingOretoSmelter = smelterAssignment && smelter.m_conversion.Any(c => m_carrying[instanceId].m_dropPrefab.name == c.m_from.gameObject.name);
+                        bool smelterOreisNotFull = Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>() < smelter.m_maxOre;
+                        bool smelterFuelisNotFull = Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < smelter.m_maxFuel;
+                        bool isCarryingFueltoFireplace = fireplaceAssignment && m_carrying[instanceId].m_dropPrefab.name == fireplace.m_fuelItem.gameObject.name;
+                        bool fireplaceisNotFull = Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < fireplace.m_maxFuel;
 
-                        if (isCarryingFuel)
+                        if (isCarryingFueltoSmelter && smelterFuelisNotFull)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Fuel");
-                            assignment.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+                            smelter.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
-                        else if (isCarryingMatchingOre && isNotFull)
+                        else if (isCarryingFueltoFireplace && fireplaceisNotFull)
+                        {
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Taking Care of the Fireplace");
+                            fireplace.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
+                            humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
+                        }
+                        else if (isCarryingMatchingOretoSmelter && smelterOreisNotFull)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Ore");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
@@ -265,15 +294,15 @@ namespace SlaveGreylings
                     }
 
                     bool isEmptyHanded = !m_fetchitems[instanceId].Any();
-                    if (isEmptyHanded && isCloseToAssignment)
+                    if (isEmptyHanded && isCloseToAssignment && smelterAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
-                        int missingOre = assignment.m_maxOre - Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>();
-                        int missingFuel = assignment.m_maxFuel - Mathf.CeilToInt(assignment.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
-                        Debug.Log($"Ore:{Traverse.Create(assignment).Method("GetQueueSize").GetValue<int>()}/{assignment.m_maxOre}, Fuel:{Mathf.CeilToInt(assignment.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f))}/{assignment.m_maxFuel}");
+                        int missingOre = smelter.m_maxOre - Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>();
+                        int missingFuel = smelter.m_maxFuel - Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
+                        Debug.Log($"Ore:{Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>()}/{smelter.m_maxOre}, Fuel:{Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f))}/{smelter.m_maxFuel}");
                         if (missingOre != 0)
                         {
-                            foreach (Smelter.ItemConversion itemConversion in assignment.m_conversion)
+                            foreach (Smelter.ItemConversion itemConversion in smelter.m_conversion)
                             {
                                 string ore = GetPrefabName(itemConversion.m_from.gameObject.name);
                                 m_fetchitems[instanceId].Add(ore);
@@ -281,9 +310,13 @@ namespace SlaveGreylings
                         }
                         if (missingFuel != 0)
                         {
-                            string fuel = GetPrefabName(assignment.m_fuelItem.gameObject.name);
+                            string fuel = GetPrefabName(smelter.m_fuelItem.gameObject.name);
                             m_fetchitems[instanceId].Add(fuel);
                         }
+                        return false;
+                    }
+                    if (isEmptyHanded && isCloseToAssignment && fireplaceAssignment)
+                    {
                         return false;
                     }
 
@@ -373,7 +406,7 @@ namespace SlaveGreylings
                 bool isNewInstance = !m_assignment.ContainsKey(instanceId);
                 if (isNewInstance)
                 {
-                    m_assignment.Add(instanceId, new MaxStack<Smelter>(4));
+                    m_assignment.Add(instanceId, new MaxStack<GameObject>(4));
                     m_assigned.Add(instanceId, false);
                     m_fetchitems.Add(instanceId, new List<string>());
                     m_carrying.Add(instanceId, null);
