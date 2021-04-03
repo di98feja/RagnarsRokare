@@ -188,6 +188,7 @@ namespace SlaveGreylings
                     return false;
                 }
 
+                // Here starts the fun.
                 if (!m_assigned[instanceId])
                 {
                     foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
@@ -221,6 +222,7 @@ namespace SlaveGreylings
                     ___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
                     return false;
                 }
+
                 if (m_assigned[instanceId])
                 {
                     var humanoid = ___m_character as Humanoid;
@@ -272,18 +274,21 @@ namespace SlaveGreylings
                             smelter.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
+
                         else if (fireplaceAssignment && isCarryingFuel && FuelisNotFull)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Taking Care of the Fireplace");
                             fireplace.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
+
                         else if (smelterAssignment && isCarryingMatchingOre && OreisNotFull)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Ore");
                             assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
+
                         else
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Dropping {m_carrying[instanceId].m_dropPrefab.name} on the ground");
@@ -702,256 +707,5 @@ namespace SlaveGreylings
                 return false;
             }
         }
-
-        //[HarmonyPatch(typeof(Fireplace), "UpdateFireplace")]
-        //static class Fireplace_UpdateFireplace_Patch
-        //{
-        //    static void Postfix(Fireplace __instance, ZNetView ___m_nview)
-        //    {
-        //        if (!Player.m_localPlayer || !isOn.Value || !___m_nview.IsOwner() || (__instance.name.Contains("groundtorch") && !refuelStandingTorches.Value) || (__instance.name.Contains("walltorch") && !refuelWallTorches.Value) || (__instance.name.Contains("fire_pit") && !refuelFirePits.Value))
-        //            return;
-
-        //        int maxFuel = (int)(__instance.m_maxFuel - Mathf.Ceil(___m_nview.GetZDO().GetFloat("fuel", 0f)));
-
-        //        List<Container> nearbyContainers = GetNearbyContainers(__instance.transform.position);
-
-        //        Vector3 position = __instance.transform.position + Vector3.up;
-        //        foreach (Collider collider in Physics.OverlapSphere(position, dropRange.Value, LayerMask.GetMask(new string[] { "item" })))
-        //        {
-        //            if (collider?.attachedRigidbody)
-        //            {
-        //                ItemDrop item = collider.attachedRigidbody.GetComponent<ItemDrop>();
-        //                //Dbgl($"nearby item name: {item.m_itemData.m_dropPrefab.name}");
-
-        //                if (item?.GetComponent<ZNetView>()?.IsValid() != true)
-        //                    continue;
-
-        //                string name = GetPrefabName(item.gameObject.name);
-
-        //                if (item.m_itemData.m_shared.m_name == __instance.m_fuelItem.m_itemData.m_shared.m_name && maxFuel > 0)
-        //                {
-
-        //                    if (fuelDisallowTypes.Value.Split(',').Contains(name))
-        //                    {
-        //                        //Dbgl($"ground has {item.m_itemData.m_dropPrefab.name} but it's forbidden by config");
-        //                        continue;
-        //                    }
-
-        //                    Dbgl($"auto adding fuel {name} from ground");
-
-        //                    int amount = Mathf.Min(item.m_itemData.m_stack, maxFuel);
-        //                    maxFuel -= amount;
-
-        //                    for (int i = 0; i < amount; i++)
-        //                    {
-        //                        if (item.m_itemData.m_stack <= 1)
-        //                        {
-        //                            if (___m_nview.GetZDO() == null)
-        //                                Destroy(item.gameObject);
-        //                            else
-        //                                ZNetScene.instance.Destroy(item.gameObject);
-        //                            ___m_nview.InvokeRPC("AddFuel", new object[] { });
-        //                            break;
-
-        //                        }
-
-        //                        item.m_itemData.m_stack--;
-        //                        ___m_nview.InvokeRPC("AddFuel", new object[] { });
-        //                        Traverse.Create(item).Method("Save").GetValue();
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        foreach (Container c in nearbyContainers)
-        //        {
-        //            if (__instance.m_fuelItem && maxFuel > 0)
-        //            {
-        //                ItemDrop.ItemData fuelItem = c.GetInventory().GetItem(__instance.m_fuelItem.m_itemData.m_shared.m_name);
-        //                if (fuelItem != null)
-        //                {
-        //                    maxFuel--;
-        //                    if (fuelDisallowTypes.Value.Split(',').Contains(fuelItem.m_dropPrefab.name))
-        //                    {
-        //                        //Dbgl($"container at {c.transform.position} has {item.m_stack} {item.m_dropPrefab.name} but it's forbidden by config");
-        //                        continue;
-        //                    }
-
-        //                    Dbgl($"container at {c.transform.position} has {fuelItem.m_stack} {fuelItem.m_dropPrefab.name}, taking one");
-
-        //                    ___m_nview.InvokeRPC("AddFuel", new object[] { });
-
-        //                    c.GetInventory().RemoveItem(__instance.m_fuelItem.m_itemData.m_shared.m_name, 1);
-        //                    typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(c, new object[] { });
-        //                    typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(c.GetInventory(), new object[] { });
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-        //[HarmonyPatch(typeof(Smelter), "FixedUpdate")]
-        //static class Smelter_FixedUpdate_Patch
-        //{
-        //    static void Postfix(Smelter __instance, ZNetView ___m_nview)
-        //    {
-        //        if (!Player.m_localPlayer || !isOn.Value || !___m_nview.IsOwner())
-        //            return;
-
-        //        int maxOre = __instance.m_maxOre - Traverse.Create(__instance).Method("GetQueueSize").GetValue<int>();
-        //        int maxFuel = __instance.m_maxFuel - Mathf.CeilToInt(___m_nview.GetZDO().GetFloat("fuel", 0f));
-
-
-        //        List<Container> nearbyContainers = GetNearbyContainers(__instance.transform.position);
-
-        //        Vector3 position = __instance.transform.position + Vector3.up;
-        //        foreach (Collider collider in Physics.OverlapSphere(position, dropRange.Value, LayerMask.GetMask(new string[] { "item" })))
-        //        {
-        //            if (collider?.attachedRigidbody)
-        //            {
-        //                ItemDrop item = collider.attachedRigidbody.GetComponent<ItemDrop>();
-        //                //Dbgl($"nearby item name: {item.m_itemData.m_dropPrefab.name}");
-
-        //                if (item?.GetComponent<ZNetView>()?.IsValid() != true)
-        //                    continue;
-
-        //                string name = GetPrefabName(item.gameObject.name);
-
-        //                foreach (Smelter.ItemConversion itemConversion in __instance.m_conversion)
-        //                {
-        //                    if (item.m_itemData.m_shared.m_name == itemConversion.m_from.m_itemData.m_shared.m_name && maxOre > 0)
-        //                    {
-
-        //                        if (oreDisallowTypes.Value.Split(',').Contains(name))
-        //                        {
-        //                            //Dbgl($"container at {c.transform.position} has {item.m_itemData.m_stack} {item.m_dropPrefab.name} but it's forbidden by config");
-        //                            continue;
-        //                        }
-
-        //                        Dbgl($"auto adding ore {name} from ground");
-
-        //                        int amount = Mathf.Min(item.m_itemData.m_stack, maxOre);
-        //                        maxOre -= amount;
-
-        //                        for (int i = 0; i < amount; i++)
-        //                        {
-        //                            if (item.m_itemData.m_stack <= 1)
-        //                            {
-        //                                if (___m_nview.GetZDO() == null)
-        //                                    Destroy(item.gameObject);
-        //                                else
-        //                                    ZNetScene.instance.Destroy(item.gameObject);
-        //                                ___m_nview.InvokeRPC("AddOre", new object[] { name });
-        //                                break;
-        //                            }
-
-        //                            item.m_itemData.m_stack--;
-        //                            ___m_nview.InvokeRPC("AddOre", new object[] { name });
-        //                            Traverse.Create(item).Method("Save").GetValue();
-        //                        }
-        //                    }
-        //                }
-
-        //                if (__instance.m_fuelItem && item.m_itemData.m_shared.m_name == __instance.m_fuelItem.m_itemData.m_shared.m_name && maxFuel > 0)
-        //                {
-
-        //                    if (fuelDisallowTypes.Value.Split(',').Contains(name))
-        //                    {
-        //                        //Dbgl($"ground has {item.m_itemData.m_dropPrefab.name} but it's forbidden by config");
-        //                        continue;
-        //                    }
-
-        //                    Dbgl($"auto adding fuel {name} from ground");
-
-        //                    int amount = Mathf.Min(item.m_itemData.m_stack, maxFuel);
-        //                    maxFuel -= amount;
-
-        //                    for (int i = 0; i < amount; i++)
-        //                    {
-        //                        if (item.m_itemData.m_stack <= 1)
-        //                        {
-        //                            if (___m_nview.GetZDO() == null)
-        //                                Destroy(item.gameObject);
-        //                            else
-        //                                ZNetScene.instance.Destroy(item.gameObject);
-        //                            ___m_nview.InvokeRPC("AddFuel", new object[] { });
-        //                            break;
-
-        //                        }
-
-        //                        item.m_itemData.m_stack--;
-        //                        ___m_nview.InvokeRPC("AddFuel", new object[] { });
-        //                        Traverse.Create(item).Method("Save").GetValue();
-        //                    }
-        //                }
-        //            }
-        //        }
-
-        //        foreach (Container c in nearbyContainers)
-        //        {
-        //            foreach (Smelter.ItemConversion itemConversion in __instance.m_conversion)
-        //            {
-        //                ItemDrop.ItemData oreItem = c.GetInventory().GetItem(itemConversion.m_from.m_itemData.m_shared.m_name);
-
-        //                if (oreItem != null && maxOre > 0)
-        //                {
-        //                    maxOre--;
-        //                    if (oreDisallowTypes.Value.Split(',').Contains(oreItem.m_dropPrefab.name))
-        //                        continue;
-
-        //                    Dbgl($"container at {c.transform.position} has {oreItem.m_stack} {oreItem.m_dropPrefab.name}, taking one");
-
-        //                    ___m_nview.InvokeRPC("AddOre", new object[] { oreItem.m_dropPrefab?.name });
-        //                    c.GetInventory().RemoveItem(itemConversion.m_from.m_itemData.m_shared.m_name, 1);
-        //                    typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(c, new object[] { });
-        //                    typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(c.GetInventory(), new object[] { });
-        //                }
-        //            }
-
-        //            if (__instance.m_fuelItem && maxFuel > 0)
-        //            {
-        //                ItemDrop.ItemData fuelItem = c.GetInventory().GetItem(__instance.m_fuelItem.m_itemData.m_shared.m_name);
-        //                if (fuelItem != null)
-        //                {
-        //                    maxFuel--;
-        //                    if (fuelDisallowTypes.Value.Split(',').Contains(fuelItem.m_dropPrefab.name))
-        //                    {
-        //                        //Dbgl($"container at {c.transform.position} has {item.m_stack} {item.m_dropPrefab.name} but it's forbidden by config");
-        //                        continue;
-        //                    }
-
-        //                    Dbgl($"container at {c.transform.position} has {fuelItem.m_stack} {fuelItem.m_dropPrefab.name}, taking one");
-
-        //                    ___m_nview.InvokeRPC("AddFuel", new object[] { });
-
-        //                    c.GetInventory().RemoveItem(__instance.m_fuelItem.m_itemData.m_shared.m_name, 1);
-        //                    typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(c, new object[] { });
-        //                    typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(c.GetInventory(), new object[] { });
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-        //[HarmonyPatch(typeof(Console), "InputText")]
-        //static class InputText_Patch
-        //{
-        //    static bool Prefix(Console __instance)
-        //    {
-        //        if (!modEnabled.Value)
-        //            return true;
-        //        string text = __instance.m_input.text;
-        //        if (text.ToLower().Equals("autofuel reset"))
-        //        {
-        //            context.Config.Reload();
-        //            context.Config.Save();
-
-        //            Traverse.Create(__instance).Method("AddString", new object[] { text }).GetValue();
-        //            Traverse.Create(__instance).Method("AddString", new object[] { "AutoFuel config reloaded" }).GetValue();
-        //            return false;
-        //        }
-        //        return true;
-        //    }
-        //}
     }
 }
