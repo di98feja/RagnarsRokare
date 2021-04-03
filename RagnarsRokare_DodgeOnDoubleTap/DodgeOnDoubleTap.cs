@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace RagnarsRokare_DodgeOnDoubleTap
 {
-	[BepInPlugin("RagnarsRokare.DodgeOnDoubleTap", "RagnarsRökare DodgeOnDoubleTapMod", "1.0.0")]
+	[BepInPlugin("RagnarsRokare.DodgeOnDoubleTap", "RagnarsRökare DodgeOnDoubleTapMod", "0.2")]
 	[BepInProcess("valheim.exe")]
     public class DodgeOnDoubleTap : BaseUnityPlugin
     {
@@ -152,7 +152,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
 				___m_lastJump = button;
 				bool flag5 = InventoryGui.IsVisible();
 				bool flag6 = (ZInput.GetButton("Crouch") || ZInput.GetButton("JoyCrouch")) && !flag5;
-				bool crouch = flag6 && ___m_lastCrouch;
+				bool crouch = flag6 && !___m_lastCrouch;
 				___m_lastCrouch = flag6;
 				bool button2 = ZInput.GetButton("AutoRun");
 				___m_character.SetControls(zero, attack, attackHold, secondaryAttack, block, blockHold, jump, crouch, run, button2);
