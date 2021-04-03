@@ -161,6 +161,7 @@ namespace SlaveGreylings
                 {
                     Invoke(__instance, "Follow", new object[] { __instance.GetFollowTarget(), dt });
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Follow");
+                    m_assignment[instanceId].Clear();
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
                     m_spottedItem[instanceId] = null;
@@ -169,7 +170,7 @@ namespace SlaveGreylings
                 if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
-                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().transform.position) < 5.0f)
+                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().transform.position) < 3.0f)
                     {
                         m_assigned[instanceId] = false;
                     }
@@ -212,14 +213,17 @@ namespace SlaveGreylings
                             m_assignment[instanceId].Push(gameObject);
                             m_assigned[instanceId] = true;
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Doing assignment: {gameObject.GetComponent<ZNetView>().GetPrefabName()}");
-
+                            m_fetchitems[instanceId].Clear();
+                            m_spottedItem[instanceId] = null;
                             return false;
                         }
                     }
-                    m_assignment[instanceId].Clear();
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
+                    return false;
                 }
                 if (m_assigned[instanceId])
                 {
+                    var humanoid = ___m_character as Humanoid;
                     GameObject assignment = m_assignment[instanceId].Peek();
                     Vector3 assignmentPosition = assignment.transform.position;
                     Smelter smelter = assignment?.GetComponent<Smelter>();
@@ -231,18 +235,18 @@ namespace SlaveGreylings
                     {
                         assignmentPosition = smelter.m_outputPoint.position;
                     }
-
+                    bool dontKnowWhattoFetch = !m_fetchitems[instanceId].Any();
+                    bool isCarryingItem = m_carrying[instanceId] != null;
                     bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignmentPosition) < 2.0f;
-                    if ((!m_fetchitems[instanceId].Any() || m_carrying[instanceId] != null) && m_spottedItem[instanceId] == null && !isCloseToAssignment)
+                    if (( dontKnowWhattoFetch || isCarryingItem) && !isCloseToAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.GetComponent<ZNetView>().GetPrefabName()} ");
                         Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignmentPosition, 0.5f, false });
                         return false;
                     }
-
-                    if (m_carrying[instanceId] != null && isCloseToAssignment)
+                                        
+                    if (isCarryingItem && isCloseToAssignment)
                     {
-                        var humanoid = ___m_character as Humanoid;
                         bool isCarryingFuel = false;
                         bool isCarryingMatchingOre = false;
                         bool OreisNotFull = false;
@@ -292,8 +296,7 @@ namespace SlaveGreylings
                         return false;
                     }
 
-                    bool isEmptyHanded = !m_fetchitems[instanceId].Any();
-                    if (isEmptyHanded && isCloseToAssignment && smelterAssignment)
+                    if (dontKnowWhattoFetch && isCloseToAssignment && smelterAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
                         int missingOre = smelter.m_maxOre - Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>();
@@ -306,16 +309,19 @@ namespace SlaveGreylings
                                 string ore = GetPrefabName(itemConversion.m_from.gameObject.name);
                                 m_fetchitems[instanceId].Add(ore);
                             }
+                            return false;
                         }
                         if (missingFuel != 0)
                         {
                             string fuel = GetPrefabName(smelter.m_fuelItem.gameObject.name);
                             m_fetchitems[instanceId].Add(fuel);
+                            return false;
                         }
                         m_assigned[instanceId] = false;
                         return false;
                     }
-                    if (isEmptyHanded && isCloseToAssignment && fireplaceAssignment)
+
+                    if (dontKnowWhattoFetch && isCloseToAssignment && fireplaceAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
                         int missingFuel = Mathf.FloorToInt(fireplace.m_maxFuel - fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
@@ -364,7 +370,6 @@ namespace SlaveGreylings
                         }
                         else // Pickup item from ground
                         {
-                            var humanoid = ___m_character as Humanoid;
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
                             var pickedUpInstance = humanoid.PickupPrefab(m_spottedItem[instanceId].m_itemData.m_dropPrefab);
 
@@ -393,8 +398,16 @@ namespace SlaveGreylings
                             return false;
                         }
                     }
+
                     ___m_aiStatus = UpdateAiStatus(___m_nview, $"Done with assignment");
+                    if (m_carrying[instanceId] != null)
+                    {
+                        humanoid.UnequipItem(m_carrying[instanceId], false);
+                        m_carrying[instanceId] = null;
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"Dropping unused item");
+                    }
                     m_fetchitems[instanceId].Clear();
+                    m_spottedItem[instanceId] = null;
                     m_assigned[instanceId] = false;
                     return false;
                 }

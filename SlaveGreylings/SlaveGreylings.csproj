@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SlaveGreylings</RootNamespace>
-    <AssemblyName>RagnarsRokare_SlaveGreylings</AssemblyName>
+    <AssemblyName>SlaveGreylings</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -74,7 +74,6 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
-xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y</PostBuildEvent>
+    <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)</PostBuildEvent>
   </PropertyGroup>
 </Project>
