@@ -24,7 +24,7 @@ This will allow you connect to the server without any typing.
 
 Built in is also an autosave that remembers the last server IP-adress entered into the connect dialog.
 
-The code can be found at 
+The code can be found at https://github.com/di98feja/RagnarsRokare
 
 We hope you find this little mod useful!
 // Barg and Morg
