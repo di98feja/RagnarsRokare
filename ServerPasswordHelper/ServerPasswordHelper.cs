@@ -2,10 +2,7 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -102,7 +99,5 @@ namespace ServerPasswordHelper
                 lastServerIPAddress.Value = ___m_joinIPAddress.text;
             }
         }
-
-
     }
 }
