@@ -15,8 +15,6 @@ namespace ServerPasswordHelper
 
         public static ConfigEntry<string> lastServerIPAddress;
 
-        private static SlaveGreylings context;
-
         public static void Dbgl(string str = "", bool pref = true)
         {
             if (isDebug)
@@ -25,7 +23,6 @@ namespace ServerPasswordHelper
 
         private void Awake()
         {
-            context = this;
             lastServerIPAddress = Config.Bind<string>("General", "LastUsedServerIPAdress", "", "The last used IP adress of server");
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
