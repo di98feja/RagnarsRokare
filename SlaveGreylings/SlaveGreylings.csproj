@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SlaveGreylings</RootNamespace>
-    <AssemblyName>SlaveGreylings</AssemblyName>
+    <AssemblyName>Ragnarsrokare_SlaveGreylings</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -58,7 +58,7 @@
       <HintPath>..\Libs\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Valheim\valheim_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>..\Libs\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\Libs\UnityEngine.UI.dll</HintPath>
@@ -74,6 +74,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)</PostBuildEvent>
+    <PostBuildEvent>
+      $(SolutionDir)pdb2mdb.exe "$(TargetPath)
+      xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y</PostBuildEvent>
   </PropertyGroup>
 </Project>
