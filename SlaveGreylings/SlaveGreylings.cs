@@ -14,11 +14,12 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
+        private const string GivenName = "RR_GivenName";
+        private const string AiStatus = "RR_AiStatus";
+
         private static readonly bool isDebug = false;
 
         public static ConfigEntry<string> lastServerIPAddress;
-
-        private static SlaveGreylings context;
 
         public static void Dbgl(string str = "", bool pref = true)
         {
@@ -28,7 +29,6 @@ namespace SlaveGreylings
 
         private void Awake()
         {
-            context = this;
             lastServerIPAddress = Config.Bind<string>("General", "LastUsedServerIPAdress", "", "The last used IP adress of server");
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
@@ -80,12 +80,12 @@ namespace SlaveGreylings
         {
             public static string UpdateAiStatus(ZNetView nview, string newStatus)
             {
-                string currentAiStatus = nview?.GetZDO()?.GetString("aiStatus");
+                string currentAiStatus = nview?.GetZDO()?.GetString(AiStatus);
                 if (currentAiStatus != newStatus)
                 {
-                    string name = nview?.GetZDO()?.GetString("givenName");
+                    string name = nview?.GetZDO()?.GetString(GivenName);
                     Debug.Log($"{name}: {newStatus}");
-                    nview.GetZDO().Set("aiStatus", newStatus);
+                    nview.GetZDO().Set(AiStatus, newStatus);
                 }
                 return newStatus;
             }
@@ -507,7 +507,7 @@ namespace SlaveGreylings
         {
             static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
             {
-                string givenName = ___m_nview?.GetZDO()?.GetString("givenName");
+                string givenName = ___m_nview?.GetZDO()?.GetString(GivenName);
                 if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
                 {
                     __result = givenName;
@@ -533,13 +533,13 @@ namespace SlaveGreylings
 
             public string GetText()
             {
-                return m_nview.GetZDO().GetString("givenName");
+                return m_nview.GetZDO().GetString(GivenName);
             }
 
             public void SetText(string text)
             {
                 m_nview.ClaimOwnership();
-                m_nview.GetZDO().Set("givenName", text);
+                m_nview.GetZDO().Set(GivenName, text);
             }
         }
 
@@ -649,7 +649,7 @@ namespace SlaveGreylings
                     __result = string.Empty;
                     return false;
                 }
-                string aiStatus = ___m_nview.GetZDO().GetString("aiStatus") ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
+                string aiStatus = ___m_nview.GetZDO().GetString(AiStatus) ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
                 string str = Localization.instance.Localize(___m_character.GetHoverName());
                 str += Localization.instance.Localize(" ( $hud_tame, " + aiStatus + " )");
                 __result = str + Localization.instance.Localize("\n[<color=yellow><b>$KEY_Use</b></color>] $hud_pet" + "\n[<color=yellow>Hold E</color>] to change name");
