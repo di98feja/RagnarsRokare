@@ -29,7 +29,21 @@ namespace RagnarsRokare_AutoPickupSelector
             return ObjectDB.instance.m_items
                 .Select(i => i.GetComponent<ItemDrop>())
                 .Where(i => i.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Material || i.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie)
-                .Where(i => i.m_itemData.m_shared.m_icons.Length > 0);
+                .Where(i => i.m_itemData.m_shared.m_icons.Length > 0)
+                .Where(i => IsKnownItem(i));
+        }
+
+        private static bool IsKnownItem(ItemDrop i)
+        {
+            if ((Traverse.Create(Player.m_localPlayer).Field("m_knownMaterial").GetValue() as HashSet<string>).Contains(i.m_itemData.m_shared.m_name))
+            {
+                return true;
+            }
+            if ((Traverse.Create(Player.m_localPlayer).Field("m_trophies").GetValue() as HashSet<string>).Contains(i.m_itemData.m_shared.m_name))
+            {
+                return true;
+            }
+            return false;
         }
 
         [HarmonyPatch(typeof(ObjectDB), "Awake")]
