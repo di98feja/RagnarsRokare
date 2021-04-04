@@ -46,6 +46,29 @@ namespace SlaveGreylings
             return result;
         }
 
+        public static T GetNearbyObject<T>(Vector3 center, string mask, IEnumerable<T> knownobjects = null ) where T : MonoBehaviour
+        {
+            T ClosestObject = null;
+                
+            foreach (Collider collider in Physics.OverlapSphere(center, 10, LayerMask.GetMask(new string[] { mask })))
+            {
+                T obj = collider.transform.parent?.parent?.gameObject?.GetComponent<T>();
+                if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
+                {
+                    continue;
+                }
+                if (knownobjects?.Contains(obj) ?? false)
+                {
+                    continue;
+                }
+                if (obj?.transform?.position != null && (obj.name.StartsWith("piece_chest") || obj.name.StartsWith("Container")) && (ClosestObject == null || Vector3.Distance(center, obj.transform.position) < Vector3.Distance(center, ClosestObject.transform.position) ))
+                {
+                    ClosestObject = obj;
+                }
+            }
+            return ClosestObject;
+        }
+
         [HarmonyPatch(typeof(BaseAI), "UpdateAI")]
         class BaseAI_UpdateAI_ReversePatch
         {
@@ -94,24 +117,17 @@ namespace SlaveGreylings
             {
                 m_assignment = new Dictionary<int, MaxStack<GameObject>>();
                 m_assigned = new Dictionary<int, bool>();
-                m_container1 = new Dictionary<int, Container>();
-                m_container2 = new Dictionary<int, Container>();
-                m_container3 = new Dictionary<int, Container>();
-                m_container4 = new Dictionary<int, Container>();
-                m_container5 = new Dictionary<int, Container>();
+                m_containers = new Dictionary<int, MaxStack<Container>>();
+                m_searchcontainer = new Dictionary<int, bool>();
                 m_fetchitems = new Dictionary<int, List<string>>();
                 m_carrying = new Dictionary<int, ItemDrop.ItemData>();
                 m_spottedItem = new Dictionary<int, ItemDrop>();
                 m_aiStatus = new Dictionary<int, string>();
             }
             public static Dictionary<int, MaxStack<GameObject>> m_assignment;
-
+            public static Dictionary<int, MaxStack<Container>> m_containers;
             public static Dictionary<int, bool> m_assigned;
-            public static Dictionary<int, Container> m_container1;
-            public static Dictionary<int, Container> m_container2;
-            public static Dictionary<int, Container> m_container3;
-            public static Dictionary<int, Container> m_container4;
-            public static Dictionary<int, Container> m_container5;
+            public static Dictionary<int, bool> m_searchcontainer;
             public static Dictionary<int, List<string>> m_fetchitems;
             public static Dictionary<int, ItemDrop.ItemData> m_carrying;
             public static Dictionary<int, ItemDrop> m_spottedItem;
@@ -189,9 +205,11 @@ namespace SlaveGreylings
                 }
 
                 // Here starts the fun.
+                Vector3 greylingPosition = ___m_character.transform.position;
+
                 if (!m_assigned[instanceId])
                 {
-                    foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 50, LayerMask.GetMask(new string[] { "piece" })))
+                    foreach (Collider collider in Physics.OverlapSphere(greylingPosition, 50, LayerMask.GetMask(new string[] { "piece" })))
                     {
                         Smelter smelter = collider.transform?.parent?.gameObject.GetComponent<Smelter>();
                         Fireplace fireplace = collider?.gameObject?.GetComponent<Fireplace>();
@@ -237,10 +255,10 @@ namespace SlaveGreylings
                     {
                         assignmentPosition = smelter.m_outputPoint.position;
                     }
-                    bool dontKnowWhattoFetch = !m_fetchitems[instanceId].Any();
+                    bool knowWhattoFetch = m_fetchitems[instanceId].Any();
                     bool isCarryingItem = m_carrying[instanceId] != null;
-                    bool isCloseToAssignment = Vector3.Distance(___m_character.transform.position, assignmentPosition) < 2.0f;
-                    if (( dontKnowWhattoFetch || isCarryingItem) && !isCloseToAssignment)
+                    bool isCloseToAssignment = Vector3.Distance(greylingPosition, assignmentPosition) < 2.0f;
+                    if ((!knowWhattoFetch || isCarryingItem) && !isCloseToAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.GetComponent<ZNetView>().GetPrefabName()} ");
                         Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignmentPosition, 0.5f, false });
@@ -301,7 +319,7 @@ namespace SlaveGreylings
                         return false;
                     }
 
-                    if (dontKnowWhattoFetch && isCloseToAssignment && smelterAssignment)
+                    if (!knowWhattoFetch && isCloseToAssignment && smelterAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
                         int missingOre = smelter.m_maxOre - Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>();
@@ -326,7 +344,7 @@ namespace SlaveGreylings
                         return false;
                     }
 
-                    if (dontKnowWhattoFetch && isCloseToAssignment && fireplaceAssignment)
+                    if (!knowWhattoFetch && isCloseToAssignment && fireplaceAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
                         int missingFuel = Mathf.FloorToInt(fireplace.m_maxFuel - fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
@@ -339,12 +357,13 @@ namespace SlaveGreylings
                         m_assigned[instanceId] = false;
                         return false;
                     }
-
-                    bool searchGroundForItemToPickup = m_fetchitems[instanceId].Any() && m_spottedItem[instanceId] == null && m_carrying[instanceId] == null;
-                    if (searchGroundForItemToPickup)
+                    
+                    bool hasSpottedAnItem = m_spottedItem[instanceId] != null;
+                    bool searchForItemToPickup = knowWhattoFetch && !hasSpottedAnItem && !isCarryingItem && !m_searchcontainer[instanceId];
+                    if (searchForItemToPickup)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
-                        foreach (Collider collider in Physics.OverlapSphere(___m_character.transform.position, 20, LayerMask.GetMask(new string[] { "item" })))
+                        foreach (Collider collider in Physics.OverlapSphere(greylingPosition, 20, LayerMask.GetMask(new string[] { "item" })))
                         {
                             if (collider?.attachedRigidbody)
                             {
@@ -361,12 +380,32 @@ namespace SlaveGreylings
                                 }
                             }
                         }
+                        var nearbyContainer = GetNearbyObject<Container>(greylingPosition, "piece", m_containers[instanceId]);
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Search for Chests");
+                        if (nearbyContainer != null)
+                        {
+                            m_containers[instanceId].Push(nearbyContainer);
+                            m_searchcontainer[instanceId] = true;
+                            return false;
+                        }
                     }
 
-                    bool hasSpottedAnItem = m_spottedItem[instanceId] != null;
+                    bool atContainer = !m_containers[instanceId].Any() && (Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 2.0f);
+                    if (m_searchcontainer[instanceId] && !atContainer && !m_containers[instanceId].Any())
+                    {
+                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_containers[instanceId].Peek().transform.position, 0.5f, false });
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Moving to Container");
+                    }
+                    if (m_searchcontainer[instanceId] && atContainer)
+                    {
+                        m_searchcontainer[instanceId] = false;
+                        m_containers[instanceId].Clear();
+                        m_assigned[instanceId] = false;
+                    }
+
                     if (hasSpottedAnItem)
                     {
-                        bool isHeadingToPickupItem = Vector3.Distance(___m_character.transform.position, m_spottedItem[instanceId].transform.position) > 2.5;
+                        bool isHeadingToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem[instanceId].transform.position) > 2.5;
                         if (isHeadingToPickupItem)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to pickup item");
@@ -434,7 +473,9 @@ namespace SlaveGreylings
                 if (isNewInstance)
                 {
                     m_assignment.Add(instanceId, new MaxStack<GameObject>(4));
+                    m_containers.Add(instanceId, new MaxStack<Container>(3));
                     m_assigned.Add(instanceId, false);
+                    m_searchcontainer.Add(instanceId, false);
                     m_fetchitems.Add(instanceId, new List<string>());
                     m_carrying.Add(instanceId, null);
                     m_spottedItem.Add(instanceId, null);
