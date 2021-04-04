@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace RagnarsRokare_DodgeOnDoubleTap
 {
-	[BepInPlugin("RagnarsRokare.DodgeOnDoubleTap", "RagnarsRökare DodgeOnDoubleTapMod", "0.2")]
+	[BepInPlugin("RagnarsRokare.DodgeOnDoubleTap", "RagnarsRökare DodgeOnDoubleTapMod", "0.3")]
 	[BepInProcess("valheim.exe")]
     public class DodgeOnDoubleTap : BaseUnityPlugin
     {

@@ -8,7 +8,7 @@ using UnityEngine.UI;
 
 namespace ServerPasswordHelper
 {
-    [BepInPlugin("RagnarsRokare.ServerPasswordHelper", "ServerPasswordHelper", "0.1")]
+    [BepInPlugin("RagnarsRokare.ServerPasswordHelper", "ServerPasswordHelper", "0.2")]
     public class SlaveGreylings : BaseUnityPlugin
     {
         private static readonly bool isDebug = false;
