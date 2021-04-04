@@ -14,6 +14,7 @@ namespace ServerPasswordHelper
         private static readonly bool isDebug = false;
 
         public static ConfigEntry<string> lastServerIPAddress;
+        public static ConfigEntry<int> NexusID;
 
         public static void Dbgl(string str = "", bool pref = true)
         {
@@ -24,6 +25,7 @@ namespace ServerPasswordHelper
         private void Awake()
         {
             lastServerIPAddress = Config.Bind<string>("General", "LastUsedServerIPAdress", "", "The last used IP adress of server");
+            NexusID = Config.Bind<int>("General", "NexusID", 862, "Nexus mod ID for updates");
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }

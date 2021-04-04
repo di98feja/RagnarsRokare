@@ -15,10 +15,12 @@ namespace RagnarsRokare_AutoPickupSelector
     {
         private readonly Harmony harmony = new Harmony("RagnarsRokare.AutoPickupSelector");
         public static ConfigEntry<string> AutoPickupBlockList;
+        public static ConfigEntry<int> NexusID;
 
         void Awake()
         {
             AutoPickupBlockList = Config.Bind("General", "AutoPickupBlockList", string.Empty);
+            NexusID = Config.Bind<int>("General", "NexusID", 868, "Nexus mod ID for updates");
             harmony.PatchAll();
         }
 

@@ -13,12 +13,14 @@ namespace RagnarsRokare_DodgeOnDoubleTap
         private readonly Harmony harmony = new Harmony("RagnarsRokare.DodgeOnDoubleTap");
 		public static ConfigEntry<int> DodgeTapHoldMax;
 		public static ConfigEntry<int> DodgeDoubleTapDelay;
+		public static ConfigEntry<int> NexusID;
 
 		void Awake()
         {
             harmony.PatchAll();
 			DodgeTapHoldMax = Config.Bind("General", "DodgeTapHoldMax", 200);
 			DodgeDoubleTapDelay = Config.Bind("General", "DodgeDoubleTapDelay", 300);
+			NexusID = Config.Bind<int>("General", "NexusID", 871, "Nexus mod ID for updates");
 		}
 
 		public enum DodgeDirection { None, Forward, Backwards, Left, Right };
