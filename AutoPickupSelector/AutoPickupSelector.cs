@@ -42,7 +42,6 @@ namespace RagnarsRokare_AutoPickupSelector
                     var blockedItemNames = AutoPickupBlockList.Value.Split(';');
                     foreach (var item in GetFilteredItemList())
                     {
-                        //Debug.Log($"Item:{item.GetComponent<ItemDrop>().name}, Type:{item.GetComponent<ItemDrop>().m_itemData.m_shared.m_itemType}");
                         item.m_autoPickup = !blockedItemNames.Any(v => v == item.name);
                     }
                 }
@@ -58,7 +57,7 @@ namespace RagnarsRokare_AutoPickupSelector
                 AutoPickupBlockList.Value = GetFilteredItemList()
                     .Where(i => i.m_autoPickup == false)
                     .Select(i => i.name)
-                    .Aggregate((list, name) => list + ";" + name);
+                    .Join(delimiter:";");
             }
         }
 
@@ -82,9 +81,6 @@ namespace RagnarsRokare_AutoPickupSelector
 
             private static IEnumerable<GameObject> CreateItemTiles(GameObject elementPrefab, RectTransform itemListRoot, float tileWidth, float tileBaseSize)
             {
-                //Debug.Log($"m_trophieListSpace:{tileWidth}");
-                //Debug.Log($"m_trophieListBaseSize:{tileBaseSize}");
-                //Debug.Log($"m_trophieListRoot:{itemListRoot.rect.width}x{itemListRoot.rect.height}");
                 var itemTiles = new List<GameObject>();
                 if (Player.m_localPlayer == null)
                 {
