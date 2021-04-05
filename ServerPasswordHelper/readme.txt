@@ -13,14 +13,13 @@ Usage:
 -Create a shortcut to the Valheim.exe and place it on your desktop or activity bar.
 -Edit the shortcut by right-clicking the shortcut and selecting Properties.
 -Add the command line argument "pwd" in the "Target" textbox after the valheim.exe itself:
- "C:\Steam\steamapps\common\Valheim\valheim.exe" pwd <myPassw0rd>
+ "C:\Steam\steamapps\common\Valheim\valheim.exe" +password <myPassw0rd>
 
 The password itself must follow the pwd-argument separated by a space.
 
 You can also add other standard arguments like:
-"C:\Steam\steamapps\common\Valheim\valheim.exe" +connect <serveradress:port> pwd <myPassw0rd>
+"C:\Steam\steamapps\common\Valheim\valheim.exe" +connect <serveradress:port> +password <myPassw0rd>
 This will allow you connect to the server without any typing.
-
 
 Built in is also an autosave that remembers the last server IP-adress entered into the connect dialog.
 

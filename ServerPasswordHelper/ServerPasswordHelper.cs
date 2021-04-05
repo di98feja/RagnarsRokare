@@ -8,19 +8,16 @@ using UnityEngine.UI;
 
 namespace ServerPasswordHelper
 {
-    [BepInPlugin("RagnarsRokare.ServerPasswordHelper", "ServerPasswordHelper", "0.2")]
+    [BepInProcess("valheim.exe")]
+    [BepInPlugin(ModId, ModName, ModVersion)]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = false;
+        public const string ModId = "RagnarsRokare.ServerPasswordHelper";
+        public const string ModName = "RagnarsRökare ServerPasswordHelper";
+        public const string ModVersion = "0.3";
 
         public static ConfigEntry<string> lastServerIPAddress;
         public static ConfigEntry<int> NexusID;
-
-        public static void Dbgl(string str = "", bool pref = true)
-        {
-            if (isDebug)
-                Debug.Log((pref ? typeof(SlaveGreylings).Namespace + " " : "") + str);
-        }
 
         private void Awake()
         {
@@ -38,9 +35,8 @@ namespace ServerPasswordHelper
             private static ZRpc m_tempPasswordRPC;
             private static ZNet m_instance;
 
-            static void Postfix(ZNet __instance, ref ZNetPeer peer, ref RectTransform ___m_connectingDialog, ref RectTransform ___m_passwordDialog, ref ZRpc ___m_tempPasswordRPC)
+            static void Postfix(ZNet __instance, ref ZNetPeer peer, ref RectTransform ___m_connectingDialog, ref RectTransform ___m_passwordDialog)
             {
-                Debug.Log("Trying to Autofill password");
                 peer.m_rpc.Register<bool>("ClientHandshake", RPC_ClientHandshake);
                 m_connectingDialog = ___m_connectingDialog;
                 m_passwordDialog = ___m_passwordDialog;
@@ -51,28 +47,37 @@ namespace ServerPasswordHelper
                 m_connectingDialog.gameObject.SetActive(value: false);
                 if (needPassword)
                 {
-                    m_passwordDialog.gameObject.SetActive(value: true);
-                    InputField componentInChildren = m_passwordDialog.GetComponentInChildren<InputField>();
                     var args = Environment.GetCommandLineArgs();
+                    string prefilledPassword = string.Empty;
                     for (int i = 0; i < args.Length; i++)
                     {
-                        if (args[i] == "pwd" && args.Length > i)
+                        if ((args[i].ToLower() == "pwd" || args[i].ToLower() == "+password") && args.Length > i+1)
                         {
-                            Debug.Log("Autofill password");
-                            m_passwordDialog.GetComponentInChildren<InputField>().text = args[i + 1];
+                            prefilledPassword = args[i + 1];
                         }
                     }
-                    componentInChildren.ActivateInputField();
-                    m_passwordDialog.GetComponentInChildren<InputFieldSubmit>().m_onSubmit = (pwd) =>
+                    if (string.IsNullOrEmpty(prefilledPassword))
                     {
-                        if (m_tempPasswordRPC.IsConnected())
+                        m_passwordDialog.gameObject.SetActive(value: true);
+                        InputField componentInChildren = m_passwordDialog.GetComponentInChildren<InputField>();
+                        componentInChildren.ActivateInputField();
+                        m_passwordDialog.GetComponentInChildren<InputFieldSubmit>().m_onSubmit = (pwd) =>
                         {
-                            m_passwordDialog.gameObject.SetActive(value: false);
-                            Traverse.Create(m_instance).Method("SendPeerInfo", new object[] { m_tempPasswordRPC, pwd }).GetValue();
-                            m_tempPasswordRPC = null;
-                        }
-                    };
-                    m_tempPasswordRPC = rpc;
+                            if (m_tempPasswordRPC.IsConnected())
+                            {
+                                m_passwordDialog.gameObject.SetActive(value: false);
+                                Traverse.Create(m_instance).Method("SendPeerInfo", new object[] { m_tempPasswordRPC, pwd }).GetValue();
+                                m_tempPasswordRPC = null;
+                            }
+                        };
+                        m_tempPasswordRPC = rpc;
+                    }
+                    else
+                    {
+                        Debug.Log("Autofill password");
+                        m_passwordDialog.gameObject.SetActive(value: false);
+                        Traverse.Create(m_instance).Method("SendPeerInfo", new object[] { rpc, prefilledPassword }).GetValue();
+                    }
                 }
                 else
                 {
