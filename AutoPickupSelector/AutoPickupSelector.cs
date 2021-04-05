@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace RagnarsRokare_AutoPickupSelector
 {
-    [BepInPlugin("RagnarsRokare.AutoPickupSelector", "RagnarsRökare AutoPickupSelector Mod", "0.3.0")]
+    [BepInPlugin("RagnarsRokare.AutoPickupSelector", "RagnarsRökare AutoPickupSelector Mod", "0.4.0")]
     [BepInProcess("valheim.exe")]
     public class RagnarsRokare : BaseUnityPlugin
     {
@@ -35,6 +35,7 @@ namespace RagnarsRokare_AutoPickupSelector
 
         private static bool IsKnownItem(ItemDrop i)
         {
+            if (Player.m_localPlayer == null) return true;
             if ((Traverse.Create(Player.m_localPlayer).Field("m_knownMaterial").GetValue() as HashSet<string>).Contains(i.m_itemData.m_shared.m_name))
             {
                 return true;
@@ -60,7 +61,6 @@ namespace RagnarsRokare_AutoPickupSelector
                     }
                 }
             }
-
         }
 
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.OnCloseTrophies))]
