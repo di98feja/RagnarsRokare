@@ -209,36 +209,16 @@ namespace SlaveGreylings
 
                 if (!m_assigned[instanceId])
                 {
-                    foreach (Collider collider in Physics.OverlapSphere(greylingPosition, 50, LayerMask.GetMask(new string[] { "piece" })))
+                    if (FindRandomNearbyAssignment(instanceId, greylingPosition))
                     {
-                        Smelter smelter = collider.transform?.parent?.gameObject.GetComponent<Smelter>();
-                        Fireplace fireplace = collider?.gameObject?.GetComponent<Fireplace>();
-                        Fireplace torch = collider.transform?.parent?.gameObject.GetComponent<Fireplace>();
-                        GameObject gameObject = null;
-                        if ((smelter?.GetComponent<ZNetView>()?.IsValid() ?? false) || (torch?.GetComponent<ZNetView>()?.IsValid() ?? false))
-                        {
-                            gameObject = collider.transform?.parent?.gameObject;
-                        }
-                        else if (fireplace?.GetComponent<ZNetView>()?.IsValid() ?? false)
-                        {
-                            gameObject = collider?.gameObject;
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                        if (gameObject.transform.position != null && !m_assignment[instanceId].Contains(gameObject))
-                        {
-                            m_assignment[instanceId].Push(gameObject);
-                            m_assigned[instanceId] = true;
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Doing assignment: {gameObject.GetComponent<ZNetView>().GetPrefabName()}");
-                            m_fetchitems[instanceId].Clear();
-                            m_spottedItem[instanceId] = null;
-                            return false;
-                        }
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"Doing assignment: {m_assignment[instanceId].Peek().GetComponent<ZNetView>().GetPrefabName()}");
+                        return false;
                     }
-                    ___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
-                    return false;
+                    else
+                    {
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
+                        return false;
+                    }
                 }
 
                 if (m_assigned[instanceId])
@@ -459,6 +439,37 @@ namespace SlaveGreylings
                 ___m_aiStatus = UpdateAiStatus(___m_nview, "Random movement");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 return false;
+            }
+
+            private static bool FindRandomNearbyAssignment(int instanceId, Vector3 greylingPosition)
+            {
+                foreach (Collider collider in Physics.OverlapSphere(greylingPosition, 50, LayerMask.GetMask(new string[] { "piece" })))
+                {
+                    Smelter smelter = collider.transform?.parent?.gameObject.GetComponent<Smelter>();
+                    Fireplace fireplace = collider?.gameObject?.GetComponent<Fireplace>();
+                    Fireplace torch = collider.transform?.parent?.gameObject.GetComponent<Fireplace>();
+                    GameObject gameObject = null;
+                    if ((smelter?.GetComponent<ZNetView>()?.IsValid() ?? false) || (torch?.GetComponent<ZNetView>()?.IsValid() ?? false))
+                    {
+                        gameObject = collider.transform?.parent?.gameObject;
+                    }
+                    else if (fireplace?.GetComponent<ZNetView>()?.IsValid() ?? false)
+                    {
+                        gameObject = collider?.gameObject;
+                    }
+                    else
+                    {
+                        continue;
+                    }
+                    if (gameObject.transform.position != null && !m_assignment[instanceId].Contains(gameObject))
+                    {
+                        m_assignment[instanceId].Push(gameObject);
+                        m_assigned[instanceId] = true;
+                        m_fetchitems[instanceId].Clear();
+                        m_spottedItem[instanceId] = null;
+                        return true;
+                    }
+                }
             }
 
             private static object Invoke(MonsterAI instance, string methodName, object[] argumentList)
