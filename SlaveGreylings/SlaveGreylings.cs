@@ -11,9 +11,14 @@ using UnityEngine.UI;
 
 namespace SlaveGreylings
 {
-    [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
+    [BepInPlugin(ModId, ModName, ModVersion)]
+    [BepInProcess("valheim.exe")]
     public class SlaveGreylings : BaseUnityPlugin
     {
+        public const string ModId = "RagnarsRokare.SlaveGreylings";
+        public const string ModName = "RagnarsRökare Slave greylings mod";
+        public const string ModVersion = "0.1";
+
         private const string GivenName = "RR_GivenName";
         private const string AiStatus = "RR_AiStatus";
 
@@ -127,21 +132,16 @@ namespace SlaveGreylings
             {
                 if (!___m_nview.IsOwner())
                 {
-                    return false;
-                }
-                if (!___m_character.IsTamed())
-                {
-                    return true;
-                }
-                if (!__instance.name.Contains("Greyling"))
-                {
                     return true;
                 }
                 if (__instance.IsSleeping())
                 {
-                    Invoke(__instance, "UpdateSleep", new object[] { dt });
-                    Dbgl($"{___m_character.GetHoverName()}: Sleep updated");
-                    return false;
+                    return true;
+                }
+                bool isNotATameGreyling = !(___m_character.IsTamed() && __instance.name.Contains("Greyling"));
+                if (isNotATameGreyling)
+                {
+                    return true;
                 }
 
                 BaseAI_UpdateAI_ReversePatch.UpdateAI(__instance, dt, ___m_nview, ref ___m_jumpInterval, ref ___m_jumpTimer, ref ___m_randomMoveUpdateTimer, ref ___m_timeSinceHurt, ref ___m_alerted);
@@ -464,7 +464,6 @@ namespace SlaveGreylings
             {
                 if (__instance.name.Contains("Greyling"))
                 {
-                    Debug.Log($"A {__instance.name} just spawned!");
                     var tameable = __instance.gameObject.GetComponent<Tameable>();
                     if (tameable == null)
                     {
@@ -486,7 +485,6 @@ namespace SlaveGreylings
                     {
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "SilverNecklace").FirstOrDefault());
-                        ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Ruby").FirstOrDefault());
                     }
                 }
             }
@@ -652,7 +650,7 @@ namespace SlaveGreylings
                 if (!___m_nview.IsValid())
                 {
                     __result = string.Empty;
-                    return false;
+                    return true;
                 }
                 string aiStatus = ___m_nview.GetZDO().GetString(AiStatus) ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
                 string str = Localization.instance.Localize(___m_character.GetHoverName());
@@ -673,9 +671,8 @@ namespace SlaveGreylings
                 if (!___m_nview.IsValid())
                 {
                     __result = false;
-                    return false;
+                    return true;
                 }
-                string hoverName = ___m_character.GetHoverName();
                 if (___m_character.IsTamed())
                 {
                     if (hold)
@@ -684,27 +681,8 @@ namespace SlaveGreylings
                         __result = false;
                         return false;
                     }
-
-                    if (Time.time - ___m_lastPetTime > 1f)
-                    {
-                        ___m_lastPetTime = Time.time;
-                        __instance.m_petEffect.Create(___m_character.GetCenterPoint(), Quaternion.identity);
-                        if (__instance.m_commandable)
-                        {
-                            typeof(Tameable).GetMethod("Command", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { user });
-                        }
-                        else
-                        {
-                            user.Message(MessageHud.MessageType.Center, hoverName + " $hud_tamelove");
-                        }
-                        __result = true;
-                        return false;
-                    }
-                    __result = false;
-                    return false;
                 }
-                __result = false;
-                return false;
+                return true;
             }
         }
     }
