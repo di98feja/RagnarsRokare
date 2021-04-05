@@ -46,10 +46,10 @@ namespace SlaveGreylings
             return result;
         }
 
-        public static T GetNearbyObject<T>(Vector3 center, string mask, IEnumerable<T> knownobjects = null ) where T : MonoBehaviour
+        public static T GetNearbyObject<T>(Vector3 center, string mask, IEnumerable<T> knownobjects = null) where T : MonoBehaviour
         {
             T ClosestObject = null;
-                
+
             foreach (Collider collider in Physics.OverlapSphere(center, 10, LayerMask.GetMask(new string[] { mask })))
             {
                 T obj = collider.transform.parent?.parent?.gameObject?.GetComponent<T>();
@@ -61,7 +61,7 @@ namespace SlaveGreylings
                 {
                     continue;
                 }
-                if (obj?.transform?.position != null && (obj.name.StartsWith("piece_chest") || obj.name.StartsWith("Container")) && (ClosestObject == null || Vector3.Distance(center, obj.transform.position) < Vector3.Distance(center, ClosestObject.transform.position) ))
+                if (obj?.transform?.position != null && (obj.name.StartsWith("piece_chest") || obj.name.StartsWith("Container")) && (ClosestObject == null || Vector3.Distance(center, obj.transform.position) < Vector3.Distance(center, ClosestObject.transform.position)))
                 {
                     ClosestObject = obj;
                 }
@@ -206,7 +206,6 @@ namespace SlaveGreylings
 
                 // Here starts the fun.
                 Vector3 greylingPosition = ___m_character.transform.position;
-
                 if (!m_assigned[instanceId])
                 {
                     if (FindRandomNearbyAssignment(instanceId, greylingPosition))
@@ -244,7 +243,7 @@ namespace SlaveGreylings
                         Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignmentPosition, 0.5f, false });
                         return false;
                     }
-                                        
+
                     if (isCarryingItem && isCloseToAssignment)
                     {
                         bool isCarryingFuel = false;
@@ -337,7 +336,7 @@ namespace SlaveGreylings
                         m_assigned[instanceId] = false;
                         return false;
                     }
-                    
+
                     bool hasSpottedAnItem = m_spottedItem[instanceId] != null;
                     bool searchForItemToPickup = knowWhattoFetch && !hasSpottedAnItem && !isCarryingItem && !m_searchcontainer[instanceId];
                     if (searchForItemToPickup)
@@ -443,8 +442,20 @@ namespace SlaveGreylings
 
             private static bool FindRandomNearbyAssignment(int instanceId, Vector3 greylingPosition)
             {
+                var pieceList = new List<Piece>();
+                Piece.GetAllPiecesInRadius(greylingPosition, 50f, pieceList);
+                var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName));
+                
+                // select random piece
+
+                // Create assignment
+
+                // return
+
+
                 foreach (Collider collider in Physics.OverlapSphere(greylingPosition, 50, LayerMask.GetMask(new string[] { "piece" })))
                 {
+
                     Smelter smelter = collider.transform?.parent?.gameObject.GetComponent<Smelter>();
                     Fireplace fireplace = collider?.gameObject?.GetComponent<Fireplace>();
                     Fireplace torch = collider.transform?.parent?.gameObject.GetComponent<Fireplace>();
@@ -470,6 +481,7 @@ namespace SlaveGreylings
                         return true;
                     }
                 }
+                return false;
             }
 
             private static object Invoke(MonsterAI instance, string methodName, object[] argumentList)
@@ -506,8 +518,6 @@ namespace SlaveGreylings
                 return false;
             }
         }
-
-
 
         [HarmonyPatch(typeof(Character), "Awake")]
         static class Character_Awake_Patch

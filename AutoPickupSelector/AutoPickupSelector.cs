@@ -46,7 +46,6 @@ namespace RagnarsRokare_AutoPickupSelector
                     }
                 }
             }
-
         }
 
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.OnCloseTrophies))]
