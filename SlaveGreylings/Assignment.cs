@@ -44,7 +44,11 @@ namespace SlaveGreylings
             new AssignmentType { Name = "Smelter", PieceName = "smelter", ComponentType = typeof(Smelter) },
             new AssignmentType { Name = "Kiln", PieceName = "charcoal_kiln", ComponentType = typeof(Smelter)},
             new AssignmentType { Name = "Fireplace", PieceName = "fire_pit", ComponentType = typeof(Fireplace)},
-            new AssignmentType { Name = "StandingWoodTorch", PieceName = "piece_groundtorch_wood", ComponentType = typeof(Fireplace)}
+            new AssignmentType { Name = "StandingWoodTorch", PieceName = "piece_groundtorch_wood", ComponentType = typeof(Fireplace)},
+            new AssignmentType { Name = "StandingIronTorch", PieceName = "piece_groundtorch", ComponentType = typeof(Fireplace)},
+            new AssignmentType { Name = "StandingGreenTorch", PieceName = "piece_groundtorch_green", ComponentType = typeof(Fireplace)},
+            new AssignmentType { Name = "WallTorch", PieceName = "piece_walltorch", ComponentType = typeof(Fireplace)},
+            new AssignmentType { Name = "Brazier", PieceName = "piece_brazierceiling01", ComponentType = typeof(Fireplace)},
         };
     }
 
