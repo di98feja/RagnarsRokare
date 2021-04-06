@@ -46,28 +46,6 @@ namespace SlaveGreylings
             return result;
         }
 
-        public static T GetNearbyObject<T>(Vector3 center, string mask, int range, IEnumerable<T> knownobjects = null) where T : MonoBehaviour
-        {
-            T ClosestObject = null;
-            foreach (Collider collider in Physics.OverlapSphere(center, range, LayerMask.GetMask(new string[] { mask })))
-            {
-                T obj = collider.transform.parent?.parent?.gameObject?.GetComponent<T>();
-                if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
-                {
-                    continue;
-                }
-                if (knownobjects?.Contains(obj) ?? false)
-                {
-                    continue;
-                }
-                if (obj?.transform?.position != null && (obj.name.StartsWith("piece_chest") || obj.name.StartsWith("Container")) && (ClosestObject == null || Vector3.Distance(center, obj.transform.position) < Vector3.Distance(center, ClosestObject.transform.position)))
-                {
-                    ClosestObject = obj;
-                }
-            }
-            return ClosestObject;
-        }
-
         [HarmonyPatch(typeof(BaseAI), "UpdateAI")]
         class BaseAI_UpdateAI_ReversePatch
         {
@@ -346,22 +324,12 @@ namespace SlaveGreylings
                     if (searchForItemToPickup)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
-                        foreach (Collider collider in Physics.OverlapSphere(greylingPosition, 20, LayerMask.GetMask(new string[] { "item" })))
+                        ItemDrop spottedItem = GetNearbyObject<ItemDrop>(greylingPosition, "item", m_fetchitems[instanceId], 20);
+                        if (spottedItem != null)
                         {
-                            if (collider?.attachedRigidbody)
-                            {
-                                ItemDrop item = collider.attachedRigidbody.GetComponent<ItemDrop>();
-                                if (item?.GetComponent<ZNetView>()?.IsValid() != true)
-                                    continue;
-
-                                string name = GetPrefabName(item.gameObject.name);
-                                if (m_fetchitems[instanceId].Contains(name))
-                                {
-                                    Debug.Log($"nearby item spotted: {name}");
-                                    m_spottedItem[instanceId] = item;
-                                    return false;
-                                }
-                            }
+                            Debug.Log($"nearby item spotted: {GetPrefabName(spottedItem.gameObject.name)}");
+                            m_spottedItem[instanceId] = spottedItem;
+                            return false;
                         }
                     }
                     
@@ -421,6 +389,36 @@ namespace SlaveGreylings
                 ___m_aiStatus = UpdateAiStatus(___m_nview, "Random movement");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 return false;
+            }
+
+            public static T GetNearbyObject<T>(Vector3 center, string mask, List<string> acceptedNames , int range = 10, IEnumerable<T> knownobjects = null) where T : MonoBehaviour
+            {
+                T ClosestObject = null;
+                foreach (Collider collider in Physics.OverlapSphere(center, range, LayerMask.GetMask(new string[] { mask })))
+                {
+                    T obj = collider.transform.parent?.parent?.gameObject?.GetComponent<T>();
+                    if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
+                    {
+                        obj = collider.transform.parent?.gameObject?.GetComponent<T>();
+                        if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
+                        {
+                            obj = collider.transform?.gameObject?.GetComponent<T>();
+                            if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
+                            {
+                                continue;
+                            }
+                        }
+                    }
+                    if (knownobjects?.Contains(obj) ?? false)
+                    {
+                        continue;
+                    }
+                    if (obj?.transform?.position != null && acceptedNames.Contains(GetPrefabName(obj.gameObject.name)) && (ClosestObject == null || Vector3.Distance(center, obj.transform.position) < Vector3.Distance(center, ClosestObject.transform.position)))
+                    {
+                        ClosestObject = obj;
+                    }
+                }
+                return ClosestObject;
             }
 
             private static bool FindRandomNearbyAssignment(int instanceId, Vector3 greylingPosition)
