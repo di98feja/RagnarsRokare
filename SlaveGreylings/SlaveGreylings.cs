@@ -114,7 +114,7 @@ namespace SlaveGreylings
 
             static MonsterAI_UpdateAI_Patch()
             {
-                m_assignment = new Dictionary<int, MaxStack<Piece>>();
+                m_assignment = new Dictionary<int, MaxStack<Assignment>>();
                 m_assigned = new Dictionary<int, bool>();
                 m_containers = new Dictionary<int, MaxStack<Container>>();
                 m_searchcontainer = new Dictionary<int, bool>();
@@ -123,7 +123,7 @@ namespace SlaveGreylings
                 m_spottedItem = new Dictionary<int, ItemDrop>();
                 m_aiStatus = new Dictionary<int, string>();
             }
-            public static Dictionary<int, MaxStack<Piece>> m_assignment;
+            public static Dictionary<int, MaxStack<Assignment>> m_assignment;
             public static Dictionary<int, MaxStack<Container>> m_containers;
             public static Dictionary<int, bool> m_assigned;
             public static Dictionary<int, bool> m_searchcontainer;
@@ -222,7 +222,8 @@ namespace SlaveGreylings
                 if (m_assigned[instanceId])
                 {
                     var humanoid = ___m_character as Humanoid;
-                    Piece assignment = m_assignment[instanceId].Peek();
+                    Assignment assignment = m_assignment[instanceId].Peek().gameObject?.AddComponent<Assignment>();
+
                     Vector3 assignmentPosition = assignment.transform.position;
                     Smelter smelter = assignment?.GetComponent<Smelter>();
                     Fireplace fireplace = assignment?.GetComponent<Fireplace>();
@@ -423,7 +424,7 @@ namespace SlaveGreylings
                 //Generate list of acceptable assignments
                 var pieceList = new List<Piece>();
                 Piece.GetAllPiecesInRadius(greylingPosition, 50f, pieceList);
-                var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName) && !m_assignment[instanceId].Contains(p));
+                var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName));
 
                 // no assignments detekted, return false
                 if (!allAssignablePieces.Any())
@@ -432,9 +433,9 @@ namespace SlaveGreylings
                 }
 
                 // select random piece
-                    var random = new System.Random();
+                var random = new System.Random();
                 int index = random.Next(allAssignablePieces.Count());
-                Piece randomAssignment = allAssignablePieces.ElementAt(index);
+                Assignment randomAssignment = allAssignablePieces.ElementAt(index).gameObject.AddComponent<Assignment>();
 
                 // Create assignment and return true
                 m_assignment[instanceId].Push(randomAssignment);
@@ -455,7 +456,7 @@ namespace SlaveGreylings
                 bool isNewInstance = !m_assignment.ContainsKey(instanceId);
                 if (isNewInstance)
                 {
-                    m_assignment.Add(instanceId, new MaxStack<Piece>(4));
+                    m_assignment.Add(instanceId, new MaxStack<Assignment>(4));
                     m_containers.Add(instanceId, new MaxStack<Container>(3));
                     m_assigned.Add(instanceId, false);
                     m_searchcontainer.Add(instanceId, false);
