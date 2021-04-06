@@ -310,16 +310,19 @@ namespace SlaveGreylings
                             {
                                 string ore = GetPrefabName(itemConversion.m_from.gameObject.name);
                                 m_fetchitems[instanceId].Add(ore);
+                                ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {ore} to search list");
                             }
-                            return false;
                         }
                         if (missingFuel != 0)
                         {
                             string fuel = GetPrefabName(smelter.m_fuelItem.gameObject.name);
                             m_fetchitems[instanceId].Add(fuel);
-                            return false;
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {fuel} to search list");
                         }
-                        m_assigned[instanceId] = false;
+                        if (missingFuel == 0 && missingOre == 0)
+                        {
+                            m_assigned[instanceId] = false;
+                        }
                         return false;
                     }
 
