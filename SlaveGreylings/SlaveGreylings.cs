@@ -185,7 +185,7 @@ namespace SlaveGreylings
                 if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
-                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().transform.position) < 3.0f)
+                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().transform.position) < 4.0f)
                     {
                         m_assigned[instanceId] = false;
                     }
@@ -335,6 +335,7 @@ namespace SlaveGreylings
                         {
                             string fuel = GetPrefabName(fireplace.m_fuelItem.gameObject.name);
                             m_fetchitems[instanceId].Add(fuel);
+                            return false;
                         }
                         m_assigned[instanceId] = false;
                         return false;
