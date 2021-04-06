@@ -160,10 +160,10 @@ namespace SlaveGreylings
                     m_spottedItem[instanceId] = null;
                     return false;
                 }
-                if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().transform.position))
+                if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().Position))
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
-                    if (Vector3.Distance(___m_character.transform.position, m_assignment[instanceId].Peek().transform.position) < 4.0f)
+                    if (m_assignment[instanceId].Peek().IsClose(___m_character.transform.position))
                     {
                         m_assigned[instanceId] = false;
                     }
@@ -187,7 +187,7 @@ namespace SlaveGreylings
                 {
                     if (FindRandomNearbyAssignment(instanceId, greylingPosition))
                     {
-                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"Doing assignment: {m_assignment[instanceId].Peek().GetComponent<ZNetView>().GetPrefabName()}");
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"Doing assignment: {m_assignment[instanceId].Peek().TypeOfAssignment.Name}");
                         return false;
                     }
                     else
@@ -200,70 +200,43 @@ namespace SlaveGreylings
                 if (m_assigned[instanceId])
                 {
                     var humanoid = ___m_character as Humanoid;
-                    Assignment assignment = m_assignment[instanceId].Peek().gameObject?.AddComponent<Assignment>();
-
-                    Vector3 assignmentPosition = assignment.transform.position;
-                    Smelter smelter = assignment?.GetComponent<Smelter>();
-                    Fireplace fireplace = assignment?.GetComponent<Fireplace>();
-
-                    bool fireplaceAssignment = fireplace?.GetComponent<ZNetView>()?.IsValid() == true;
-                    bool smelterAssignment = smelter?.GetComponent<ZNetView>()?.IsValid() == true;
-                    if (smelterAssignment)
+                    Assignment assignment = m_assignment[instanceId].Peek();
+                    bool assignmentIsInvalid = assignment?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
+                    if (assignmentIsInvalid)
                     {
-                        assignmentPosition = smelter.m_outputPoint.position;
-                    }
-                    bool knowWhattoFetch = m_fetchitems[instanceId].Any();
-                    bool isCarryingItem = m_carrying[instanceId] != null;
-                    bool isCloseToAssignment = Vector3.Distance(greylingPosition, assignmentPosition) < 2.0f;
-                    if ((!knowWhattoFetch || isCarryingItem) && !isCloseToAssignment)
-                    {
-                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.GetComponent<ZNetView>().GetPrefabName()} ");
-                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignmentPosition, 0.5f, false });
+                        m_assignment[instanceId].Pop();
+                        m_assigned[instanceId] = false;
                         return false;
                     }
 
-                    if (isCarryingItem && isCloseToAssignment)
+                    bool knowWhattoFetch = m_fetchitems[instanceId].Any();
+                    bool isCarryingItem = m_carrying[instanceId] != null;
+                    if ((!knowWhattoFetch || isCarryingItem) && !assignment.IsClose(greylingPosition))
                     {
-                        bool isCarryingFuel = false;
-                        bool isCarryingMatchingOre = false;
-                        bool OreisNotFull = false;
-                        bool FuelisNotFull = false;
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
+                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, 0.5f, false });
+                        return false;
+                    }
 
-                        if (smelterAssignment)
-                        {
-                            isCarryingFuel = smelterAssignment && smelter.m_maxFuel > 0 && m_carrying[instanceId].m_dropPrefab.name == smelter.m_fuelItem.gameObject.name;
-                            isCarryingMatchingOre = smelterAssignment && smelter.m_conversion.Any(c => m_carrying[instanceId].m_dropPrefab.name == c.m_from.gameObject.name);
-                            OreisNotFull = Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>() < smelter.m_maxOre;
-                            FuelisNotFull = Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < smelter.m_maxFuel;
-                        }
+                    if (isCarryingItem && assignment.IsClose(greylingPosition))
+                    {
+                        var needFuel = assignment.NeedFuel;
+                        var needOre = assignment.NeedOre;
+                        bool isCarryingFuel = m_carrying[instanceId].m_dropPrefab.name == needFuel;
+                        bool isCarryingMatchingOre = needOre.Any(c => m_carrying[instanceId].m_dropPrefab.name == c);
 
-                        if (fireplaceAssignment)
-                        {
-                            isCarryingFuel = fireplaceAssignment && m_carrying[instanceId].m_dropPrefab.name == fireplace.m_fuelItem.gameObject.name;
-                            FuelisNotFull = Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) < fireplace.m_maxFuel;
-                        }
-
-                        if (smelterAssignment && isCarryingFuel && FuelisNotFull)
-                        {
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Fuel");
-                            smelter.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+                        if (isCarryingFuel)
+                        { 
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Unload to {assignment.TypeOfAssignment.Name} -> Fuel");
+                            assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
-
-                        else if (fireplaceAssignment && isCarryingFuel && FuelisNotFull)
+                        else if (isCarryingMatchingOre)
                         {
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Taking Care of the Fireplace");
-                            fireplace.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Unload to {assignment.TypeOfAssignment.Name} -> Ore");
+                            assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
                         }
-
-                        else if (smelterAssignment && isCarryingMatchingOre && OreisNotFull)
-                        {
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Unload to Smelter -> Ore");
-                            assignment.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying[instanceId].m_dropPrefab.name) });
-                            humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
-                        }
-
                         else
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Dropping {m_carrying[instanceId].m_dropPrefab.name} on the ground");
@@ -276,46 +249,26 @@ namespace SlaveGreylings
                         return false;
                     }
 
-                    if (!knowWhattoFetch && isCloseToAssignment && smelterAssignment)
+                    if (!knowWhattoFetch && assignment.IsClose(greylingPosition))
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
-                        int missingOre = smelter.m_maxOre - Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>();
-                        int missingFuel = smelter.m_maxFuel - Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
-                        Debug.Log($"Ore:{Traverse.Create(smelter).Method("GetQueueSize").GetValue<int>()}/{smelter.m_maxOre}, Fuel:{Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f))}/{smelter.m_maxFuel}");
-                        if (missingOre != 0)
+                        Debug.Log($"Ore:{assignment.NeedOre.Join()}, Fuel:{assignment.NeedFuel}");
+                        string needFuel = assignment.NeedFuel;
+                        if (!string.IsNullOrEmpty(needFuel))
                         {
-                            foreach (Smelter.ItemConversion itemConversion in smelter.m_conversion)
-                            {
-                                string ore = GetPrefabName(itemConversion.m_from.gameObject.name);
-                                m_fetchitems[instanceId].Add(ore);
-                                ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {ore} to search list");
-                            }
+                            m_fetchitems[instanceId].Add(needFuel);
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {needFuel} to search list");
                         }
-                        if (missingFuel != 0)
+                        var needOre = assignment.NeedOre;
+                        if (needOre.Any())
                         {
-                            string fuel = GetPrefabName(smelter.m_fuelItem.gameObject.name);
-                            m_fetchitems[instanceId].Add(fuel);
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {fuel} to search list");
+                            m_fetchitems[instanceId].AddRange(needOre);
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {needOre.Join()} to search list");
                         }
-                        if (missingFuel == 0 && missingOre == 0)
+                        if (!m_fetchitems[instanceId].Any())
                         {
                             m_assigned[instanceId] = false;
                         }
-                        return false;
-                    }
-
-                    if (!knowWhattoFetch && isCloseToAssignment && fireplaceAssignment)
-                    {
-                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
-                        int missingFuel = Mathf.FloorToInt(fireplace.m_maxFuel - fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f));
-                        Debug.Log($"Fuel:{Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f))}/{fireplace.m_maxFuel}");
-                        if (missingFuel != 0)
-                        {
-                            string fuel = GetPrefabName(fireplace.m_fuelItem.gameObject.name);
-                            m_fetchitems[instanceId].Add(fuel);
-                            return false;
-                        }
-                        m_assigned[instanceId] = false;
                         return false;
                     }
 
@@ -423,11 +376,11 @@ namespace SlaveGreylings
 
             private static bool FindRandomNearbyAssignment(int instanceId, Vector3 greylingPosition)
             {
+                Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
                 //Generate list of acceptable assignments
                 var pieceList = new List<Piece>();
                 Piece.GetAllPiecesInRadius(greylingPosition, 50f, pieceList);
                 var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName));
-
                 // no assignments detekted, return false
                 if (!allAssignablePieces.Any())
                 {
@@ -437,8 +390,7 @@ namespace SlaveGreylings
                 // select random piece
                 var random = new System.Random();
                 int index = random.Next(allAssignablePieces.Count());
-                Assignment randomAssignment = allAssignablePieces.ElementAt(index).gameObject.AddComponent<Assignment>();
-
+                Assignment randomAssignment = new Assignment(instanceId, allAssignablePieces.ElementAt(index));
                 // Create assignment and return true
                 m_assignment[instanceId].Push(randomAssignment);
                 m_assigned[instanceId] = true;
