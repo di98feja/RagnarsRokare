@@ -214,7 +214,7 @@ namespace SlaveGreylings
                     if ((!knowWhattoFetch || isCarryingItem) && !assignment.IsClose(greylingPosition))
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
-                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, 0.5f, false });
+                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, assignment.TypeOfAssignment.InteractDist - 1.0f, false });
                         return false;
                     }
 
@@ -292,7 +292,7 @@ namespace SlaveGreylings
                         if (isHeadingToPickupItem)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to pickup item");
-                            Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0, false });
+                            Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0.5f , false });
                             return false;
                         }
                         else // Pickup item from ground

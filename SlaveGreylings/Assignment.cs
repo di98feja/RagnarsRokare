@@ -68,9 +68,9 @@ namespace SlaveGreylings
                 if (TypeOfAssignment.ComponentType == typeof(Smelter))
                 {
                     var smelter = AssignmentObject.GetComponent<Smelter>();
-                    if (smelter.m_maxFuel - Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) > 0)
+                    if (smelter.m_maxFuel != 0 && smelter.m_maxFuel - Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) > 0)
                     {
-                        return smelter.m_fuelItem.m_itemData.m_dropPrefab.name;
+                        return GetPrefabName(smelter.m_fuelItem.gameObject.name);
                     }
                     else
                     {
@@ -82,7 +82,7 @@ namespace SlaveGreylings
                     var fireplace = AssignmentObject.GetComponent<Fireplace>();
                     if (fireplace.m_maxFuel - Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) > 0)
                     {
-                        return fireplace.m_fuelItem.m_itemData.m_dropPrefab.name;
+                        return GetPrefabName(fireplace.m_fuelItem.gameObject.name);
                     }
                     else
                     {
@@ -145,7 +145,7 @@ namespace SlaveGreylings
         {  
             new AssignmentType { Name = "Smelter", PieceName = "smelter", ComponentType = typeof(Smelter), InteractDist = 2.5f },
             new AssignmentType { Name = "Kiln", PieceName = "charcoal_kiln", ComponentType = typeof(Smelter), InteractDist = 2.5f},
-            new AssignmentType { Name = "Fireplace", PieceName = "fire_pit", ComponentType = typeof(Fireplace), InteractDist = 3.0f},
+            new AssignmentType { Name = "Fireplace", PieceName = "fire_pit", ComponentType = typeof(Fireplace), InteractDist = 4.0f},
             new AssignmentType { Name = "StandingWoodTorch", PieceName = "piece_groundtorch_wood", ComponentType = typeof(Fireplace), InteractDist = 2.5f},
             new AssignmentType { Name = "StandingIronTorch", PieceName = "piece_groundtorch", ComponentType = typeof(Fireplace), InteractDist = 2.5f},
             new AssignmentType { Name = "StandingGreenTorch", PieceName = "piece_groundtorch_green", ComponentType = typeof(Fireplace), InteractDist = 2.5f},
