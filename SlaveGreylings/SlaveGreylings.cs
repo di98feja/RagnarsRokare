@@ -111,6 +111,7 @@ namespace SlaveGreylings
             public static Dictionary<int, string> m_aiStatus;
 
             private static Character m_attacker = null;
+            private static List<string> m_containerNames = new List<string>() { "piece_chest_wood"};
             private static List<string> m_fireplaces = new List<string>() { "fire_pit", "groundtorch", "walltorch" };
             private static List<string> m_smelters = new List<string>() { "smelter", "charcoal_kiln" };
 
@@ -158,6 +159,8 @@ namespace SlaveGreylings
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
                     m_spottedItem[instanceId] = null;
+                    m_containers[instanceId].Clear();
+                    m_searchcontainer[instanceId] = false;
                     return false;
                 }
                 if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().Position))
@@ -277,19 +280,50 @@ namespace SlaveGreylings
                     if (searchForItemToPickup)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
-                        ItemDrop spottedItem = GetNearbyObject<ItemDrop>(greylingPosition, "item", m_fetchitems[instanceId], 20);
+                        ItemDrop spottedItem = GetNearbyObject<ItemDrop>(greylingPosition, "item", m_fetchitems[instanceId], 10);
                         if (spottedItem != null)
                         {
-                            Debug.Log($"nearby item spotted: {GetPrefabName(spottedItem.gameObject.name)}");
                             m_spottedItem[instanceId] = spottedItem;
+                            return false;
+                        }
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Search for nerby Chests") ;
+                        Container nearbyChest = GetNearbyObject<Container>(greylingPosition, "piece", m_containerNames, 10, m_containers[instanceId]);
+                        if (nearbyChest != null)
+                        {
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Chest found");
+                            m_containers[instanceId].Push(nearbyChest);
+                            m_searchcontainer[instanceId] = true;
                             return false;
                         }
                     }
                     
+                    if (m_searchcontainer[instanceId])
+                    {
+                        bool containerIsInvalid = m_containers[instanceId].Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
+                        if (containerIsInvalid)
+                        {
+                            m_containers[instanceId].Pop();
+                            m_searchcontainer[instanceId] = false;
+                            return false;
+                        }
+                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 2.5;
+                        if (!isCloseToContainer)
+                        {
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to Container");
+                            Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_containers[instanceId].Peek().transform.position, 0.5f, false });
+                            return false;
+                        }
+                        else
+                        {
+                            m_searchcontainer[instanceId] = false;
+                            return false;
+                        }
+                    }
+
                     if (hasSpottedAnItem)
                     {
-                        bool isHeadingToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem[instanceId].transform.position) > 2.5;
-                        if (isHeadingToPickupItem)
+                        bool isCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem[instanceId].transform.position) > 2.5;
+                        if (isCloseToPickupItem)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to pickup item");
                             Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0.5f , false });
@@ -335,6 +369,8 @@ namespace SlaveGreylings
                     }
                     m_fetchitems[instanceId].Clear();
                     m_spottedItem[instanceId] = null;
+                    m_containers[instanceId].Clear();
+                    m_searchcontainer[instanceId] = false;
                     m_assigned[instanceId] = false;
                     return false;
                 }
@@ -379,7 +415,7 @@ namespace SlaveGreylings
                 Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
                 //Generate list of acceptable assignments
                 var pieceList = new List<Piece>();
-                Piece.GetAllPiecesInRadius(greylingPosition, 50f, pieceList);
+                Piece.GetAllPiecesInRadius(greylingPosition, 30f, pieceList);
                 var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName));
                 // no assignments detekted, return false
                 if (!allAssignablePieces.Any())
