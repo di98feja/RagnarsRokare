@@ -96,7 +96,7 @@ namespace SlaveGreylings
                 m_assigned = new Dictionary<int, bool>();
                 m_containers = new Dictionary<int, MaxStack<Container>>();
                 m_searchcontainer = new Dictionary<int, bool>();
-                m_fetchitems = new Dictionary<int, List<string>>();
+                m_fetchitems = new Dictionary<int, List<ItemDrop.ItemData>>();
                 m_carrying = new Dictionary<int, ItemDrop.ItemData>();
                 m_spottedItem = new Dictionary<int, ItemDrop>();
                 m_aiStatus = new Dictionary<int, string>();
@@ -105,15 +105,13 @@ namespace SlaveGreylings
             public static Dictionary<int, MaxStack<Container>> m_containers;
             public static Dictionary<int, bool> m_assigned;
             public static Dictionary<int, bool> m_searchcontainer;
-            public static Dictionary<int, List<string>> m_fetchitems;
+            public static Dictionary<int, List<ItemDrop.ItemData>> m_fetchitems;
             public static Dictionary<int, ItemDrop.ItemData> m_carrying;
             public static Dictionary<int, ItemDrop> m_spottedItem;
             public static Dictionary<int, string> m_aiStatus;
 
             private static Character m_attacker = null;
-            private static List<string> m_containerNames = new List<string>() { "piece_chest_wood"};
-            private static List<string> m_fireplaces = new List<string>() { "fire_pit", "groundtorch", "walltorch" };
-            private static List<string> m_smelters = new List<string>() { "smelter", "charcoal_kiln" };
+            private static List<string> m_acceptedContainerNames = new List<string>() { "piece_chest_wood"};
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
                 ref float ___m_timeSinceHurt, ref string ___m_aiStatus, ref Vector3 ___arroundPointTarget, ref float ___m_jumpInterval, ref float ___m_jumpTimer,
@@ -225,8 +223,8 @@ namespace SlaveGreylings
                     {
                         var needFuel = assignment.NeedFuel;
                         var needOre = assignment.NeedOre;
-                        bool isCarryingFuel = m_carrying[instanceId].m_dropPrefab.name == needFuel;
-                        bool isCarryingMatchingOre = needOre.Any(c => m_carrying[instanceId].m_dropPrefab.name == c);
+                        bool isCarryingFuel = m_carrying[instanceId].m_shared.m_name == needFuel?.m_shared?.m_name;
+                        bool isCarryingMatchingOre = needOre?.Any(c => m_carrying[instanceId].m_shared.m_name == c?.m_shared?.m_name) ?? false;
 
                         if (isCarryingFuel)
                         { 
@@ -242,7 +240,7 @@ namespace SlaveGreylings
                         }
                         else
                         {
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Dropping {m_carrying[instanceId].m_dropPrefab.name} on the ground");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, Localization.instance.Localize($"Dropping {m_carrying[instanceId].m_shared.m_name} on the ground"));
                             humanoid.DropItem(humanoid.GetInventory(), m_carrying[instanceId], 1);
                         }
 
@@ -255,18 +253,18 @@ namespace SlaveGreylings
                     if (!knowWhattoFetch && assignment.IsClose(greylingPosition))
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
-                        Debug.Log($"Ore:{assignment.NeedOre.Join()}, Fuel:{assignment.NeedFuel}");
-                        string needFuel = assignment.NeedFuel;
-                        if (!string.IsNullOrEmpty(needFuel))
+                        Debug.Log($"Ore:{assignment.NeedOre.Join(j => j.m_shared.m_name)}, Fuel:{assignment.NeedFuel.m_shared.m_name}");
+                        var needFuel = assignment.NeedFuel;
+                        if (needFuel != null)
                         {
                             m_fetchitems[instanceId].Add(needFuel);
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {needFuel} to search list");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, Localization.instance.Localize($"Adding {needFuel.m_shared.m_name} to search list"));
                         }
                         var needOre = assignment.NeedOre;
                         if (needOre.Any())
                         {
                             m_fetchitems[instanceId].AddRange(needOre);
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Adding {needOre.Join()} to search list");
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, Localization.instance.Localize($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list"));
                         }
                         if (!m_fetchitems[instanceId].Any())
                         {
@@ -280,14 +278,14 @@ namespace SlaveGreylings
                     if (searchForItemToPickup)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
-                        ItemDrop spottedItem = GetNearbyObject<ItemDrop>(greylingPosition, "item", m_fetchitems[instanceId], 10);
+                        ItemDrop spottedItem = GetNearbyItem(greylingPosition, m_fetchitems[instanceId], 10);
                         if (spottedItem != null)
                         {
                             m_spottedItem[instanceId] = spottedItem;
                             return false;
                         }
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search for nerby Chests") ;
-                        Container nearbyChest = GetNearbyObject<Container>(greylingPosition, "piece", m_containerNames, 10, m_containers[instanceId]);
+                        Container nearbyChest = FindRandomNearbyContainer(greylingPosition);
                         if (nearbyChest != null)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Chest found");
@@ -296,8 +294,6 @@ namespace SlaveGreylings
                             return false;
                         }
                     }
-                    
-
 
                     if (m_searchcontainer[instanceId])
                     {
@@ -317,10 +313,10 @@ namespace SlaveGreylings
                         }
                         else
                         {
-                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"TcHEST INVENTORY {m_containers[instanceId].Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
-                            foreach (string fetchItem in m_fetchitems[instanceId])
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"Chest inventory:{m_containers[instanceId].Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
+                            foreach (var fetchItem in m_fetchitems[instanceId])
                             {
-                                ItemDrop.ItemData item = m_containers[instanceId].Peek()?.GetInventory()?.GetItem(fetchItem);
+                                ItemDrop.ItemData item = m_containers[instanceId].Peek()?.GetInventory()?.GetItem(fetchItem.m_shared.m_name);
                                 if (item == null) continue;
                                 else
                                 {
@@ -402,31 +398,27 @@ namespace SlaveGreylings
                 return false;
             }
 
-            public static T GetNearbyObject<T>(Vector3 center, string mask, List<string> acceptedNames , int range = 10, IEnumerable<T> knownobjects = null) where T : MonoBehaviour
+            public static ItemDrop GetNearbyItem(Vector3 center, List<ItemDrop.ItemData> acceptedNames , int range = 10) 
             {
-                T ClosestObject = null;
-                foreach (Collider collider in Physics.OverlapSphere(center, range, LayerMask.GetMask(new string[] { mask })))
+                ItemDrop ClosestObject = null;
+                foreach (Collider collider in Physics.OverlapSphere(center, range, LayerMask.GetMask(new string[] { "item" })))
                 {
-                    T obj = collider.transform.parent?.parent?.gameObject?.GetComponent<T>();
-                    if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
+                    ItemDrop item = collider.transform.parent?.parent?.gameObject?.GetComponent<ItemDrop>();
+                    if (item?.GetComponent<ZNetView>()?.IsValid() != true)
                     {
-                        obj = collider.transform.parent?.gameObject?.GetComponent<T>();
-                        if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
+                        item = collider.transform.parent?.gameObject?.GetComponent<ItemDrop>();
+                        if (item?.GetComponent<ZNetView>()?.IsValid() != true)
                         {
-                            obj = collider.transform?.gameObject?.GetComponent<T>();
-                            if (obj?.GetComponent<ZNetView>()?.IsValid() != true)
+                            item = collider.transform?.gameObject?.GetComponent<ItemDrop>();
+                            if (item?.GetComponent<ZNetView>()?.IsValid() != true)
                             {
                                 continue;
                             }
                         }
                     }
-                    if (knownobjects?.Contains(obj) ?? false)
+                    if (item?.transform?.position != null && acceptedNames.Select(n => n.m_shared.m_name).Contains(item.m_itemData.m_shared.m_name) && (ClosestObject == null || Vector3.Distance(center, item.transform.position) < Vector3.Distance(center, ClosestObject.transform.position)))
                     {
-                        continue;
-                    }
-                    if (obj?.transform?.position != null && acceptedNames.Contains(GetPrefabName(obj.gameObject.name)) && (ClosestObject == null || Vector3.Distance(center, obj.transform.position) < Vector3.Distance(center, ClosestObject.transform.position)))
-                    {
-                        ClosestObject = obj;
+                        ClosestObject = item;
                     }
                 }
                 return ClosestObject;
@@ -457,6 +449,24 @@ namespace SlaveGreylings
                 return true;
             }
 
+            private static Container FindRandomNearbyContainer(Vector3 greylingPosition)
+            {
+                Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
+                var pieceList = new List<Piece>();
+                Piece.GetAllPiecesInRadius(greylingPosition, 10f, pieceList);
+                var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
+                // no containers detected, return false
+                if (!allcontainerPieces.Any())
+                {
+                    return null;
+                }
+
+                // select random piece
+                var random = new System.Random();
+                int index = random.Next(allcontainerPieces.Count());
+                return allcontainerPieces.ElementAt(index).gameObject.GetComponent<Container>();
+            }
+
             private static object Invoke(MonsterAI instance, string methodName, object[] argumentList)
             {
                 return typeof(MonsterAI).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
@@ -472,7 +482,7 @@ namespace SlaveGreylings
                     m_containers.Add(instanceId, new MaxStack<Container>(3));
                     m_assigned.Add(instanceId, false);
                     m_searchcontainer.Add(instanceId, false);
-                    m_fetchitems.Add(instanceId, new List<string>());
+                    m_fetchitems.Add(instanceId, new List<ItemDrop.ItemData>());
                     m_carrying.Add(instanceId, null);
                     m_spottedItem.Add(instanceId, null);
                     m_aiStatus.Add(instanceId, "Init");

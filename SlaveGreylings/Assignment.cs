@@ -61,7 +61,7 @@ namespace SlaveGreylings
             }
         } 
 
-        public string NeedFuel
+        public ItemDrop.ItemData NeedFuel
         {
             get 
             {
@@ -70,11 +70,11 @@ namespace SlaveGreylings
                     var smelter = AssignmentObject.GetComponent<Smelter>();
                     if (smelter.m_maxFuel != 0 && smelter.m_maxFuel - Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) > 0)
                     {
-                        return smelter.m_fuelItem.m_itemData.m_shared.m_name;
+                        return smelter.m_fuelItem.m_itemData;
                     }
                     else
                     {
-                        return string.Empty;
+                        return null;
                     }
                 }
                 else if (TypeOfAssignment.ComponentType == typeof(Fireplace))
@@ -82,18 +82,18 @@ namespace SlaveGreylings
                     var fireplace = AssignmentObject.GetComponent<Fireplace>();
                     if (fireplace.m_maxFuel - Mathf.CeilToInt(fireplace.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) > 0)
                     {
-                        return GetPrefabName(fireplace.m_fuelItem.gameObject.name);
+                        return fireplace.m_fuelItem.m_itemData;
                     }
                     else
                     {
-                        return string.Empty;
+                        return null;
                     }
                 }
-                return string.Empty;
+                return null;
             }
         }
 
-        public IEnumerable<string> NeedOre
+        public IEnumerable<ItemDrop.ItemData> NeedOre
         {
             get
             {
@@ -105,7 +105,7 @@ namespace SlaveGreylings
                     {
                         foreach (Smelter.ItemConversion itemConversion in smelter.m_conversion)
                         {
-                            yield return GetPrefabName(itemConversion.m_from.gameObject.name);
+                            yield return itemConversion.m_from.m_itemData;
                         }
                     }
                 }
