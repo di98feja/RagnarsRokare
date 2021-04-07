@@ -194,7 +194,7 @@ namespace SlaveGreylings
                     else
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
-                        return false;
+                        m_assignment[instanceId].Clear();
                     }
                 }
 
@@ -253,14 +253,14 @@ namespace SlaveGreylings
                     if (!knowWhattoFetch && assignment.IsClose(greylingPosition))
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
-                        Debug.Log($"Ore:{assignment.NeedOre.Join(j => j.m_shared.m_name)}, Fuel:{assignment.NeedFuel.m_shared.m_name}");
                         var needFuel = assignment.NeedFuel;
+                        var needOre = assignment.NeedOre;
+                        Debug.Log($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
                         if (needFuel != null)
                         {
                             m_fetchitems[instanceId].Add(needFuel);
                             ___m_aiStatus = UpdateAiStatus(___m_nview, Localization.instance.Localize($"Adding {needFuel.m_shared.m_name} to search list"));
                         }
-                        var needOre = assignment.NeedOre;
                         if (needOre.Any())
                         {
                             m_fetchitems[instanceId].AddRange(needOre);
@@ -285,7 +285,7 @@ namespace SlaveGreylings
                             return false;
                         }
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search for nerby Chests") ;
-                        Container nearbyChest = FindRandomNearbyContainer(greylingPosition);
+                        Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers[instanceId]);
                         if (nearbyChest != null)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Chest found");
@@ -314,9 +314,11 @@ namespace SlaveGreylings
                         else
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Chest inventory:{m_containers[instanceId].Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
+                            var wantedItemsInChest = m_containers[instanceId].Peek()?.GetInventory()?.GetAllItems()?.Where(i => m_fetchitems[instanceId].Contains(i));
                             foreach (var fetchItem in m_fetchitems[instanceId])
                             {
                                 ItemDrop.ItemData item = m_containers[instanceId].Peek()?.GetInventory()?.GetItem(fetchItem.m_shared.m_name);
+                                Debug.Log($"item:{item?.m_shared.m_name}");
                                 if (item == null) continue;
                                 else
                                 {
@@ -437,10 +439,13 @@ namespace SlaveGreylings
                     return false;
                 }
 
+                // filter out assignments already in list
+                var newAssignments = allAssignablePieces.Where(p => !m_assignment[instanceId].Any(a => a.AssignmentObject == p.gameObject));
+
                 // select random piece
                 var random = new System.Random();
-                int index = random.Next(allAssignablePieces.Count());
-                Assignment randomAssignment = new Assignment(instanceId, allAssignablePieces.ElementAt(index));
+                int index = random.Next(newAssignments.Count());
+                Assignment randomAssignment = new Assignment(instanceId, newAssignments.ElementAt(index));
                 // Create assignment and return true
                 m_assignment[instanceId].Push(randomAssignment);
                 m_assigned[instanceId] = true;
@@ -449,22 +454,24 @@ namespace SlaveGreylings
                 return true;
             }
 
-            private static Container FindRandomNearbyContainer(Vector3 greylingPosition)
+            private static Container FindRandomNearbyContainer(Vector3 greylingPosition, MaxStack<Container> knownContainers)
             {
                 Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
                 var pieceList = new List<Piece>();
                 Piece.GetAllPiecesInRadius(greylingPosition, 10f, pieceList);
                 var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
                 // no containers detected, return false
-                if (!allcontainerPieces.Any())
+
+                var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c));
+                if (!containers.Any())
                 {
                     return null;
                 }
 
                 // select random piece
                 var random = new System.Random();
-                int index = random.Next(allcontainerPieces.Count());
-                return allcontainerPieces.ElementAt(index).gameObject.GetComponent<Container>();
+                int index = random.Next(containers.Count());
+                return containers.ElementAt(index);
             }
 
             private static object Invoke(MonsterAI instance, string methodName, object[] argumentList)
@@ -495,7 +502,7 @@ namespace SlaveGreylings
                 EffectArea effectArea2 = EffectArea.IsPointInsideArea(instance.transform.position, EffectArea.Type.Burning, 2f);
                 if ((bool)effectArea2)
                 {
-                    typeof(MonsterAI).GetMethod("RandomMovementArroundPoint", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, new object[] { dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f + 1f, true });
+                    typeof(MonsterAI).GetMethod("RandomMovementArroundPoint", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, new object[] { dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f, true });
                     return true;
                 }
                 return false;
