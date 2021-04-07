@@ -70,7 +70,7 @@ namespace SlaveGreylings
                     var smelter = AssignmentObject.GetComponent<Smelter>();
                     if (smelter.m_maxFuel != 0 && smelter.m_maxFuel - Mathf.CeilToInt(smelter.GetComponent<ZNetView>().GetZDO().GetFloat("fuel", 0f)) > 0)
                     {
-                        return GetPrefabName(smelter.m_fuelItem.gameObject.name);
+                        return smelter.m_fuelItem.m_itemData.m_shared.m_name;
                     }
                     else
                     {

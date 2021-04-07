@@ -297,6 +297,8 @@ namespace SlaveGreylings
                         }
                     }
                     
+
+
                     if (m_searchcontainer[instanceId])
                     {
                         bool containerIsInvalid = m_containers[instanceId].Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
@@ -315,6 +317,26 @@ namespace SlaveGreylings
                         }
                         else
                         {
+                            ___m_aiStatus = UpdateAiStatus(___m_nview, $"TcHEST INVENTORY {m_containers[instanceId].Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
+                            foreach (string fetchItem in m_fetchitems[instanceId])
+                            {
+                                ItemDrop.ItemData item = m_containers[instanceId].Peek()?.GetInventory()?.GetItem(fetchItem);
+                                if (item == null) continue;
+                                else
+                                {
+                                    ___m_aiStatus = UpdateAiStatus(___m_nview, $"Trying to Pickup {item} from Chest ");
+                                    var pickedUpInstance = humanoid.PickupPrefab(item.m_dropPrefab);
+                                    humanoid.GetInventory().Print();
+                                    humanoid.EquipItem(pickedUpInstance);
+                                    m_containers[instanceId].Peek().GetInventory().RemoveItem(fetchItem, 1);
+                                    m_carrying[instanceId] = pickedUpInstance;
+                                    m_spottedItem[instanceId] = null;
+                                    m_fetchitems[instanceId].Clear();
+                                    m_searchcontainer[instanceId] = false;
+                                    return false;
+                                }
+                            }
+
                             m_searchcontainer[instanceId] = false;
                             return false;
                         }
