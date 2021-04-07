@@ -163,7 +163,7 @@ namespace SlaveGreylings
                     m_searchcontainer[instanceId] = false;
                     return false;
                 }
-                if (m_assignment[instanceId].Any() && AvoidFire(__instance, dt, m_assignment[instanceId].Peek().Position))
+                if (AvoidFire(__instance, dt, m_assigned[instanceId] ? m_assignment[instanceId].Peek().Position : __instance.transform.position))
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
                     if (m_assignment[instanceId].Peek().IsClose(___m_character.transform.position))
@@ -460,7 +460,7 @@ namespace SlaveGreylings
 
             static bool AvoidFire(MonsterAI instance, float dt, Vector3 targetPosition)
             {
-                EffectArea effectArea2 = EffectArea.IsPointInsideArea(instance.transform.position, EffectArea.Type.Burning, 3f);
+                EffectArea effectArea2 = EffectArea.IsPointInsideArea(instance.transform.position, EffectArea.Type.Burning, 2f);
                 if ((bool)effectArea2)
                 {
                     typeof(MonsterAI).GetMethod("RandomMovementArroundPoint", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, new object[] { dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f + 1f, true });
