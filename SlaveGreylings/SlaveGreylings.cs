@@ -365,7 +365,7 @@ namespace SlaveGreylings
                                     var pickedUpInstance = humanoid.PickupPrefab(item.m_dropPrefab);
                                     humanoid.GetInventory().Print();
                                     humanoid.EquipItem(pickedUpInstance);
-                                    m_containers[instanceId].Peek().GetInventory().RemoveItem(fetchItem, 1);
+                                    m_containers[instanceId].Peek().GetInventory().RemoveItem(item, 1);
                                     typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek(), new object[] { });
                                     typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek().GetInventory(), new object[] { });
                                     m_carrying[instanceId] = pickedUpInstance;
