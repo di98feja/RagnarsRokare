@@ -100,6 +100,7 @@ namespace SlaveGreylings
                 m_carrying = new Dictionary<int, ItemDrop.ItemData>();
                 m_spottedItem = new Dictionary<int, ItemDrop>();
                 m_aiStatus = new Dictionary<int, string>();
+                m_assignedTimer = new Dictionary<int, float>();
             }
             public static Dictionary<int, MaxStack<Assignment>> m_assignment;
             public static Dictionary<int, MaxStack<Container>> m_containers;
@@ -109,6 +110,7 @@ namespace SlaveGreylings
             public static Dictionary<int, ItemDrop.ItemData> m_carrying;
             public static Dictionary<int, ItemDrop> m_spottedItem;
             public static Dictionary<int, string> m_aiStatus;
+            public static Dictionary<int, float> m_assignedTimer;
 
             private static Character m_attacker = null;
             private static List<string> m_acceptedContainerNames = new List<string>() { "piece_chest_wood"};
@@ -183,6 +185,24 @@ namespace SlaveGreylings
                 }
 
                 // Here starts the fun.
+                
+                //Assigned timeout-function 
+                m_assignedTimer[instanceId] += dt;
+                if (m_assignedTimer[instanceId] > 60) m_assigned[instanceId] = false;
+                
+                //Assignment timeout-function
+                foreach (Assignment assignment in m_assignment[instanceId])
+                {
+                    assignment.AssignmentTime += dt;
+                    if (assignment.AssignmentTime > 120)
+                    {
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"removing outdated Assignment of {m_assignment[instanceId].Count()}");
+                        m_assignment[instanceId].Remove(assignment);
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"remaining Assignments {m_assignment[instanceId].Count()}");
+                        break;
+                    }
+                }
+
                 Vector3 greylingPosition = ___m_character.transform.position;
                 if (!m_assigned[instanceId])
                 {
@@ -284,6 +304,25 @@ namespace SlaveGreylings
                             m_spottedItem[instanceId] = spottedItem;
                             return false;
                         }
+                        
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Trying to remeber content of known Chests");
+                        foreach (Container chest in m_containers[instanceId])
+                        {
+                            foreach (var fetchItem in m_fetchitems[instanceId])
+                            {
+                                ItemDrop.ItemData item = chest?.GetInventory()?.GetItem(fetchItem.m_shared.m_name);
+                                if (item == null) continue;
+                                else
+                                {
+                                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Item found in old chest");
+                                    m_containers[instanceId].Remove(chest);
+                                    m_containers[instanceId].Push(chest);
+                                    m_searchcontainer[instanceId] = true;
+                                    return false;
+                                }
+                            }
+                        }
+
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search for nerby Chests") ;
                         Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers[instanceId]);
                         if (nearbyChest != null)
@@ -327,6 +366,8 @@ namespace SlaveGreylings
                                     humanoid.GetInventory().Print();
                                     humanoid.EquipItem(pickedUpInstance);
                                     m_containers[instanceId].Peek().GetInventory().RemoveItem(fetchItem, 1);
+                                    typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek(), new object[] { });
+                                    typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek().GetInventory(), new object[] { });
                                     m_carrying[instanceId] = pickedUpInstance;
                                     m_spottedItem[instanceId] = null;
                                     m_fetchitems[instanceId].Clear();
@@ -449,6 +490,7 @@ namespace SlaveGreylings
                 // Create assignment and return true
                 m_assignment[instanceId].Push(randomAssignment);
                 m_assigned[instanceId] = true;
+                m_assignedTimer[instanceId] = 0;
                 m_fetchitems[instanceId].Clear();
                 m_spottedItem[instanceId] = null;
                 return true;
@@ -493,6 +535,7 @@ namespace SlaveGreylings
                     m_carrying.Add(instanceId, null);
                     m_spottedItem.Add(instanceId, null);
                     m_aiStatus.Add(instanceId, "Init");
+                    m_assignedTimer.Add(instanceId, 0);
                 }
                 return instanceId;
             }

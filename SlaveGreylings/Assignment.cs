@@ -42,6 +42,7 @@ namespace SlaveGreylings
         public int BelongsTo { get; set; }
         public GameObject AssignmentObject { get; set; }
         public AssignmentType TypeOfAssignment { get; set; }
+        public float AssignmentTime { get; set; }
         public Vector3 Position 
         {
             get
@@ -122,6 +123,7 @@ namespace SlaveGreylings
             BelongsTo = instanceId;
             TypeOfAssignment = GetAssignmentType(piece);
             AssignmentObject = piece.gameObject;
+            AssignmentTime = 0;
         }
 
         private AssignmentType GetAssignmentType(Piece piece)
