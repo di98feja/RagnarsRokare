@@ -576,6 +576,17 @@ namespace SlaveGreylings
                         ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
                         ai.m_randomMoveRange = 5;
                         ai.m_consumeSearchRange = 50;
+
+                        var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+                        if (visEquipment == null)
+                        {
+                            __instance.gameObject.AddComponent<VisEquipment>();
+                            visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+                            //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
+                            var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
+                            visEquipment.m_rightHand = rightHand;
+                        }
+
                     }
                     else
                     {
@@ -706,15 +717,6 @@ namespace SlaveGreylings
             {
                 if (!__instance.name.Contains("Greyling")) return true;
                 if (!__instance.IsTamed()) return true;
-
-                if (___m_visEquipment == null)
-                {
-                    __instance.gameObject.AddComponent<VisEquipment>();
-                    ___m_visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
-                    //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
-                    var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
-                    ___m_visEquipment.m_rightHand = rightHand;
-                }
 
                 ___m_rightItem = item;
                 ___m_rightItem.m_equiped = item != null;
