@@ -97,6 +97,9 @@ namespace SlaveGreylings
                 m_spottedItem = new Dictionary<int, ItemDrop>();
                 m_aiStatus = new Dictionary<int, string>();
                 m_assignedTimer = new Dictionary<int, float>();
+
+                m_acceptedContainerNames = new List<string>();
+                m_acceptedContainerNames.AddRange(GreylingsConfig.IncludedContainersList.Value.Split());
             }
             public static Dictionary<int, MaxStack<Assignment>> m_assignment;
             public static Dictionary<int, MaxStack<Container>> m_containers;
@@ -109,7 +112,7 @@ namespace SlaveGreylings
             public static Dictionary<int, float> m_assignedTimer;
 
             private static Character m_attacker = null;
-            private static List<string> m_acceptedContainerNames = new List<string>() { "piece_chest_wood"};
+            private static List<string> m_acceptedContainerNames;
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
                 ref float ___m_timeSinceHurt, ref string ___m_aiStatus, ref Vector3 ___arroundPointTarget, ref float ___m_jumpInterval, ref float ___m_jumpTimer,
@@ -184,13 +187,13 @@ namespace SlaveGreylings
                 
                 //Assigned timeout-function 
                 m_assignedTimer[instanceId] += dt;
-                if (m_assignedTimer[instanceId] > 60) m_assigned[instanceId] = false;
+                if (m_assignedTimer[instanceId] > GreylingsConfig.TimeLimitOnAssignment.Value) m_assigned[instanceId] = false;
                 
                 //Assignment timeout-function
                 foreach (Assignment assignment in m_assignment[instanceId])
                 {
                     assignment.AssignmentTime += dt;
-                    if (assignment.AssignmentTime > 120)
+                    if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"removing outdated Assignment of {m_assignment[instanceId].Count()}");
                         m_assignment[instanceId].Remove(assignment);
@@ -523,8 +526,8 @@ namespace SlaveGreylings
                 bool isNewInstance = !m_assignment.ContainsKey(instanceId);
                 if (isNewInstance)
                 {
-                    m_assignment.Add(instanceId, new MaxStack<Assignment>(4));
-                    m_containers.Add(instanceId, new MaxStack<Container>(3));
+                    m_assignment.Add(instanceId, new MaxStack<Assignment>(5));
+                    m_containers.Add(instanceId, new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value));
                     m_assigned.Add(instanceId, false);
                     m_searchcontainer.Add(instanceId, false);
                     m_fetchitems.Add(instanceId, new List<ItemDrop.ItemData>());
