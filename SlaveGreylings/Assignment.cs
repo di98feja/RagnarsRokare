@@ -154,9 +154,9 @@ namespace SlaveGreylings
             new AssignmentType { Name = "StandingGreenTorch", PieceName = "piece_groundtorch_green", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeStandingGreenTorchInAssignments.Value},
             new AssignmentType { Name = "WallTorch", PieceName = "piece_walltorch", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeWallTorchInAssignments.Value},
             new AssignmentType { Name = "Brazier", PieceName = "piece_brazierceiling01", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeBrazierInAssignments.Value},
-            new AssignmentType { Name = "Blastfurnace", PieceName = "blastfurnace", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeBlastfurnaceInAssignments.Value},
+            new AssignmentType { Name = "Blastfurnace", PieceName = "blastfurnace", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeBlastFurnaceInAssignments.Value},
             new AssignmentType { Name = "Windmill", PieceName = "windmill", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeWindmillInAssignments.Value},
-            new AssignmentType { Name = "Spinningwheel", PieceName = "piece_spinningwheel", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeSpinningwheelInAssignments.Value},
+            new AssignmentType { Name = "Spinningwheel", PieceName = "piece_spinningwheel", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeSpinningWheelInAssignments.Value},
         };
     }
 
