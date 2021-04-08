@@ -297,7 +297,7 @@ namespace SlaveGreylings
                     if (searchForItemToPickup)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
-                        ItemDrop spottedItem = GetNearbyItem(greylingPosition, m_fetchitems[instanceId], ItemSearchRadius.Value);
+                        ItemDrop spottedItem = GetNearbyItem(greylingPosition, m_fetchitems[instanceId], GreylingsConfig.ItemSearchRadius.Value);
                         if (spottedItem != null)
                         {
                             m_spottedItem[instanceId] = spottedItem;
@@ -471,8 +471,8 @@ namespace SlaveGreylings
                 Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
                 //Generate list of acceptable assignments
                 var pieceList = new List<Piece>();
-                Piece.GetAllPiecesInRadius(greylingPosition, (float)AssignmentSearchRadius.Value, pieceList);
-                var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName));
+                Piece.GetAllPiecesInRadius(greylingPosition, (float)GreylingsConfig.AssignmentSearchRadius.Value, pieceList);
+                var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && a.Activated));
                 // no assignments detekted, return false
                 if (!allAssignablePieces.Any())
                 {
@@ -499,7 +499,7 @@ namespace SlaveGreylings
             {
                 Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
                 var pieceList = new List<Piece>();
-                Piece.GetAllPiecesInRadius(greylingPosition, (float)ContainerSearchRadius.Value, pieceList);
+                Piece.GetAllPiecesInRadius(greylingPosition, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
                 var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
                 // no containers detected, return false
 
@@ -565,8 +565,8 @@ namespace SlaveGreylings
                         tameable = __instance.gameObject.AddComponent<Tameable>();
                     }
 
-                    tameable.m_fedDuration = (float)FeedDuration.Value;
-                    tameable.m_tamingTime = (float)TamingTime.Value;
+                    tameable.m_fedDuration = (float)GreylingsConfig.FeedDuration.Value;
+                    tameable.m_tamingTime = (float)GreylingsConfig.TamingTime.Value;
                     tameable.m_commandable = true;
 
                     var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
@@ -590,7 +590,7 @@ namespace SlaveGreylings
                     else
                     {
                         ai.m_consumeItems.Clear();
-                        var tamingItemNames = TamingItemList.Value.Split(',');
+                        var tamingItemNames = GreylingsConfig.TamingItemList.Value.Split(',');
                         foreach (string consumeItem in tamingItemNames)
                         {
                             ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, consumeItem).FirstOrDefault());
