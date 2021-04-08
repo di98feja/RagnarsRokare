@@ -65,6 +65,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Config.cs" />
     <Compile Include="MaxStack.cs" />
     <Compile Include="SlaveGreylings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -74,9 +75,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assignment.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="TextFile1.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
