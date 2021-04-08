@@ -19,7 +19,23 @@ namespace SlaveGreylings
 
         private static readonly bool isDebug = false;
 
-        public static ConfigEntry<string> lastServerIPAddress;
+        public static ConfigEntry<string> TamingItemList;
+        public static ConfigEntry<int> FeedDuration;
+        public static ConfigEntry<int> TamingTime;
+        public static ConfigEntry<int> AssignmentSearchRadius;
+        public static ConfigEntry<int> ItemSearchRadius;
+        public static ConfigEntry<int> ContainerSearchRadius;
+        public static ConfigEntry<bool> IncludeSmelterInAssignments;
+        public static ConfigEntry<bool> IncludeKilnInAssignments;
+        public static ConfigEntry<bool> IncludeFireplaceInAssignments;
+        public static ConfigEntry<bool> IncludeStandingWoodTorchInAssignments;
+        public static ConfigEntry<bool> IncludeStandingIronTorchInAssignments;
+        public static ConfigEntry<bool> IncludeStandingGreenTorchInAssignments;
+        public static ConfigEntry<bool> IncludeWallTorchInAssignments;
+        public static ConfigEntry<bool> IncludeBrazierInAssignments;
+        public static ConfigEntry<bool> IncludeBlastFurnaceInAssignments;
+        public static ConfigEntry<bool> IncludeWindmillInAssignments;
+        public static ConfigEntry<bool> IncludeSpinningWheelInAssignments;
 
         public static void Dbgl(string str = "", bool pref = true)
         {
@@ -29,7 +45,23 @@ namespace SlaveGreylings
 
         private void Awake()
         {
-            lastServerIPAddress = Config.Bind<string>("General", "LastUsedServerIPAdress", "", "The last used IP adress of server");
+            TamingItemList = Config.Bind<string>("General", "Greyling_TamingItemList", "SilverNecklace", "Comma separated list if items used to tame Greylings");
+            FeedDuration = Config.Bind<int>("General", "Greyling_FeedDuration", 500, "Time before getting hungry after consuming one item");
+            TamingTime = Config.Bind<int>("General", "Greyling_TamingTime", 1000, "Total time it takes to tame a greyling");
+            AssignmentSearchRadius = Config.Bind<int>("General", "Greyling_AssignmentSearchRadius", 30, "Radius to search for new assignments within");
+            ItemSearchRadius = Config.Bind<int>("General", "Greyling_ItemSearchRadius", 10, "Radius to search for items on the ground");
+            ContainerSearchRadius = Config.Bind<int>("General", "Greyling_ContainerSearchRadius", 10, "Radius to search for containers");
+            IncludeSmelterInAssignments = Config.Bind<bool>("General", "Greyling_IncludeSmelterInAssignment", true, "Should Smelters be included when searching for assigments");
+            IncludeKilnInAssignments = Config.Bind<bool>("General", "Greyling_IncludeKilnInAssignments", true, "Should Kiln be included when searching for assigments");
+            IncludeFireplaceInAssignments = Config.Bind<bool>("General", "Greyling_IncludeFireplaceInAssignments", true, "Should Fireplace be included when searching for assigments");
+            IncludeStandingWoodTorchInAssignments = Config.Bind<bool>("General", "Greyling_StandingWoodTorchInAssignment", true, "Should StandingWoodTorch be included when searching for assigments");
+            IncludeStandingIronTorchInAssignments = Config.Bind<bool>("General", "Greyling_StandingGreenTorch", true, "Should StandingGreenTorch be included when searching for assigments");
+            IncludeStandingGreenTorchInAssignments = Config.Bind<bool>("General", "Greyling_StandingGreenTorch", true, "Should StandingGreenTorch be included when searching for assigments");
+            IncludeWallTorchInAssignments = Config.Bind<bool>("General", "Greyling_WallTorch", true, "Should WallTorch be included when searching for assigments");
+            IncludeBrazierInAssignments = Config.Bind<bool>("General", "Greyling_IncludeSmelterInAssignment", true, "Should Smelters be included when searching for assigments");
+            IncludeBlastFurnaceInAssignments = Config.Bind<bool>("General", "Greyling_IncludeSmelterInAssignment", true, "Should Smelters be included when searching for assigments");
+            IncludeWindmillInAssignments = Config.Bind<bool>("General", "Greyling_IncludeSmelterInAssignment", true, "Should Smelters be included when searching for assigments");
+            IncludeSpinningWheelInAssignments = Config.Bind<bool>("General", "Greyling_IncludeSmelterInAssignment", true, "Should Smelters be included when searching for assigments");
 
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
@@ -298,7 +330,7 @@ namespace SlaveGreylings
                     if (searchForItemToPickup)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
-                        ItemDrop spottedItem = GetNearbyItem(greylingPosition, m_fetchitems[instanceId], 10);
+                        ItemDrop spottedItem = GetNearbyItem(greylingPosition, m_fetchitems[instanceId], ItemSearchRadius.Value);
                         if (spottedItem != null)
                         {
                             m_spottedItem[instanceId] = spottedItem;
@@ -472,7 +504,7 @@ namespace SlaveGreylings
                 Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
                 //Generate list of acceptable assignments
                 var pieceList = new List<Piece>();
-                Piece.GetAllPiecesInRadius(greylingPosition, 30f, pieceList);
+                Piece.GetAllPiecesInRadius(greylingPosition, (float)AssignmentSearchRadius.Value, pieceList);
                 var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName));
                 // no assignments detekted, return false
                 if (!allAssignablePieces.Any())
@@ -500,7 +532,7 @@ namespace SlaveGreylings
             {
                 Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
                 var pieceList = new List<Piece>();
-                Piece.GetAllPiecesInRadius(greylingPosition, 10f, pieceList);
+                Piece.GetAllPiecesInRadius(greylingPosition, (float)ContainerSearchRadius.Value, pieceList);
                 var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
                 // no containers detected, return false
 
@@ -566,8 +598,8 @@ namespace SlaveGreylings
                         tameable = __instance.gameObject.AddComponent<Tameable>();
                     }
 
-                    tameable.m_fedDuration = 500;
-                    tameable.m_tamingTime = 1000;
+                    tameable.m_fedDuration = (float)FeedDuration.Value;
+                    tameable.m_tamingTime = (float)TamingTime.Value;
                     tameable.m_commandable = true;
 
                     var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
@@ -591,8 +623,11 @@ namespace SlaveGreylings
                     else
                     {
                         ai.m_consumeItems.Clear();
-                        ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "SilverNecklace").FirstOrDefault());
-                        ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Ruby").FirstOrDefault());
+                        var tamingItemNames = TamingItemList.Value.Split(',');
+                        foreach (string consumeItem in tamingItemNames)
+                        {
+                            ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, consumeItem).FirstOrDefault());
+                        }
                     }
                 }
             }
