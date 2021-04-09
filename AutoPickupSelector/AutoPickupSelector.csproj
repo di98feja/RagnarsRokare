@@ -68,6 +68,7 @@
   <ItemGroup>
     <Content Include="itemlist.txt" />
     <Content Include="readme.txt" />
+    <Content Include="PieceList.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

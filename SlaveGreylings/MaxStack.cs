@@ -52,5 +52,19 @@ namespace SlaveGreylings
         {
             return m_stack.GetEnumerator();
         }
+
+        public void Remove(T item)
+        {
+            Stack<T> newstack = new Stack<T>();
+            while (m_stack.Any())
+            {
+                T transfer = m_stack.Pop();
+                if (!transfer.Equals(item))
+                {
+                    newstack.Push(transfer);
+                }
+            }
+            m_stack = newstack;
+        }
     }
 }

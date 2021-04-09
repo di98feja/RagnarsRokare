@@ -124,6 +124,8 @@ namespace SlaveGreylings
 
                 ___m_aiStatus = "";
 
+                
+                
                 if (___m_character.GetHealthPercentage() < ___m_fleeIfLowHealth && ___m_timeSinceHurt < 20f && m_attacker != null)
                 {
                     Invoke(__instance, "Flee", new object[] { dt, m_attacker.transform.position });
@@ -134,6 +136,7 @@ namespace SlaveGreylings
                 {
                     Invoke(__instance, "Follow", new object[] { __instance.GetFollowTarget(), dt });
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Follow");
+                    Invoke(__instance, "SetAlerted", new object[] { false });
                     m_assignment[instanceId].Clear();
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
@@ -192,7 +195,7 @@ namespace SlaveGreylings
                     }
                     else
                     {
-                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
+                        //___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
                         m_assignment[instanceId].Clear();
                     }
                 }
@@ -214,7 +217,7 @@ namespace SlaveGreylings
                     if ((!knowWhattoFetch || isCarryingItem) && !assignment.IsClose(greylingPosition))
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
-                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, assignment.TypeOfAssignment.InteractDist - 1.0f, false });
+                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, 0.5f, false });
                         return false;
                     }
 
@@ -422,7 +425,7 @@ namespace SlaveGreylings
                     return false;
                 }
 
-                ___m_aiStatus = UpdateAiStatus(___m_nview, "Random movement");
+                ___m_aiStatus = UpdateAiStatus(___m_nview, "Random movement (No new assignments found)");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 return false;
             }
