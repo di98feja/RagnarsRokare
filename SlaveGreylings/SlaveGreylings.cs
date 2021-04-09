@@ -481,6 +481,10 @@ namespace SlaveGreylings
 
                 // filter out assignments already in list
                 var newAssignments = allAssignablePieces.Where(p => !m_assignment[instanceId].Any(a => a.AssignmentObject == p.gameObject));
+                if (!newAssignments.Any())
+                {
+                    return false;
+                }
 
                 // select random piece
                 var random = new System.Random();
