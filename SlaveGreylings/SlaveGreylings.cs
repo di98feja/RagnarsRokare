@@ -192,7 +192,7 @@ namespace SlaveGreylings
                     }
                     else
                     {
-                        ___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
+                        //___m_aiStatus = UpdateAiStatus(___m_nview, $"No new assignments found");
                         m_assignment[instanceId].Clear();
                     }
                 }
@@ -214,7 +214,7 @@ namespace SlaveGreylings
                     if ((!knowWhattoFetch || isCarryingItem) && !assignment.IsClose(greylingPosition))
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
-                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, assignment.TypeOfAssignment.InteractDist - 1.0f, false });
+                        Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, 0.5f, false });
                         return false;
                     }
 
@@ -415,7 +415,7 @@ namespace SlaveGreylings
                     return false;
                 }
 
-                ___m_aiStatus = UpdateAiStatus(___m_nview, "Random movement");
+                ___m_aiStatus = UpdateAiStatus(___m_nview, "Random movement (No new assignments found)");
                 typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { dt });
                 return false;
             }
@@ -461,13 +461,14 @@ namespace SlaveGreylings
 
                 // filter out assignments already in list
                 var newAssignments = allAssignablePieces.Where(p => !m_assignment[instanceId].Any(a => a.AssignmentObject == p.gameObject));
+
+                // filter out inaccessible assignments
+                newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, false, false));
+
                 if (!newAssignments.Any())
                 {
                     return false;
                 }
-
-                // filter out inaccessible assignments
-                newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, false, false));
 
                 // select random piece
                 var random = new System.Random();
