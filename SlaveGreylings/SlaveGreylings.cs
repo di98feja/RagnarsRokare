@@ -466,6 +466,9 @@ namespace SlaveGreylings
                     return false;
                 }
 
+                // filter out inaccessible assignments
+                newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, false, false));
+
                 // select random piece
                 var random = new System.Random();
                 int index = random.Next(newAssignments.Count());
