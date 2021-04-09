@@ -124,6 +124,8 @@ namespace SlaveGreylings
 
                 ___m_aiStatus = "";
 
+                
+                
                 if (___m_character.GetHealthPercentage() < ___m_fleeIfLowHealth && ___m_timeSinceHurt < 20f && m_attacker != null)
                 {
                     Invoke(__instance, "Flee", new object[] { dt, m_attacker.transform.position });
@@ -134,6 +136,7 @@ namespace SlaveGreylings
                 {
                     Invoke(__instance, "Follow", new object[] { __instance.GetFollowTarget(), dt });
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Follow");
+                    Invoke(__instance, "SetAlerted", new object[] { false });
                     m_assignment[instanceId].Clear();
                     m_fetchitems[instanceId].Clear();
                     m_assigned[instanceId] = false;
