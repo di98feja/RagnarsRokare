@@ -1,6 +1,5 @@
 ﻿using BepInEx;
 using HarmonyLib;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -15,31 +14,12 @@ namespace SlaveGreylings
     {
         private const string GivenName = "RR_GivenName";
         private const string AiStatus = "RR_AiStatus";
-
         private static readonly bool isDebug = false;
-
-        public static void Dbgl(string str = "", bool pref = true)
-        {
-            if (isDebug)
-                Debug.Log((pref ? typeof(SlaveGreylings).Namespace + " " : "") + str);
-        }
 
         private void Awake()
         {
             GreylingsConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-        }
-
-        private static string GetPrefabName(string name)
-        {
-            char[] anyOf = new char[] { '(', ' ' };
-            int num = name.IndexOfAny(anyOf);
-            string result;
-            if (num >= 0)
-                result = name.Substring(0, num);
-            else
-                result = name;
-            return result;
         }
 
         [HarmonyPatch(typeof(BaseAI), "UpdateAI")]
@@ -615,7 +595,6 @@ namespace SlaveGreylings
                     __instance.m_consumeItems.Clear();
                     __instance.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
                     __instance.m_consumeSearchRange = 50;
-
                 }
             }
         }
@@ -643,10 +622,12 @@ namespace SlaveGreylings
         class MyTextReceiver : TextReceiver
         {
             private readonly ZNetView m_nview;
+            private readonly Character m_character;
 
-            public MyTextReceiver(ZNetView nview)
+            public MyTextReceiver(ZNetView nview, Character character)
             {
                 this.m_nview = nview;
+                this.m_character = character;
             }
 
             public string GetText()
@@ -658,6 +639,19 @@ namespace SlaveGreylings
             {
                 m_nview.ClaimOwnership();
                 m_nview.GetZDO().Set(GivenName, text);
+
+                UpdateHUDText(text);
+            }
+
+            private void UpdateHUDText(string text)
+            {
+                var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
+                var hudsDict = hudsDictObject as System.Collections.IDictionary;
+                if (!hudsDict.Contains(m_character)) return;
+                var hudObject = hudsDict[m_character];
+                var hudText = hudObject.GetType().GetField("m_name", BindingFlags.Public | BindingFlags.Instance).GetValue(hudObject) as Text;
+                if (hudText == null) return;
+                hudText.text = text;
             }
         }
 
@@ -756,7 +750,7 @@ namespace SlaveGreylings
                 if (!___m_nview.IsValid())
                 {
                     __result = string.Empty;
-                    return false;
+                    return true;
                 }
                 string aiStatus = ___m_nview.GetZDO().GetString(AiStatus) ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
                 string str = Localization.instance.Localize(___m_character.GetHoverName());
@@ -777,14 +771,14 @@ namespace SlaveGreylings
                 if (!___m_nview.IsValid())
                 {
                     __result = false;
-                    return false;
+                    return true;
                 }
                 string hoverName = ___m_character.GetHoverName();
                 if (___m_character.IsTamed())
                 {
                     if (hold)
                     {
-                        TextInput.instance.RequestText(new MyTextReceiver(___m_character.GetComponent<ZNetView>()), "Name", 15);
+                        TextInput.instance.RequestText(new MyTextReceiver(___m_character.GetComponent<ZNetView>(), ___m_character), "Name", 15);
                         __result = false;
                         return false;
                     }
@@ -811,5 +805,24 @@ namespace SlaveGreylings
                 return false;
             }
         }
+
+        private static string GetPrefabName(string name)
+        {
+            char[] anyOf = new char[] { '(', ' ' };
+            int num = name.IndexOfAny(anyOf);
+            string result;
+            if (num >= 0)
+                result = name.Substring(0, num);
+            else
+                result = name;
+            return result;
+        }
+
+        public static void Dbgl(string str = "", bool pref = true)
+        {
+            if (isDebug)
+                Debug.Log((pref ? typeof(SlaveGreylings).Namespace + " " : "") + str);
+        }
+
     }
 }
