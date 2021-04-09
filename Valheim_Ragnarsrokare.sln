@@ -11,6 +11,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SlaveGreylings", "SlaveGrey
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerPasswordHelper", "ServerPasswordHelper\ServerPasswordHelper.csproj", "{C839513D-2658-43DB-962B-E962E3C469D2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{A1908A5F-6CF6-417E-AF1D-26E11B734F64}"
+	ProjectSection(SolutionItems) = preProject
+		AutoPickupSelector\itemlist.txt = AutoPickupSelector\itemlist.txt
+		AutoPickupSelector\PieceList.txt = AutoPickupSelector\PieceList.txt
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
