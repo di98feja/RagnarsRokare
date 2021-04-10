@@ -555,6 +555,7 @@ namespace SlaveGreylings
         static class Character_Awake_Patch
         {
             private static Dictionary<string, int> m_allGreylings = new Dictionary<string, int>();
+
             static void Postfix(Character __instance, ref ZNetView ___m_nview)
             {
                 if (__instance.name.Contains("Greyling"))
@@ -581,12 +582,21 @@ namespace SlaveGreylings
                     }
                     
                     var uniqueId = ___m_nview.GetZDO().GetString(Z_CharacterId);
+                    Debug.Log($"Greyling guid:{uniqueId ?? string.Empty}");
                     if (string.IsNullOrEmpty(uniqueId))
                     {
                         uniqueId = System.Guid.NewGuid().ToString();
                         ___m_nview.GetZDO().Set(Z_CharacterId, uniqueId);
+                        Debug.Log($"Created new guid:{uniqueId}");
                     }
-                    m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
+                    if (m_allGreylings.ContainsKey(uniqueId))
+                    {
+                        m_allGreylings[uniqueId] = __instance.GetInstanceID();
+                    }
+                    else
+                    {
+                        m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
+                    }
                     ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateHUDText);
 
                     var ai = __instance.GetBaseAI() as MonsterAI;
