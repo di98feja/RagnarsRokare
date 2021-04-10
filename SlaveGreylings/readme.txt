@@ -34,6 +34,8 @@ Many distanses and timers are configurable for better adjustments, some of them 
 Tips:
 The Greyling is not very smart (this is intended) and easily gets confused. It might get stuck in tight corners or behind walls. Avoid tight multi level designs for where you deploy enslaved greylings.
 
+Please note that this is a work in progress, we will add new features/creatures and take disciplinary action against unruly or misbehaving Greylings.
+
 The code can be found at https://github.com/di98feja/RagnarsRokare
 
 We hope you find this little mod useful!
