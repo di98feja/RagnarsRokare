@@ -12,8 +12,10 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
     public class SlaveGreylings : BaseUnityPlugin
     {
-        private const string GivenName = "RR_GivenName";
-        private const string AiStatus = "RR_AiStatus";
+        private const string Z_GivenName = "RR_GivenName";
+        private const string Z_AiStatus = "RR_AiStatus";
+        private const string Z_CharacterId = "RR_CharId";
+        private const string Z_UpdateCharacterHUD = "RR_UpdateCharacterHUD";
         private static readonly bool isDebug = false;
 
         private void Awake()
@@ -56,12 +58,12 @@ namespace SlaveGreylings
         {
             public static string UpdateAiStatus(ZNetView nview, string newStatus)
             {
-                string currentAiStatus = nview?.GetZDO()?.GetString(AiStatus);
+                string currentAiStatus = nview?.GetZDO()?.GetString(Z_AiStatus);
                 if (currentAiStatus != newStatus)
                 {
-                    string name = nview?.GetZDO()?.GetString(GivenName);
+                    string name = nview?.GetZDO()?.GetString(Z_GivenName);
                     Debug.Log($"{name}: {newStatus}");
-                    nview.GetZDO().Set(AiStatus, newStatus);
+                    nview.GetZDO().Set(Z_AiStatus, newStatus);
                 }
                 return newStatus;
             }
@@ -552,6 +554,7 @@ namespace SlaveGreylings
         [HarmonyPatch(typeof(Character), "Awake")]
         static class Character_Awake_Patch
         {
+            private static Dictionary<string, int> m_allGreylings = new Dictionary<string, int>();
             static void Postfix(Character __instance, ref ZNetView ___m_nview)
             {
                 if (__instance.name.Contains("Greyling"))
@@ -576,7 +579,10 @@ namespace SlaveGreylings
                         var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
                         visEquipment.m_rightHand = rightHand;
                     }
-                    ___m_nview.Register("UpdateHUDText", RPC_);
+                    var uniqueId = System.Guid.NewGuid().ToString();
+                    ___m_nview.GetZDO().Set(Z_CharacterId, uniqueId);
+                    ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateHUDText);
+                    m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
                     {
@@ -584,6 +590,11 @@ namespace SlaveGreylings
                         ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
                         ai.m_randomMoveRange = 5;
                         ai.m_consumeSearchRange = 50;
+                        string givenName = ___m_nview?.GetZDO()?.GetString(Z_GivenName);
+                        if (!string.IsNullOrEmpty(givenName))
+                        {
+                            __instance.m_name = givenName;
+                        }
                     }
                     else
                     {
@@ -597,12 +608,15 @@ namespace SlaveGreylings
                 }
             }
 
-            private static void RPC_UpdateHUDText(string text)
+            private static void RPC_UpdateHUDText(long sender, string uniqueId, string text)
             {
+                Debug.Log($"Updating HUD for {uniqueId}");
+                var greylingToUpdate = Character.GetAllCharacters().Where(c => c.GetInstanceID() == m_allGreylings[uniqueId]).FirstOrDefault();
+                if (null == greylingToUpdate) return;
                 var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
                 var hudsDict = hudsDictObject as System.Collections.IDictionary;
-                if (!hudsDict.Contains(m_character)) return;
-                var hudObject = hudsDict[m_character];
+                if (!hudsDict.Contains(greylingToUpdate)) return;
+                var hudObject = hudsDict[greylingToUpdate];
                 var hudText = hudObject.GetType().GetField("m_name", BindingFlags.Public | BindingFlags.Instance).GetValue(hudObject) as Text;
                 if (hudText == null) return;
                 hudText.text = text;
@@ -625,24 +639,24 @@ namespace SlaveGreylings
             }
         }
 
-        [HarmonyPatch(typeof(Character), "GetHoverName")]
-        static class Character_GetHoverName_Patch
-        {
-            static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
-            {
-                string givenName = ___m_nview?.GetZDO()?.GetString(GivenName);
-                if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
-                {
-                    __result = givenName;
-                    return false;
-                }
-                else
-                {
-                    // Run original method
-                    return true;
-                }
-            }
-        }
+        //[HarmonyPatch(typeof(Character), "GetHoverName")]
+        //static class Character_GetHoverName_Patch
+        //{
+        //    static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
+        //    {
+        //        string givenName = ___m_nview?.GetZDO()?.GetString(GivenName);
+        //        if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
+        //        {
+        //            __result = givenName;
+        //            return false;
+        //        }
+        //        else
+        //        {
+        //            // Run original method
+        //            return true;
+        //        }
+        //    }
+        //}
 
 
         class MyTextReceiver : TextReceiver
@@ -658,15 +672,16 @@ namespace SlaveGreylings
 
             public string GetText()
             {
-                return m_nview.GetZDO().GetString(GivenName);
+                return m_nview.GetZDO().GetString(Z_GivenName);
             }
 
             public void SetText(string text)
             {
                 m_nview.ClaimOwnership();
-                m_nview.GetZDO().Set(GivenName, text);
-
-                m_nview.InvokeRPC("UpdateHUDText", text);                
+                m_nview.GetZDO().Set(Z_GivenName, text);
+                m_character.m_name = text;
+                Debug.Log($"CharId:{m_nview.GetZDO().GetString(Z_CharacterId)}");
+                m_nview.InvokeRPC(Z_UpdateCharacterHUD, m_nview.GetZDO().GetString(Z_CharacterId), text);                
             }
         }
 
@@ -767,7 +782,7 @@ namespace SlaveGreylings
                     __result = string.Empty;
                     return true;
                 }
-                string aiStatus = ___m_nview.GetZDO().GetString(AiStatus) ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
+                string aiStatus = ___m_nview.GetZDO().GetString(Z_AiStatus) ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
                 string str = Localization.instance.Localize(___m_character.GetHoverName());
                 str += Localization.instance.Localize(" ( $hud_tame, " + aiStatus + " )");
                 __result = str + Localization.instance.Localize("\n[<color=yellow><b>$KEY_Use</b></color>] $hud_pet" + "\n[<color=yellow>Hold E</color>] to change name");
