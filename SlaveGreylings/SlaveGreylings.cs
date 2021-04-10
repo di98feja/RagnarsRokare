@@ -335,7 +335,7 @@ namespace SlaveGreylings
                             m_searchcontainer[instanceId] = false;
                             return false;
                         }
-                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 2.5;
+                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 2.0;
                         if (!isCloseToContainer)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to Container");
@@ -374,7 +374,7 @@ namespace SlaveGreylings
 
                     if (hasSpottedAnItem)
                     {
-                        bool isCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem[instanceId].transform.position) > 2.5;
+                        bool isCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem[instanceId].transform.position) > 1;
                         if (isCloseToPickupItem)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to pickup item");
