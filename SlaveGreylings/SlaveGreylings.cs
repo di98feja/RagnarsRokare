@@ -227,7 +227,7 @@ namespace SlaveGreylings
                     if (isCarryingItem && assignment.IsClose(greylingPosition) && !isLookingAtAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Looking at Assignment: {assignment.TypeOfAssignment.Name} ");
-                        Invoke(__instance, "LookAt", new object[] { });
+                        Invoke(__instance, "LookAt", new object[] { assignment.Position });
                         return false;
                     }
 
@@ -598,6 +598,7 @@ namespace SlaveGreylings
                         m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
                     }
                     ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateHUDText);
+                    ___m_nview.Register("RR_testRPC", RPC_Test);
 
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
@@ -611,6 +612,8 @@ namespace SlaveGreylings
                         {
                             __instance.m_name = givenName;
                         }
+                        ___m_nview.InvokeRPC(Z_UpdateCharacterHUD, uniqueId, givenName);
+                        ___m_nview.InvokeRPC("RR_testRPC");
                     }
                     else
                     {
@@ -624,7 +627,12 @@ namespace SlaveGreylings
                 }
             }
 
-            private static void RPC_UpdateHUDText(long sender, string uniqueId, string text)
+            private static void RPC_Test(long caller)
+            {
+                Debug.Log("RPC_TEST!");
+            }
+
+            public static void RPC_UpdateHUDText(long sender, string uniqueId, string text)
             {
                 Debug.Log($"Updating HUD for {uniqueId ?? string.Empty}");
                 if (!m_allGreylings.ContainsKey(uniqueId)) return;
@@ -699,7 +707,7 @@ namespace SlaveGreylings
                 m_nview.GetZDO().Set(Z_GivenName, text);
                 m_character.m_name = text;
                 Debug.Log($"CharId:{m_nview.GetZDO().GetString(Z_CharacterId)}");
-                m_nview.InvokeRPC(Z_UpdateCharacterHUD, m_nview.GetZDO().GetString(Z_CharacterId), text);                
+                m_nview.InvokeRPC(Z_UpdateCharacterHUD, m_nview.GetZDO().GetString(Z_CharacterId), text );
             }
         }
 
