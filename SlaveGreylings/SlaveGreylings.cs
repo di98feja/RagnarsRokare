@@ -598,7 +598,6 @@ namespace SlaveGreylings
                         m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
                     }
                     ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateHUDText);
-                    ___m_nview.Register("RR_testRPC", RPC_Test);
 
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
@@ -612,8 +611,6 @@ namespace SlaveGreylings
                         {
                             __instance.m_name = givenName;
                         }
-                        ___m_nview.InvokeRPC(Z_UpdateCharacterHUD, uniqueId, givenName);
-                        ___m_nview.InvokeRPC("RR_testRPC");
                     }
                     else
                     {
@@ -627,9 +624,10 @@ namespace SlaveGreylings
                 }
             }
 
-            private static void RPC_Test(long caller)
+            public static void BroadcastUpdateHUD(ref ZNetView nview, string text)
             {
-                Debug.Log("RPC_TEST!");
+                Debug.Log($"CharId:{nview.GetZDO().GetString(Z_CharacterId)}");
+                nview.InvokeRPC(Z_UpdateCharacterHUD, nview.GetZDO().GetString(Z_CharacterId), text);
             }
 
             public static void RPC_UpdateHUDText(long sender, string uniqueId, string text)
@@ -647,7 +645,6 @@ namespace SlaveGreylings
                 if (hudText == null) return;
                 hudText.text = text;
             }
-
         }
 
         [HarmonyPatch(typeof(MonsterAI), "MakeTame")]
@@ -687,12 +684,12 @@ namespace SlaveGreylings
 
         class MyTextReceiver : TextReceiver
         {
-            private readonly ZNetView m_nview;
+            private ZNetView m_nview;
             private readonly Character m_character;
 
-            public MyTextReceiver(ZNetView nview, Character character)
+            public MyTextReceiver(Character character)
             {
-                this.m_nview = nview;
+                this.m_nview = character.GetComponent<ZNetView>();
                 this.m_character = character;
             }
 
@@ -706,8 +703,7 @@ namespace SlaveGreylings
                 m_nview.ClaimOwnership();
                 m_nview.GetZDO().Set(Z_GivenName, text);
                 m_character.m_name = text;
-                Debug.Log($"CharId:{m_nview.GetZDO().GetString(Z_CharacterId)}");
-                m_nview.InvokeRPC(Z_UpdateCharacterHUD, m_nview.GetZDO().GetString(Z_CharacterId), text );
+                Character_Awake_Patch.BroadcastUpdateHUD(ref m_nview, text);
             }
         }
 
@@ -819,7 +815,7 @@ namespace SlaveGreylings
         [HarmonyPatch(typeof(Tameable), "Interact")]
         static class Tameable_Interact_Patch
         {
-            static bool Prefix(Tameable __instance, ref bool __result, Humanoid user, bool hold, ZNetView ___m_nview, Character ___m_character,
+            static bool Prefix(Tameable __instance, ref bool __result, Humanoid user, bool hold, ZNetView ___m_nview, ref Character ___m_character,
                 ref float ___m_lastPetTime)
             {
                 if (!__instance.name.Contains("Greyling")) return true;
@@ -834,7 +830,7 @@ namespace SlaveGreylings
                 {
                     if (hold)
                     {
-                        TextInput.instance.RequestText(new MyTextReceiver(___m_character.GetComponent<ZNetView>(), ___m_character), "Name", 15);
+                        TextInput.instance.RequestText(new MyTextReceiver(___m_character), "Name", 15);
                         __result = false;
                         return false;
                     }
