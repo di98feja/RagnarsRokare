@@ -178,7 +178,12 @@ namespace SlaveGreylings
                 foreach (Assignment assignment in m_assignment[instanceId])
                 {
                     assignment.AssignmentTime += dt;
-                    if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value)
+                    int multiplicator = 1;
+                    if (assignment.TypeOfAssignment.ComponentType == typeof(Fireplace))
+                    {
+                        multiplicator = 3;
+                    }
+                    if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value * multiplicator)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"removing outdated Assignment of {m_assignment[instanceId].Count()}");
                         m_assignment[instanceId].Remove(assignment);
@@ -526,7 +531,7 @@ namespace SlaveGreylings
                 bool isNewInstance = !m_assignment.ContainsKey(instanceId);
                 if (isNewInstance)
                 {
-                    m_assignment.Add(instanceId, new MaxStack<Assignment>(5));
+                    m_assignment.Add(instanceId, new MaxStack<Assignment>(20));
                     m_containers.Add(instanceId, new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value));
                     m_assigned.Add(instanceId, false);
                     m_searchcontainer.Add(instanceId, false);
