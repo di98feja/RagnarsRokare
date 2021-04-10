@@ -579,10 +579,16 @@ namespace SlaveGreylings
                         var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
                         visEquipment.m_rightHand = rightHand;
                     }
-                    var uniqueId = System.Guid.NewGuid().ToString();
-                    ___m_nview.GetZDO().Set(Z_CharacterId, uniqueId);
-                    ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateHUDText);
+                    
+                    var uniqueId = ___m_nview.GetZDO().GetString(Z_CharacterId);
+                    if (string.IsNullOrEmpty(uniqueId))
+                    {
+                        uniqueId = System.Guid.NewGuid().ToString();
+                        ___m_nview.GetZDO().Set(Z_CharacterId, uniqueId);
+                    }
                     m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
+                    ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateHUDText);
+
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
                     {
@@ -610,7 +616,9 @@ namespace SlaveGreylings
 
             private static void RPC_UpdateHUDText(long sender, string uniqueId, string text)
             {
-                Debug.Log($"Updating HUD for {uniqueId}");
+                Debug.Log($"Updating HUD for {uniqueId ?? string.Empty}");
+                if (!m_allGreylings.ContainsKey(uniqueId)) return;
+
                 var greylingToUpdate = Character.GetAllCharacters().Where(c => c.GetInstanceID() == m_allGreylings[uniqueId]).FirstOrDefault();
                 if (null == greylingToUpdate) return;
                 var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
