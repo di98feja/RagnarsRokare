@@ -676,25 +676,6 @@ namespace SlaveGreylings
             }
         }
 
-        //[HarmonyPatch(typeof(Character), "GetHoverName")]
-        //static class Character_GetHoverName_Patch
-        //{
-        //    static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
-        //    {
-        //        string givenName = ___m_nview?.GetZDO()?.GetString(Z_GivenName);
-        //        if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
-        //        {
-        //            __result = givenName;
-        //            return false;
-        //        }
-        //        else
-        //        {
-        //            // Run original method
-        //            return true;
-        //        }
-        //    }
-        //}
-
         class MyTextReceiver : TextReceiver
         {
             private ZNetView m_nview;
