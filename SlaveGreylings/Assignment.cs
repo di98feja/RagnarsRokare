@@ -151,15 +151,15 @@ namespace SlaveGreylings
 
         public static IEnumerable<AssignmentType> AssignmentTypes { get; } = new List<AssignmentType>
         {
-            new AssignmentType { Name = "Smelter", PieceName = "smelter", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeSmelterInAssignments.Value},
+            new AssignmentType { Name = "Smelter", PieceName = "smelter", ComponentType = typeof(Smelter), InteractDist = 1.5f, Activated = GreylingsConfig.IncludeSmelterInAssignments.Value},
             new AssignmentType { Name = "Kiln", PieceName = "charcoal_kiln", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeKilnInAssignments.Value},
             new AssignmentType { Name = "Fireplace", PieceName = "fire_pit", ComponentType = typeof(Fireplace), InteractDist = 4.0f, Activated = GreylingsConfig.IncludeFireplaceInAssignments.Value},
-            new AssignmentType { Name = "StandingWoodTorch", PieceName = "piece_groundtorch_wood", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeStandingWoodTorchInAssignments.Value},
-            new AssignmentType { Name = "StandingIronTorch", PieceName = "piece_groundtorch", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeStandingIronTorchInAssignments.Value},
-            new AssignmentType { Name = "StandingGreenTorch", PieceName = "piece_groundtorch_green", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeStandingGreenTorchInAssignments.Value},
-            new AssignmentType { Name = "WallTorch", PieceName = "piece_walltorch", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeWallTorchInAssignments.Value},
-            new AssignmentType { Name = "Brazier", PieceName = "piece_brazierceiling01", ComponentType = typeof(Fireplace), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeBrazierInAssignments.Value},
-            new AssignmentType { Name = "Blastfurnace", PieceName = "blastfurnace", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeBlastFurnaceInAssignments.Value},
+            new AssignmentType { Name = "StandingWoodTorch", PieceName = "piece_groundtorch_wood", ComponentType = typeof(Fireplace), InteractDist = 1.5f, Activated = GreylingsConfig.IncludeStandingWoodTorchInAssignments.Value},
+            new AssignmentType { Name = "StandingIronTorch", PieceName = "piece_groundtorch", ComponentType = typeof(Fireplace), InteractDist = 1.5f, Activated = GreylingsConfig.IncludeStandingIronTorchInAssignments.Value},
+            new AssignmentType { Name = "StandingGreenTorch", PieceName = "piece_groundtorch_green", ComponentType = typeof(Fireplace), InteractDist = 1.5f, Activated = GreylingsConfig.IncludeStandingGreenTorchInAssignments.Value},
+            new AssignmentType { Name = "WallTorch", PieceName = "piece_walltorch", ComponentType = typeof(Fireplace), InteractDist = 1.5f, Activated = GreylingsConfig.IncludeWallTorchInAssignments.Value},
+            new AssignmentType { Name = "Brazier", PieceName = "piece_brazierceiling01", ComponentType = typeof(Fireplace), InteractDist = 1.5f, Activated = GreylingsConfig.IncludeBrazierInAssignments.Value},
+            new AssignmentType { Name = "Blastfurnace", PieceName = "blastfurnace", ComponentType = typeof(Smelter), InteractDist = 1.5f, Activated = GreylingsConfig.IncludeBlastFurnaceInAssignments.Value},
             new AssignmentType { Name = "Windmill", PieceName = "windmill", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeWindmillInAssignments.Value},
             new AssignmentType { Name = "Spinningwheel", PieceName = "piece_spinningwheel", ComponentType = typeof(Smelter), InteractDist = 2.5f, Activated = GreylingsConfig.IncludeSpinningWheelInAssignments.Value},
         };

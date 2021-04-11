@@ -9,7 +9,7 @@ using UnityEngine.UI;
 
 namespace SlaveGreylings
 {
-    [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.1")]
+    [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.2")]
     public class SlaveGreylings : BaseUnityPlugin
     {
         private const string Z_GivenName = "RR_GivenName";
