@@ -79,7 +79,7 @@ namespace SlaveGreylings
                 m_spottedItem = new Dictionary<int, ItemDrop>();
                 m_aiStatus = new Dictionary<int, string>();
                 m_assignedTimer = new Dictionary<int, float>();
-
+                m_stateChangeTimer = new Dictionary<int, float>();
                 m_acceptedContainerNames = new List<string>();
                 m_acceptedContainerNames.AddRange(GreylingsConfig.IncludedContainersList.Value.Split());
             }
@@ -171,10 +171,6 @@ namespace SlaveGreylings
 
                 // Here starts the fun.
 
-                //stateChangeTimer Updated
-                m_stateChangeTimer[instanceId] += dt;
-
-
                 //Assigned timeout-function 
                 m_assignedTimer[instanceId] += dt;
                 if (m_assignedTimer[instanceId] > GreylingsConfig.TimeLimitOnAssignment.Value) m_assigned[instanceId] = false;
@@ -197,7 +193,11 @@ namespace SlaveGreylings
                     }
                 }
 
-                Vector3 greylingPosition = ___m_character.transform.position;
+                //stateChangeTimer Updated
+                m_stateChangeTimer[instanceId] += dt;
+                if (m_stateChangeTimer[instanceId] < 1) return false;
+
+                    Vector3 greylingPosition = ___m_character.transform.position;
                 if (!m_assigned[instanceId])
                 {
                     if (FindRandomNearbyAssignment(instanceId, greylingPosition))
@@ -234,7 +234,6 @@ namespace SlaveGreylings
                         {
                             return false;
                         }
-                        return false;
                     }
 
                     bool isLookingAtAssignment = (bool)Invoke(__instance,"IsLookingAt", new object[] { assignment.Position, 20f });
@@ -245,7 +244,7 @@ namespace SlaveGreylings
                         return false;
                     }
 
-                    if (isCarryingItem && assignment.IsClose(greylingPosition))
+                    if (isCarryingItem && assignment.IsCloseEnough(greylingPosition))
                     {
                         var needFuel = assignment.NeedFuel;
                         var needOre = assignment.NeedOre;
@@ -273,10 +272,11 @@ namespace SlaveGreylings
                         humanoid.UnequipItem(m_carrying[instanceId], false);
                         m_carrying[instanceId] = null;
                         m_fetchitems[instanceId].Clear();
+                        m_stateChangeTimer[instanceId] = 0;
                         return false;
                     }
 
-                    if (!knowWhattoFetch && assignment.IsClose(greylingPosition))
+                    if (!knowWhattoFetch && assignment.IsCloseEnough(greylingPosition))
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
                         var needFuel = assignment.NeedFuel;
@@ -296,6 +296,7 @@ namespace SlaveGreylings
                         {
                             m_assigned[instanceId] = false;
                         }
+                        m_stateChangeTimer[instanceId] = 0;
                         return false;
                     }
 
@@ -308,6 +309,7 @@ namespace SlaveGreylings
                         if (spottedItem != null)
                         {
                             m_spottedItem[instanceId] = spottedItem;
+                            m_stateChangeTimer[instanceId] = 0;
                             return false;
                         }
                         
@@ -324,6 +326,7 @@ namespace SlaveGreylings
                                     m_containers[instanceId].Remove(chest);
                                     m_containers[instanceId].Push(chest);
                                     m_searchcontainer[instanceId] = true;
+                                    m_stateChangeTimer[instanceId] = 0;
                                     return false;
                                 }
                             }
@@ -336,6 +339,7 @@ namespace SlaveGreylings
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Chest found");
                             m_containers[instanceId].Push(nearbyChest);
                             m_searchcontainer[instanceId] = true;
+                            m_stateChangeTimer[instanceId] = 0;
                             return false;
                         }
                     }
@@ -377,19 +381,21 @@ namespace SlaveGreylings
                                     m_spottedItem[instanceId] = null;
                                     m_fetchitems[instanceId].Clear();
                                     m_searchcontainer[instanceId] = false;
+                                    m_stateChangeTimer[instanceId] = 0;
                                     return false;
                                 }
                             }
 
                             m_searchcontainer[instanceId] = false;
+                            m_stateChangeTimer[instanceId] = 0;
                             return false;
                         }
                     }
 
                     if (hasSpottedAnItem)
                     {
-                        bool isCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem[instanceId].transform.position) > 1;
-                        if (isCloseToPickupItem)
+                        bool isNotCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem[instanceId].transform.position) > 1;
+                        if (isNotCloseToPickupItem)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to pickup item");
                             Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0.5f , false });
@@ -422,6 +428,7 @@ namespace SlaveGreylings
                             m_carrying[instanceId] = pickedUpInstance;
                             m_spottedItem[instanceId] = null;
                             m_fetchitems[instanceId].Clear();
+                            m_stateChangeTimer[instanceId] = 0;
                             return false;
                         }
                     }
@@ -438,6 +445,7 @@ namespace SlaveGreylings
                     m_containers[instanceId].Clear();
                     m_searchcontainer[instanceId] = false;
                     m_assigned[instanceId] = false;
+                    m_stateChangeTimer[instanceId] = 0;
                     return false;
                 }
 

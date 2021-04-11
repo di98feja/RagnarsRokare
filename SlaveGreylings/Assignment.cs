@@ -119,6 +119,11 @@ namespace SlaveGreylings
             return Vector3.Distance(point, Position) < TypeOfAssignment.InteractDist;
         }
 
+        public bool IsCloseEnough(Vector3 point)
+        {
+            return Vector3.Distance(point, Position) < TypeOfAssignment.InteractDist + 1;
+        }
+
         public Assignment(int instanceId, Piece piece)
         {
             BelongsTo = instanceId;
