@@ -48,11 +48,10 @@ We hope you find this little mod useful!
 ###############################
 From the book of Barg:
 Today the day of 42 in this paradise of a world of Odin we call Valheim, me and Morg gave the two greylings the names Berith and Dumbass. We think one is female but cannot really tell them apart, 
-except from a sens of identity we can feel when moving up close to them. The naming caused some missunderstanding when me and Morg was trying to use different names, but an improvenet in our sens of identity 
+except from a sense of identity we can feel when moving up close to them. The naming caused some misunderstanding when me and Morg was trying to use different names, but an improvement in our sense of identity 
 sorted this problem just fine.
-Another improvement in the Greyling training is that we have trained them to not hast into a task wothout thinking it through. We noted that this improved the quality of their work, even if it results in a slower progress.
+Another improvement in the Greyling training is that we have trained them to not hast into a task without thinking it through. We noted that this improved the quality of their work, even if it results in a slower progress.
 ###############################
-
-* Renaming is improved so the risk of players seing different names is limited.
-* Task timeout is limiting the minimum time on a state (such as search, load item etc.) to 1s. This is creating a smoother more natrual behaviour of the slaves.
+* Renaming is improved so the risk of players seeing different names is limited.
+* Task timeout is limiting the minimum time on a state (such as search, load item etc.) to 1s. This is creating a smoother more natural behavior of the slaves.
 * Minor adjustments to interact distance to make moving up to assignments/objects look better.
