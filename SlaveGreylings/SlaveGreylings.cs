@@ -602,7 +602,7 @@ namespace SlaveGreylings
                     {
                         m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
                     }
-                    ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateHUDText);
+                    ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateCharacterName);
 
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
@@ -629,19 +629,18 @@ namespace SlaveGreylings
                 }
             }
 
-            public static void BroadcastUpdateHUD(ref ZNetView nview, string text)
+            public static void BroadcastUpdateCharacterName(ref ZNetView nview, string text)
             {
-                Debug.Log($"CharId:{nview.GetZDO().GetString(Z_CharacterId)}");
                 nview.InvokeRPC(ZNetView.Everybody, Z_UpdateCharacterHUD, nview.GetZDO().GetString(Z_CharacterId), text);
             }
 
-            public static void RPC_UpdateHUDText(long sender, string uniqueId, string text)
+            public static void RPC_UpdateCharacterName(long sender, string uniqueId, string text)
             {
-                Debug.Log($"Updating HUD for {uniqueId ?? string.Empty}");
                 if (!m_allGreylings.ContainsKey(uniqueId)) return;
 
                 var greylingToUpdate = Character.GetAllCharacters().Where(c => c.GetInstanceID() == m_allGreylings[uniqueId]).FirstOrDefault();
                 if (null == greylingToUpdate) return;
+                greylingToUpdate.m_name = text;
                 var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
                 var hudsDict = hudsDictObject as System.Collections.IDictionary;
                 if (!hudsDict.Contains(greylingToUpdate)) return;
@@ -667,26 +666,6 @@ namespace SlaveGreylings
             }
         }
 
-        //[HarmonyPatch(typeof(Character), "GetHoverName")]
-        //static class Character_GetHoverName_Patch
-        //{
-        //    static bool Prefix(Character __instance, ref string __result, ref ZNetView ___m_nview)
-        //    {
-        //        string givenName = ___m_nview?.GetZDO()?.GetString(GivenName);
-        //        if (__instance.name.Contains("Greyling") && __instance.IsTamed() && !string.IsNullOrEmpty(givenName))
-        //        {
-        //            __result = givenName;
-        //            return false;
-        //        }
-        //        else
-        //        {
-        //            // Run original method
-        //            return true;
-        //        }
-        //    }
-        //}
-
-
         class MyTextReceiver : TextReceiver
         {
             private ZNetView m_nview;
@@ -707,8 +686,7 @@ namespace SlaveGreylings
             {
                 m_nview.ClaimOwnership();
                 m_nview.GetZDO().Set(Z_GivenName, text);
-                m_character.m_name = text;
-                Character_Awake_Patch.BroadcastUpdateHUD(ref m_nview, text);
+                Character_Awake_Patch.BroadcastUpdateCharacterName(ref m_nview, text);
             }
         }
 
