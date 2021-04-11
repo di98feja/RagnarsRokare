@@ -4,63 +4,96 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace RagnarsRokare.CraftToStack
 {
-	[BepInPlugin(ModId, ModName, ModVersion)]
-	[BepInProcess("valheim.exe")]
-	public class CraftToStack : BaseUnityPlugin
-	{
-		public const string ModId = "RagnarsRokare.CraftToStack";
-		public const string ModName = "RagnarsRökare CraftToStackMod";
-		public const string ModVersion = "0.1";
+    [BepInPlugin(ModId, ModName, ModVersion)]
+    [BepInProcess("valheim.exe")]
+    public class CraftToStack : BaseUnityPlugin
+    {
+        public const string ModId = "RagnarsRokare.CraftToStack";
+        public const string ModName = "RagnarsRökare CraftToStackMod";
+        public const string ModVersion = "0.1";
 
-		private readonly Harmony harmony = new Harmony(ModId);
-		public static ConfigEntry<int> NexusID;
+        private readonly Harmony harmony = new Harmony(ModId);
+        public static ConfigEntry<int> NexusID;
 
-		void Awake()
-		{
-			Debug.Log($"Loading {ModName} v{ModVersion}, lets get rolling!");
-			harmony.PatchAll();
-			NexusID = Config.Bind<int>("General", "NexusID", -1, "Nexus mod ID for updates");
-		}
+        void Awake()
+        {
+            Debug.Log($"Loading {ModName} v{ModVersion}, Barg Bug Bash!");
+            harmony.PatchAll();
+            NexusID = Config.Bind<int>("General", "NexusID", -1, "Nexus mod ID for updates");
+        }
 
-		[HarmonyPatch(typeof(Inventory), "AddItem")]
-		class Inventory_AddItem_Patch
-		{
-			static bool Prefix(ref Inventory __instance, ref ItemDrop.ItemData __result, string name, int stack, int quality, int variant, long crafterID, string crafterName)
+        [HarmonyPatch(typeof(InventoryGui), "UpdateRecipe")]
+        class InventoryGui_UpdateRecipe_Patch
+        {
+            static void Postfix(ref InventoryGui __instance, KeyValuePair<Recipe, ItemDrop.ItemData> ___m_selectedRecipe, ref Button ___m_craftButton)
+            {
+                if (Player.m_localPlayer == null) return;
+                var recipeInput = ___m_selectedRecipe.Value;
+                if (recipeInput != null) return;
+                var recipe = ___m_selectedRecipe.Key;
+                bool isUpgradable = recipe.m_item.m_itemData.m_shared.m_maxQuality > 1;
+                if (isUpgradable) return;
+
+                UITooltip component = ___m_craftButton.GetComponent<UITooltip>();
+                if (component.m_text != Localization.instance.Localize("$inventory_full")) return;
+
+                bool canAddItem = Player.m_localPlayer.GetInventory().CanAddItem(recipe.m_item.m_itemData, recipe.m_amount);
+                if (!canAddItem) return;
+
+                ___m_craftButton.interactable = true;
+                component.m_text = string.Empty;
+            }
+        }
+
+        private static bool m_forceEmptySlot = false;
+
+        [HarmonyPatch(typeof(InventoryGui), "DoCrafting")]
+        class InventoryGui_DoCrafting_Patch
+        {
+            static void Prefix()
+            {
+                m_forceEmptySlot = true;
+            }
+        }
+
+        [HarmonyPatch(typeof(Inventory), "HaveEmptySlot")]
+        class Inventory_HaveEmptySlot_Patch
+        {
+            static void Postfix(ref bool __result)
+            {
+                if (m_forceEmptySlot)
+                {
+                    // DoCrafting has silly requirement that inventory has an empty slot
+                    // Because this was actually checked in the UpdateRecepie method we can simply fake an empty slot here.
+                    __result = true;
+                    m_forceEmptySlot = false;
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Inventory), "AddItem", argumentTypes: new Type[] { typeof(string), typeof(int), typeof(int), typeof(int), typeof(long), typeof(string) })]
+        class Inventory_AddItem_Patch
+        {
+            static bool Prefix(ref Inventory __instance, ref ItemDrop.ItemData __result, string name, int stack, int quality, int variant, long crafterID, string crafterName)
             {
                 GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(name);
-                if (itemPrefab == null)
+                if (itemPrefab == null) return true;
+
+                bool canAddItem = __instance.CanAddItem(itemPrefab, stack);
+                if (canAddItem)
                 {
-                    return true;
-                }
-                ItemDrop component = itemPrefab.GetComponent<ItemDrop>();
-                if (component == null)
-                {
-                    return true;
-                }
-                bool fillTopFirst = (bool)Traverse.Create(__instance).Method("TopFirst").GetValue(component.m_itemData);
-                bool hasEmptySlot = ((Vector2i)Traverse.Create(__instance).Method("FindEmptySlot").GetValue(fillTopFirst)).x == -1;
-                if (component.m_itemData.m_shared.m_maxStackSize > 1)
-                {
-                    var existingStack = Traverse.Create(__instance).Method("FindFreeStackItem").GetValue(name, quality) as ItemDrop.ItemData;
-                    if (existingStack == null) return true;
-                    int roomLeftInStack = existingStack.m_shared.m_maxStackSize - existingStack.m_stack;
-                    bool allFitInStack = roomLeftInStack >= stack;
-                    if (allFitInStack || hasEmptySlot)
-                    {
-                        __result = MoveItems(ref __instance, name, stack, quality, variant, crafterID, crafterName, itemPrefab);
-                        return false;
-                    }
+                    __result = MoveItems(ref __instance, stack, quality, variant, crafterID, crafterName, itemPrefab);
+                    return false;
                 }
                 return true;
             }
 
-            private static ItemDrop.ItemData MoveItems(ref Inventory instance, string name, int stack, int quality, int variant, long crafterID, string crafterName, GameObject itemPrefab)
+            private static ItemDrop.ItemData MoveItems(ref Inventory instance, int stack, int quality, int variant, long crafterID, string crafterName, GameObject itemPrefab)
             {
                 ItemDrop.ItemData result = null;
                 int num = stack;
@@ -83,12 +116,35 @@ namespace RagnarsRokare.CraftToStack
                     component2.m_itemData.m_durability = component2.m_itemData.GetMaxDurability();
                     component2.m_itemData.m_crafterID = crafterID;
                     component2.m_itemData.m_crafterName = crafterName;
-                    Traverse.Create(instance).Method("AddItem").GetValue(component2.m_itemData);
+                    Traverse.Create(instance).Method("AddItem", new Type[] { typeof(ItemDrop.ItemData) }).GetValue(component2.m_itemData);
                     result = component2.m_itemData;
                     UnityEngine.Object.Destroy(gameObject);
                 }
                 return result;
             }
         }
-	}
+
+        [HarmonyPatch(typeof(Inventory), "RemoveItem", argumentTypes: new Type[] { typeof(string), typeof(int) })]
+        class Inventory_RemoveItem_Patch
+        {
+            static bool Prefix(ref Inventory __instance, ref List<ItemDrop.ItemData> ___m_inventory, string name, ref int amount)
+            {
+                var sortedInventoryList = ___m_inventory.OrderBy(i => i.m_stack);
+                foreach (ItemDrop.ItemData item in sortedInventoryList)
+                {
+                    if (item.m_shared.m_name == name)
+                    {
+                        int num = Mathf.Min(item.m_stack, amount);
+                        item.m_stack -= num;
+                        amount -= num;
+                        if (amount <= 0)
+                        {
+                            break;
+                        }
+                    }
+                }
+                return true;
+            }
+        }
+    }
 }
