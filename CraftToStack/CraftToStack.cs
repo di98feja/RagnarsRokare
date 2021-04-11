@@ -24,7 +24,7 @@ namespace RagnarsRokare.CraftToStack
         {
             Debug.Log($"Loading {ModName} v{ModVersion}, Barg Bug Bash!");
             harmony.PatchAll();
-            NexusID = Config.Bind<int>("General", "NexusID", -1, "Nexus mod ID for updates");
+            NexusID = Config.Bind<int>("General", "NexusID", 982, "Nexus mod ID for updates");
         }
 
         [HarmonyPatch(typeof(InventoryGui), "UpdateRecipe")]
