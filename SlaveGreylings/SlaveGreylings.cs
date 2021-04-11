@@ -92,7 +92,7 @@ namespace SlaveGreylings
             public static Dictionary<int, ItemDrop> m_spottedItem;
             public static Dictionary<int, string> m_aiStatus;
             public static Dictionary<int, float> m_assignedTimer;
-
+            public static Dictionary<int, float> m_stateChangeTimer;
             private static Character m_attacker = null;
             private static List<string> m_acceptedContainerNames;
 
@@ -145,6 +145,7 @@ namespace SlaveGreylings
                     m_spottedItem[instanceId] = null;
                     m_containers[instanceId].Clear();
                     m_searchcontainer[instanceId] = false;
+                    m_stateChangeTimer[instanceId] = 0;
                     return false;
                 }
                 if (AvoidFire(__instance, dt, m_assigned[instanceId] ? m_assignment[instanceId].Peek().Position : __instance.transform.position))
@@ -169,7 +170,11 @@ namespace SlaveGreylings
                 }
 
                 // Here starts the fun.
-                
+
+                //stateChangeTimer Updated
+                m_stateChangeTimer[instanceId] += dt;
+
+
                 //Assigned timeout-function 
                 m_assignedTimer[instanceId] += dt;
                 if (m_assignedTimer[instanceId] > GreylingsConfig.TimeLimitOnAssignment.Value) m_assigned[instanceId] = false;
@@ -225,6 +230,10 @@ namespace SlaveGreylings
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
                         Invoke(__instance, "MoveAndAvoid", new object[] { dt, assignment.Position, 0.5f, false });
+                        if (m_stateChangeTimer[instanceId] < 30)
+                        {
+                            return false;
+                        }
                         return false;
                     }
 
@@ -540,6 +549,7 @@ namespace SlaveGreylings
                     m_spottedItem.Add(instanceId, null);
                     m_aiStatus.Add(instanceId, "Init");
                     m_assignedTimer.Add(instanceId, 0);
+                    m_stateChangeTimer.Add(instanceId, 0);
                 }
                 return instanceId;
             }
