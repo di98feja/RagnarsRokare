@@ -627,7 +627,7 @@ namespace SlaveGreylings
             public static void BroadcastUpdateHUD(ref ZNetView nview, string text)
             {
                 Debug.Log($"CharId:{nview.GetZDO().GetString(Z_CharacterId)}");
-                nview.InvokeRPC(Z_UpdateCharacterHUD, nview.GetZDO().GetString(Z_CharacterId), text);
+                nview.InvokeRPC(ZNetView.Everybody, Z_UpdateCharacterHUD, nview.GetZDO().GetString(Z_CharacterId), text);
             }
 
             public static void RPC_UpdateHUDText(long sender, string uniqueId, string text)
