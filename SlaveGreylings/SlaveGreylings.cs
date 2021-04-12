@@ -18,6 +18,8 @@ namespace SlaveGreylings
         private const string Z_UpdateCharacterHUD = "RR_UpdateCharacterHUD";
         private static readonly bool isDebug = false;
 
+        private static Character m_attacker = null;
+
         private void Awake()
         {
             GreylingsConfig.Init(Config);
@@ -93,7 +95,6 @@ namespace SlaveGreylings
             public static Dictionary<int, string> m_aiStatus;
             public static Dictionary<int, float> m_assignedTimer;
             public static Dictionary<int, float> m_stateChangeTimer;
-            private static Character m_attacker = null;
             private static List<string> m_acceptedContainerNames;
 
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
@@ -125,14 +126,19 @@ namespace SlaveGreylings
                 Dbgl("GetInstanceID ok");
 
                 ___m_aiStatus = "";
-
                 
-                
-                if (___m_character.GetHealthPercentage() < ___m_fleeIfLowHealth && ___m_timeSinceHurt < 20f && m_attacker != null)
+                if ( ___m_timeSinceHurt < 20f)
                 {
-                    Invoke(__instance, "Flee", new object[] { dt, m_attacker.transform.position });
-                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Low health, flee");
+                    __instance.Alert();
+                    var fleeFrom = m_attacker == null ? ___m_character.transform.position : m_attacker.transform.position;
+                    Invoke(__instance, "Flee", new object[] { dt, fleeFrom });
+                    ___m_aiStatus = UpdateAiStatus(___m_nview, "Got hurt, flee!");
                     return false;
+                }
+                else
+                {
+                    m_attacker = null;
+                    Invoke(__instance, "SetAlerted", new object[] { false });
                 }
                 if ((bool)__instance.GetFollowTarget())
                 {
@@ -571,6 +577,22 @@ namespace SlaveGreylings
                     return true;
                 }
                 return false;
+            }
+        }
+
+        [HarmonyPatch(typeof(Character), "Damage")]
+        static class Character_Damaged_Patch
+        { 
+            static void Prefix(ref Character __instance, ref HitData hit)
+            {
+                if (__instance.name.Contains("Greyling") && __instance.IsTamed())
+                {
+                    m_attacker = hit.GetAttacker();
+                    if (m_attacker != null && m_attacker.IsPlayer())
+                    {
+                        hit.m_damage.Modify(0.1f);
+                    }
+                }
             }
         }
 
