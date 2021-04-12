@@ -126,7 +126,8 @@ namespace SlaveGreylings
                 Dbgl("GetInstanceID ok");
 
                 ___m_aiStatus = "";
-                
+                Vector3 greylingPosition = ___m_character.transform.position;
+
                 if ( ___m_timeSinceHurt < 20f)
                 {
                     __instance.Alert();
@@ -171,8 +172,70 @@ namespace SlaveGreylings
                 if (___m_tamable.IsHungry())
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Is hungry, no work a do");
-
-                    return false;
+                    if (m_searchcontainer[instanceId] && m_containers[instanceId].Any())
+                    {
+                        bool containerIsInvalid = m_containers[instanceId].Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
+                        if (containerIsInvalid)
+                        {
+                            m_containers[instanceId].Pop();
+                            m_searchcontainer[instanceId] = false;
+                            return false;
+                        }
+                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 2.0;
+                        if (!isCloseToContainer)
+                        {
+                            Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_containers[instanceId].Peek().transform.position, 0.5f, false });
+                            return false;
+                        }
+                        else
+                        {
+                            ItemDrop foodItem = __instance.m_consumeItems.ElementAt<ItemDrop>(0);
+                            ItemDrop.ItemData item = m_containers[instanceId].Peek()?.GetInventory()?.GetItem(foodItem.m_itemData.m_shared.m_name);
+                            if (item == null)
+                            {
+                                ___m_aiStatus = UpdateAiStatus(___m_nview, "No Resin in chest");
+                                Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers[instanceId]);
+                                if (nearbyChest != null)
+                                {
+                                    m_containers[instanceId].Push(nearbyChest);
+                                    m_searchcontainer[instanceId] = true;
+                                    return false;
+                                }
+                                else
+                                {
+                                    m_containers[instanceId].Clear();
+                                    m_searchcontainer[instanceId] = false;
+                                    return false;
+                                }
+                            }
+                            else
+                            {
+                                ___m_aiStatus = UpdateAiStatus(___m_nview, "Resin in chest");
+                                m_containers[instanceId].Peek().GetInventory().RemoveItem(item, 1);
+                                typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek(), new object[] { });
+                                typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek().GetInventory(), new object[] { });
+                                __instance.m_onConsumedItem(foodItem);
+                                ___m_aiStatus = UpdateAiStatus(___m_nview, "Consume item");
+                                m_searchcontainer[instanceId] = false;
+                                return false;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers[instanceId]);
+                        if (nearbyChest != null)
+                        {
+                            m_containers[instanceId].Push(nearbyChest);
+                            m_searchcontainer[instanceId] = true;
+                            return false;
+                        }
+                        else
+                        {
+                            m_searchcontainer[instanceId] = false;
+                            return false;
+                        }
+                    }
                 }
 
                 // Here starts the fun.
@@ -203,7 +266,7 @@ namespace SlaveGreylings
                 m_stateChangeTimer[instanceId] += dt;
                 if (m_stateChangeTimer[instanceId] < 1) return false;
 
-                    Vector3 greylingPosition = ___m_character.transform.position;
+                    
                 if (!m_assigned[instanceId])
                 {
                     if (FindRandomNearbyAssignment(instanceId, greylingPosition))
