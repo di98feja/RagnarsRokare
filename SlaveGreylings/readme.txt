@@ -55,3 +55,13 @@ Another improvement in the Greyling training is that we have trained them to not
 * Renaming is improved so the risk of players seeing different names is limited.
 * Task timeout is limiting the minimum time on a state (such as search, load item etc.) to 1s. This is creating a smoother more natural behavior of the slaves.
 * Minor adjustments to interact distance to make moving up to assignments/objects look better.
+
+
+0.3 patchnotes:
+##################################
+
+
+##################################
+* Decreased dmg from player implemented on slaves
+* Slaves will look in chests for food rather then wonder of in the forrest.
+* Minor distance changes
