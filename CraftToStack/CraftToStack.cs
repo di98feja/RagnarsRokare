@@ -4,8 +4,10 @@ using HarmonyLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using UnityEngine;
-using UnityEngine.UI;
+using static ItemDrop;
 
 namespace RagnarsRokare.CraftToStack
 {
@@ -15,7 +17,7 @@ namespace RagnarsRokare.CraftToStack
     {
         public const string ModId = "RagnarsRokare.CraftToStack";
         public const string ModName = "RagnarsRökare CraftToStackMod";
-        public const string ModVersion = "0.1";
+        public const string ModVersion = "0.2";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> NexusID;
@@ -30,48 +32,79 @@ namespace RagnarsRokare.CraftToStack
         [HarmonyPatch(typeof(InventoryGui), "UpdateRecipe")]
         class InventoryGui_UpdateRecipe_Patch
         {
-            static void Postfix(ref InventoryGui __instance, KeyValuePair<Recipe, ItemDrop.ItemData> ___m_selectedRecipe, ref Button ___m_craftButton)
+            // ORIGINAL
+            // brtrue Label22
+            // ldarg.1 NULL
+            // callvirt Inventory Humanoid::GetInventory()
+            // callvirt bool Inventory::HaveEmptySlot()  <----   new opCodes replace this
+            // br Label23
+            // ldc.i4.1 NULL[Label22]
+            // stloc.s 9 (System.Boolean)[Label23]
+
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> originalCIL)
             {
-                if (Player.m_localPlayer == null) return;
-                var recipeInput = ___m_selectedRecipe.Value;
-                if (recipeInput != null) return;
-                var recipe = ___m_selectedRecipe.Key;
-                bool isUpgradable = recipe.m_item.m_itemData.m_shared.m_maxQuality > 1;
-                if (isUpgradable) return;
+                var findEmptySlotMethod = typeof(Inventory).GetMethod("HaveEmptySlot", BindingFlags.Public | BindingFlags.Instance);
+                var canAddItemMethod = typeof(Inventory).GetMethod("CanAddItem", new Type[] { typeof(ItemData), typeof(int) });
+                var selectedRecepieField = typeof(InventoryGui).GetField("m_selectedRecipe", BindingFlags.NonPublic | BindingFlags.Instance);
+                var getKeyFromRecipeProperty = typeof(KeyValuePair<Recipe, ItemData>).GetMethod("get_Key", BindingFlags.Public | BindingFlags.Instance);
+                foreach (var operation in originalCIL)
+                {
+                    if (operation.Calls(findEmptySlotMethod))
+                    {
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Ldflda, selectedRecepieField);
+                        yield return new CodeInstruction(OpCodes.Call, getKeyFromRecipeProperty);
+                        yield return new CodeInstruction(OpCodes.Ldfld, typeof(Recipe).GetField("m_item", BindingFlags.Public | BindingFlags.Instance));
+                        yield return new CodeInstruction(OpCodes.Ldfld, typeof(ItemDrop).GetField("m_itemData", BindingFlags.Public | BindingFlags.Instance));
 
-                UITooltip component = ___m_craftButton.GetComponent<UITooltip>();
-                if (component.m_text != Localization.instance.Localize("$inventory_full")) return;
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Ldflda, selectedRecepieField);
+                        yield return new CodeInstruction(OpCodes.Call, getKeyFromRecipeProperty);
+                        yield return new CodeInstruction(OpCodes.Ldfld, typeof(Recipe).GetField("m_amount"));
 
-                bool canAddItem = Player.m_localPlayer.GetInventory().CanAddItem(recipe.m_item.m_itemData, recipe.m_amount);
-                if (!canAddItem) return;
-
-                ___m_craftButton.interactable = true;
-                component.m_text = string.Empty;
+                        yield return new CodeInstruction(OpCodes.Call, canAddItemMethod);
+                        continue;
+                    }
+                    yield return operation;
+                }
             }
         }
-
-        private static bool m_forceEmptySlot = false;
 
         [HarmonyPatch(typeof(InventoryGui), "DoCrafting")]
         class InventoryGui_DoCrafting_Patch
         {
-            static void Prefix()
-            {
-                m_forceEmptySlot = true;
-            }
-        }
+            // Original code
+            // ldarg.1 NULL
+            // callvirt Inventory Humanoid::GetInventory()
+            // callvirt bool Inventory::HaveEmptySlot() <- This is replaced with new OpCodes
+            // brtrue Label10
+            // ret NULL
 
-        [HarmonyPatch(typeof(Inventory), "HaveEmptySlot")]
-        class Inventory_HaveEmptySlot_Patch
-        {
-            static void Postfix(ref bool __result)
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> originalCIL)
             {
-                if (m_forceEmptySlot)
+                var findEmptySlotMethod = typeof(Inventory).GetMethod("HaveEmptySlot", BindingFlags.Public | BindingFlags.Instance);
+                var canAddItemMethod = typeof(Inventory).GetMethod("CanAddItem", new Type[] { typeof(ItemData), typeof(int) });
+                var craftRecipeField = typeof(InventoryGui).GetField("m_craftRecipe", BindingFlags.NonPublic | BindingFlags.Instance);
+                var getKeyFromRecipeProperty = typeof(KeyValuePair<Recipe, ItemData>).GetMethod("get_Key", BindingFlags.Public | BindingFlags.Instance);
+                foreach (var operation in originalCIL)
                 {
-                    // DoCrafting has silly requirement that inventory has an empty slot
-                    // Because this was actually checked in the UpdateRecepie method we can simply fake an empty slot here.
-                    __result = true;
-                    m_forceEmptySlot = false;
+                    if (operation.Calls(findEmptySlotMethod))
+                    {
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Ldflda, craftRecipeField);
+                        yield return new CodeInstruction(OpCodes.Call, getKeyFromRecipeProperty);
+                        yield return new CodeInstruction(OpCodes.Ldfld, typeof(Recipe).GetField("m_item", BindingFlags.Public | BindingFlags.Instance));
+                        yield return new CodeInstruction(OpCodes.Ldfld, typeof(ItemDrop).GetField("m_itemData", BindingFlags.Public | BindingFlags.Instance));
+
+                        yield return new CodeInstruction(OpCodes.Ldarg_0);
+                        yield return new CodeInstruction(OpCodes.Ldflda, craftRecipeField);
+                        yield return new CodeInstruction(OpCodes.Call, getKeyFromRecipeProperty);
+                        yield return new CodeInstruction(OpCodes.Ldfld, typeof(Recipe).GetField("m_amount"));
+
+                        yield return new CodeInstruction(OpCodes.Call, canAddItemMethod);
+                        continue;
+                    }
+                    yield return operation;
                 }
             }
         }
@@ -79,48 +112,61 @@ namespace RagnarsRokare.CraftToStack
         [HarmonyPatch(typeof(Inventory), "AddItem", argumentTypes: new Type[] { typeof(string), typeof(int), typeof(int), typeof(int), typeof(long), typeof(string) })]
         class Inventory_AddItem_Patch
         {
-            static bool Prefix(ref Inventory __instance, ref ItemDrop.ItemData __result, string name, int stack, int quality, int variant, long crafterID, string crafterName)
+            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
             {
-                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(name);
-                if (itemPrefab == null) return true;
+                //   ORIGINAL
+                //   ldarg.0 NULL[Label2]
+                //   ldarg.0 NULL
+                //   ldloc.1 NULL
+                //   ldfld ItemDrop+ItemData ItemDrop::m_itemData
+                //   call bool Inventory::TopFirst(ItemDrop + ItemData item)
+                //   call Vector2i Inventory::FindEmptySlot(bool topFirst)
+                //   ldfld int Vector2i::x
+                //   ldc.i4.m1 NULL
+                //   bne.un Label3
 
-                bool canAddItem = __instance.CanAddItem(itemPrefab, stack);
-                if (canAddItem)
-                {
-                    __result = MoveItems(ref __instance, stack, quality, variant, crafterID, crafterName, itemPrefab);
-                    return false;
-                }
-                return true;
-            }
+                //   REPLACEMENT:
+                //   ldarg.0
+                //   ldloc.0
+                //   ldarg.2
+                //   call bool Inventory::CanAddItem(UnityEngine::GameObject, int32 stack)
+                //   brtrue Label3
 
-            private static ItemDrop.ItemData MoveItems(ref Inventory instance, int stack, int quality, int variant, long crafterID, string crafterName, GameObject itemPrefab)
-            {
-                ItemDrop.ItemData result = null;
-                int num = stack;
-                while (num > 0)
+                bool foundCallToFindEmptySlot = false;
+
+                var findEmptySlotMethod = typeof(Inventory).GetMethod("FindEmptySlot", BindingFlags.NonPublic | BindingFlags.Instance);
+                var canAddItemMethod = typeof(Inventory).GetMethod("CanAddItem", new Type[] { typeof(GameObject), typeof(int) });
+                var newCodes = new List<CodeInstruction>(instructions);
+                for (int i = 0; i < newCodes.Count(); i++)
                 {
-                    ZNetView.m_forceDisableInit = true;
-                    GameObject gameObject = UnityEngine.Object.Instantiate(itemPrefab);
-                    ZNetView.m_forceDisableInit = false;
-                    ItemDrop component2 = gameObject.GetComponent<ItemDrop>();
-                    if (component2 == null)
+                    var instruction = newCodes[i];
+                    if (instruction.operand?.ToString().Contains("FindEmptySlot") ?? false) // Calls(findEmptySlotMethod))
                     {
-                        UnityEngine.Object.Destroy(gameObject);
-                        return null;
+                        foundCallToFindEmptySlot = true;
                     }
-                    int num2 = Mathf.Min(num, component2.m_itemData.m_shared.m_maxStackSize);
-                    num -= num2;
-                    component2.m_itemData.m_stack = num2;
-                    component2.m_itemData.m_quality = quality;
-                    component2.m_itemData.m_variant = variant;
-                    component2.m_itemData.m_durability = component2.m_itemData.GetMaxDurability();
-                    component2.m_itemData.m_crafterID = crafterID;
-                    component2.m_itemData.m_crafterName = crafterName;
-                    Traverse.Create(instance).Method("AddItem", new Type[] { typeof(ItemDrop.ItemData) }).GetValue(component2.m_itemData);
-                    result = component2.m_itemData;
-                    UnityEngine.Object.Destroy(gameObject);
+
+                    if (instruction.IsLdarg(0) && i > 0 && instructions.ElementAt(i - 1).IsLdarg(0))
+                    {
+                        newCodes[i] = new CodeInstruction(OpCodes.Ldloc_0);
+                        newCodes[i + 1] = new CodeInstruction(OpCodes.Ldarg_2);
+                        newCodes[i + 2] = new CodeInstruction(OpCodes.Call, canAddItemMethod);
+                        newCodes[i + 3].opcode = OpCodes.Nop;
+                        newCodes[i + 4].opcode = OpCodes.Nop;
+                        newCodes[i + 5].opcode = OpCodes.Nop;
+                        newCodes[i + 6].opcode = OpCodes.Nop;
+                        newCodes[i + 7].opcode = OpCodes.Brtrue;
+                    }
                 }
-                return result;
+                if (foundCallToFindEmptySlot)
+                {
+                    return newCodes;
+                }
+                else
+                {
+                    // Since we cannot locate the method we wanna remove, we don't change anything.
+                    Debug.LogWarning($"{ModId}:Inventory.AddItem not patched, original method is changed");
+                    return instructions;
+                }
             }
         }
 
