@@ -158,7 +158,7 @@ namespace SlaveGreylings
                 if (AvoidFire(__instance, dt, m_assigned[instanceId] ? m_assignment[instanceId].Peek().Position : __instance.transform.position))
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
-                    if (m_assignment[instanceId].Peek().IsClose(___m_character.transform.position))
+                    if (m_assignment[instanceId].Any() && m_assignment[instanceId].Peek().IsClose(___m_character.transform.position))
                     {
                         m_assigned[instanceId] = false;
                     }
@@ -216,7 +216,10 @@ namespace SlaveGreylings
                                 typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek().GetInventory(), new object[] { });
                                 __instance.m_onConsumedItem(foodItem);
                                 ___m_aiStatus = UpdateAiStatus(___m_nview, "Consume item");
+                                m_assigned[instanceId] = false;
+                                m_spottedItem[instanceId] = null;
                                 m_searchcontainer[instanceId] = false;
+                                m_stateChangeTimer[instanceId] = 0;
                                 return false;
                             }
                         }
@@ -258,6 +261,10 @@ namespace SlaveGreylings
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"removing outdated Assignment of {m_assignment[instanceId].Count()}");
                         m_assignment[instanceId].Remove(assignment);
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"remaining Assignments {m_assignment[instanceId].Count()}");
+                        if (!m_assignment[instanceId].Any())
+                        {
+                            m_assigned[instanceId] = false;
+                        }
                         break;
                     }
                 }
