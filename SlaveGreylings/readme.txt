@@ -47,10 +47,11 @@ We hope you find this little mod useful!
 0.2 patchnotes:
 ###############################
 From the book of Barg:
-Today the day of 42 in this paradise of a world of Odin we call Valheim, me and Morg gave the two greylings the names Berith and Dumbass. We think one is female but cannot really tell them apart, 
-except from a sense of identity we can feel when moving up close to them. The naming caused some misunderstanding when me and Morg was trying to use different names, but an improvement in our sense of identity 
-sorted this problem just fine.
-Another improvement in the Greyling training is that we have trained them to not hast into a task without thinking it through. We noted that this improved the quality of their work, even if it results in a slower progress.
+Today the day of 42 in this paradise of a world of Odin we call Valheim, me and Morg gave the two greylings the names Berith and Dumbass. 
+We think one is female but cannot really tell them apart, except from a sense of identity we can feel when moving up close to them. 
+The naming caused some misunderstanding when me and Morg was trying to use different names, but an improvement in our sense of identity sorted this problem just fine.
+Another improvement in the Greyling training is that we have trained them to not hast into a task without thinking it through. 
+We noted that this improved the quality of their work, even if it results in a slower progress.
 ###############################
 * Renaming is improved so the risk of players seeing different names is limited.
 * Task timeout is limiting the minimum time on a state (such as search, load item etc.) to 1s. This is creating a smoother more natural behavior of the slaves.
@@ -59,9 +60,13 @@ Another improvement in the Greyling training is that we have trained them to not
 
 0.3 patchnotes:
 ##################################
-
-
+From the book of Barg:
+Today the day of 45 in this paradise of a world of Odin we call Valheim. Today I realized that the Greylings are far more adaptable then expected. 
+Already after a short period among us they tend to look in chests and houses for food rather then wondering of into the forest. By encouraging this behavior the need for fencing might be limited in the future.
+Another discovery of this adaptation was when Morg, enraged of Sig's overenthusiastic farting, throw his axe on Stig. To our surprise Stig looked a bit afraid from being hurt, but showed almost no sign of damage.
+We thought the rich amount of resin in their food made them harder, but pitching Stig against a skeleton killed him as easy as any other greyling. This must be an adaptation to the environment we did not count on.
+More experiments might help us understand this behavior better, but now we will hunt some Boar for this evening barbeque.
 ##################################
-* Decreased dmg from player implemented on slaves
-* Slaves will look in chests for food rather then wonder of in the forrest.
+* Decreased dmg from player implemented on slaves.
+* Slaves will look in chests for food rather then wonder of in the forrest if there is no food on the ground.
 * Minor distance changes

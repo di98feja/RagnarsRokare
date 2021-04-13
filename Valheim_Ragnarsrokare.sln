@@ -13,6 +13,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServerPasswordHelper", "Ser
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{A1908A5F-6CF6-417E-AF1D-26E11B734F64}"
 	ProjectSection(SolutionItems) = preProject
+		Book of Barg.txt = Book of Barg.txt
 		AutoPickupSelector\itemlist.txt = AutoPickupSelector\itemlist.txt
 		AutoPickupSelector\PieceList.txt = AutoPickupSelector\PieceList.txt
 	EndProjectSection
