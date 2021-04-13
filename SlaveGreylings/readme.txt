@@ -70,3 +70,9 @@ More experiments might help us understand this behavior better, but now we will 
 * Decreased dmg from player implemented on slaves.
 * Slaves will look in chests for food rather then wonder of in the forrest if there is no food on the ground.
 * Minor distance changes
+
+0.4 patchnotes:
+*Bug (Unity Log error spam) is fixed (we hope).
+*Hearth added in assign list.
+*Stop movement to avoid strange overshooting at target.
+*Minor interact distance tweaks
