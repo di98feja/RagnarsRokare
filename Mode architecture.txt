@@ -1,0 +1,67 @@
+Liten strukturkarta på objekt i den uppdaterade MonsterAI.
+
+#Main Monster AI
+MonsterAI:
+	- IsTame
+	- Mode-selection(based on monster type)
+	- sleep
+	- Hurt
+	- Follow
+		- Prio 1 follow mode
+		- Prio 2 follow mode
+	- Avoid Fire (Water)
+	- Consume item
+	- Search for food
+	- Stay (assignment)
+		- Prio 1 mode
+		- Prio 2 mode
+
+#Modes
+Refill Fuel&Ore:
+	- Assign mode
+	- execute Mode
+		- Find assignment
+		- Check out assignment status
+		- Search ground/chests for item
+		- fetch item/pickup
+		- return to assignment
+		- unload item
+	- toggle halt mode
+	- exit mode
+
+Repair damaged pieces:
+	- Assign mode
+	- execute mode
+		- Find assignment
+		- Identify need of equipment ??  (will add extra moving arround)
+		- Search ground/chests for item ??
+		- return to assignment ??
+		- repair piece
+	- toggle halt mode
+	- exit mode
+
+#Follow modes
+Aggresive
+	- Assign mode
+	- execute mode
+	- exit mode
+
+Passive
+	- Assign mode
+	- execute mode
+	- exit mode
+
+Chicken
+	- Assign mode
+	- execute mode
+	- exit mode
+
+#Support modes
+- Search Containers for Item
+
+#Base functions
+- Search ground for Item
+- Move to item/piece
+- Pickup item
+- Unload Item
+- Use item/tool
