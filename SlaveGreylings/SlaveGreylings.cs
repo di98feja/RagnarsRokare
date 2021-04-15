@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using RagnarsRokare.MobAI;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -128,7 +129,7 @@ namespace SlaveGreylings
                 ___m_aiStatus = "";
                 Vector3 greylingPosition = ___m_character.transform.position;
 
-                if ( ___m_timeSinceHurt < 20f)
+                if (___m_timeSinceHurt < 20f)
                 {
                     __instance.Alert();
                     var fleeFrom = m_attacker == null ? ___m_character.transform.position : m_attacker.transform.position;
@@ -243,7 +244,7 @@ namespace SlaveGreylings
                 //Assigned timeout-function 
                 m_assignedTimer[instanceId] += dt;
                 if (m_assignedTimer[instanceId] > GreylingsConfig.TimeLimitOnAssignment.Value) m_assigned[instanceId] = false;
-                
+
                 //Assignment timeout-function
                 foreach (Assignment assignment in m_assignment[instanceId])
                 {
@@ -266,7 +267,7 @@ namespace SlaveGreylings
                 m_stateChangeTimer[instanceId] += dt;
                 if (m_stateChangeTimer[instanceId] < 1) return false;
 
-                    
+
                 if (!m_assigned[instanceId])
                 {
                     if (FindRandomNearbyAssignment(instanceId, greylingPosition))
@@ -305,7 +306,7 @@ namespace SlaveGreylings
                         }
                     }
 
-                    bool isLookingAtAssignment = (bool)Invoke(__instance,"IsLookingAt", new object[] { assignment.Position, 20f });
+                    bool isLookingAtAssignment = (bool)Invoke(__instance, "IsLookingAt", new object[] { assignment.Position, 20f });
                     if (isCarryingItem && assignment.IsClose(greylingPosition) && !isLookingAtAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Looking at Assignment: {assignment.TypeOfAssignment.Name} ");
@@ -321,7 +322,7 @@ namespace SlaveGreylings
                         bool isCarryingMatchingOre = needOre?.Any(c => m_carrying[instanceId].m_shared.m_name == c?.m_shared?.m_name) ?? false;
 
                         if (isCarryingFuel)
-                        { 
+                        {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Unload to {assignment.TypeOfAssignment.Name} -> Fuel");
                             assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                             humanoid.GetInventory().RemoveOneItem(m_carrying[instanceId]);
@@ -381,7 +382,7 @@ namespace SlaveGreylings
                             m_stateChangeTimer[instanceId] = 0;
                             return false;
                         }
-                        
+
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Trying to remeber content of known Chests");
                         foreach (Container chest in m_containers[instanceId])
                         {
@@ -401,7 +402,7 @@ namespace SlaveGreylings
                             }
                         }
 
-                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Search for nerby Chests") ;
+                        ___m_aiStatus = UpdateAiStatus(___m_nview, "Search for nerby Chests");
                         Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers[instanceId]);
                         if (nearbyChest != null)
                         {
@@ -467,7 +468,7 @@ namespace SlaveGreylings
                         if (isNotCloseToPickupItem)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to pickup item");
-                            Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0.5f , false });
+                            Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_spottedItem[instanceId].transform.position, 0.5f, false });
                             return false;
                         }
                         else // Pickup item from ground
@@ -523,7 +524,7 @@ namespace SlaveGreylings
                 return false;
             }
 
-            public static ItemDrop GetNearbyItem(Vector3 center, List<ItemDrop.ItemData> acceptedNames , int range = 10) 
+            public static ItemDrop GetNearbyItem(Vector3 center, List<ItemDrop.ItemData> acceptedNames, int range = 10)
             {
                 ItemDrop ClosestObject = null;
                 foreach (Collider collider in Physics.OverlapSphere(center, range, LayerMask.GetMask(new string[] { "item" })))
@@ -645,7 +646,7 @@ namespace SlaveGreylings
 
         [HarmonyPatch(typeof(Character), "Damage")]
         static class Character_Damaged_Patch
-        { 
+        {
             static void Prefix(ref Character __instance, ref HitData hit)
             {
                 if (__instance.name.Contains("Greyling") && __instance.IsTamed())
@@ -659,13 +660,49 @@ namespace SlaveGreylings
             }
         }
 
+
         [HarmonyPatch(typeof(Character), "Awake")]
         static class Character_Awake_Patch
         {
             private static Dictionary<string, int> m_allGreylings = new Dictionary<string, int>();
 
+            static void Prefix(Character __instance)
+            {
+                Debug.LogWarning($"{__instance.gameObject.GetInstanceID()}:CharacterAI.Awake.Prefix");
+                var ai = __instance.GetComponent<BaseAI>();
+                if (ai is TestBehaviour)
+                {
+                    return;               }
+                if (ai is MonsterAI monAI)
+                {
+                    var test = __instance.gameObject.AddComponent<TestBehaviour>();
+                    Debug.LogWarning("1");
+                    test.Mimik(monAI);
+                    Debug.LogWarning("2");
+                    Destroy(monAI);
+                    Debug.LogWarning("3");
+                    var nView = test.GetComponent<ZNetView>();
+                    Debug.LogWarning("4");
+                    nView.Unregister("Alert");
+                    Debug.LogWarning("5");
+                    var t2 = __instance.GetComponent<BaseAI>();
+                    Debug.LogWarning("6");
+                    if (t2 is TestBehaviour)
+                    {
+                        Debug.LogWarning("New AI is a TestAI!");
+                    }
+
+                }
+            }
+
             static void Postfix(Character __instance, ref ZNetView ___m_nview)
             {
+                Debug.LogWarning($"{__instance.gameObject.GetInstanceID()}:Character.Awake.Postfix");
+                var tb = __instance.GetBaseAI();
+                if (tb is TestBehaviour)
+                {
+                    Debug.LogWarning("New AI is a TestAI!");
+                }
                 if (__instance.name.Contains("Greyling"))
                 {
                     Debug.Log($"A {__instance.name} just spawned!");
@@ -688,14 +725,12 @@ namespace SlaveGreylings
                         var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
                         visEquipment.m_rightHand = rightHand;
                     }
-                    
+
                     var uniqueId = ___m_nview.GetZDO().GetString(Z_CharacterId);
-                    Debug.Log($"Greyling guid:{uniqueId ?? string.Empty}");
                     if (string.IsNullOrEmpty(uniqueId))
                     {
                         uniqueId = System.Guid.NewGuid().ToString();
                         ___m_nview.GetZDO().Set(Z_CharacterId, uniqueId);
-                        Debug.Log($"Created new guid:{uniqueId}");
                     }
                     if (m_allGreylings.ContainsKey(uniqueId))
                     {
@@ -705,9 +740,16 @@ namespace SlaveGreylings
                     {
                         m_allGreylings.Add(uniqueId, __instance.GetInstanceID());
                     }
+                    Debug.LogWarning("reg updHud");
+                    ___m_nview.Unregister(Z_UpdateCharacterHUD);
                     ___m_nview.Register<string, string>(Z_UpdateCharacterHUD, RPC_UpdateCharacterName);
 
                     var ai = __instance.GetBaseAI() as MonsterAI;
+                    if (ai is TestBehaviour)
+                    {
+                        Debug.LogWarning("New AI is a TestAI!");
+                    }
+                    __instance.GetType().GetField("m_baseAI", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(__instance, ai);
                     if (__instance.IsTamed())
                     {
                         ai.m_consumeItems.Clear();

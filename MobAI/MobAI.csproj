@@ -4,15 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0439AE94-20B4-446C-A79B-685995C8606E}</ProjectGuid>
+    <ProjectGuid>{17E57B00-6D93-4A15-B127-11749921623C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SlaveGreylings</RootNamespace>
-    <AssemblyName>Ragnarsrokare_SlaveGreylings</AssemblyName>
+    <RootNamespace>MobAI</RootNamespace>
+    <AssemblyName>MobAI</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,7 +21,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -31,14 +29,13 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\Libs\0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="assembly_guiutils">
-      <HintPath>..\Libs\assembly_guiutils.dll</HintPath>
+    <Reference Include="assembly_utils">
+      <HintPath>..\Libs\assembly_utils.dll</HintPath>
     </Reference>
     <Reference Include="assembly_valheim">
       <HintPath>..\Libs\assembly_valheim.dll</HintPath>
@@ -60,38 +57,15 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\Libs\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.PhysicsModule">
-      <HintPath>..\Libs\UnityEngine.PhysicsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>..\Libs\UnityEngine.UI.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Config.cs" />
-    <Compile Include="MaxStack.cs" />
-    <Compile Include="SlaveGreylings.cs" />
+    <Compile Include="MemberwiseClone.cs" />
+    <Compile Include="TestBehaviour.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Assignment.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="readme.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\MobAI\MobAI.csproj">
-      <Project>{17e57b00-6d93-4a15-b127-11749921623c}</Project>
-      <Name>MobAI</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
-xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y
-</PostBuildEvent>
+xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y</PostBuildEvent>
   </PropertyGroup>
 </Project>
