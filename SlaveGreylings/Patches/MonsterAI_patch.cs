@@ -41,10 +41,23 @@ namespace SlaveGreylings
             }
         }
 
+        [HarmonyPatch(typeof(MonsterAI), "MakeTame")]
+        static class MonsterAI_MakeTame_Patch
+        {
+            static void Postfix(MonsterAI __instance)
+            {
+                if (__instance.name.Contains("Greyling"))
+                {
+                    __instance.m_consumeItems.Clear();
+                    __instance.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
+                    __instance.m_consumeSearchRange = 50;
+                }
+            }
+        }
+
         [HarmonyPatch(typeof(MonsterAI), "UpdateAI")]
         static class MonsterAI_UpdateAI_Patch
         {
-            private static readonly bool isDebug = false;
 
             public static string UpdateAiStatus(ZNetView nview, string newStatus)
             {
@@ -654,14 +667,6 @@ namespace SlaveGreylings
                     result = name;
                 return result;
             }
-
-            public static void Dbgl(string str = "", bool pref = true)
-            {
-                if (isDebug)
-                    Debug.Log((pref ? typeof(SlaveGreylings).Namespace + " " : "") + str);
-            }
-
-
         }
     }
 }
