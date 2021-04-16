@@ -83,7 +83,7 @@ namespace SlaveGreylings
                 UpdateAiStatus(NView, "Consume item");
                 return;
             }
-            if (this.Tamable.IsHungry())
+            if (monsterAi.Tameable().IsHungry())
             {
                 UpdateAiStatus(___m_nview, "Is hungry, no work a do");
                 if (m_searchcontainer && m_containers.Any())
@@ -461,14 +461,6 @@ namespace SlaveGreylings
             return newStatus;
         }
 
-        public Tameable Tameable
-        {
-            get
-            {
-                if (Instance == null) throw new ArgumentException("Instance is missing");
-                return Traverse.Create(Instance as MonsterAI).Field("m_tameable").GetValue(Instance) as Tameable;
-            }
-        }
 
 
     }

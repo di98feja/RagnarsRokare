@@ -68,6 +68,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Extensions.cs" />
     <Compile Include="GreylingAI.cs" />
     <Compile Include="Patches\Character_patch.cs" />
     <Compile Include="Config.cs" />
