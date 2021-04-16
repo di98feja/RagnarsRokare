@@ -69,7 +69,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="MaxStack.cs" />
+    <Compile Include="MobManager.cs" />
+    <Compile Include="MonsterAI_patch.cs" />
     <Compile Include="SlaveGreylings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

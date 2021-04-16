@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
 using System.ArrayExtensions;
+using UnityEngine;
 
 namespace System
 {
@@ -30,6 +31,7 @@ namespace System
             if (targetObject == originalObject) return;
 
             var typeToReflect = originalObject.GetType();
+            Debug.Log($"Copy:{typeToReflect}");
             if (IsPrimitive(typeToReflect)) { targetObject = originalObject; return; }
             if (typeof(Delegate).IsAssignableFrom(typeToReflect)) return;
             if (typeToReflect.IsArray)
@@ -92,6 +94,7 @@ namespace System
                 }
                 var originalFieldValue = fieldInfo.GetValue(originalObject);
                 var clonedFieldValue = InternalCopy(originalFieldValue, visited);
+                Debug.Log($"Copy field:{fieldInfo}, Orig:{originalFieldValue}, Copy:{clonedFieldValue}");
                 fieldInfo.SetValue(cloneObject, clonedFieldValue);
             }
         }
