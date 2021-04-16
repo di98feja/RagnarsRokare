@@ -146,7 +146,7 @@ namespace SlaveGreylings
                 if (AvoidFire(__instance, dt, m_assigned[instanceId] ? m_assignment[instanceId].Peek().Position : __instance.transform.position))
                 {
                     ___m_aiStatus = UpdateAiStatus(___m_nview, "Avoiding fire");
-                    if (m_assignment[instanceId].Peek().IsClose(___m_character.transform.position))
+                    if (m_assignment[instanceId].Any() && m_assignment[instanceId].Peek().IsClose(___m_character.transform.position))
                     {
                         m_assigned[instanceId] = false;
                     }
@@ -169,7 +169,7 @@ namespace SlaveGreylings
                             m_searchcontainer[instanceId] = false;
                             return false;
                         }
-                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 2.0;
+                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 1.5;
                         if (!isCloseToContainer)
                         {
                             Invoke(__instance, "MoveAndAvoid", new object[] { dt, m_containers[instanceId].Peek().transform.position, 0.5f, false });
@@ -204,7 +204,10 @@ namespace SlaveGreylings
                                 typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers[instanceId].Peek().GetInventory(), new object[] { });
                                 __instance.m_onConsumedItem(foodItem);
                                 ___m_aiStatus = UpdateAiStatus(___m_nview, "Consume item");
+                                m_assigned[instanceId] = false;
+                                m_spottedItem[instanceId] = null;
                                 m_searchcontainer[instanceId] = false;
+                                m_stateChangeTimer[instanceId] = 0;
                                 return false;
                             }
                         }
@@ -246,6 +249,10 @@ namespace SlaveGreylings
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"removing outdated Assignment of {m_assignment[instanceId].Count()}");
                         m_assignment[instanceId].Remove(assignment);
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"remaining Assignments {m_assignment[instanceId].Count()}");
+                        if (!m_assignment[instanceId].Any())
+                        {
+                            m_assigned[instanceId] = false;
+                        }
                         break;
                     }
                 }
@@ -293,16 +300,19 @@ namespace SlaveGreylings
                         }
                     }
 
-                    bool isLookingAtAssignment = (bool)Invoke(__instance, "IsLookingAt", new object[] { assignment.Position, 20f });
+                    bool isLookingAtAssignment
+                        = (bool)Invoke(__instance, "IsLookingAt", new object[] { assignment.Position, 20f });
                     if (isCarryingItem && assignment.IsClose(greylingPosition) && !isLookingAtAssignment)
                     {
                         ___m_aiStatus = UpdateAiStatus(___m_nview, $"Looking at Assignment: {assignment.TypeOfAssignment.Name} ");
+                        humanoid.SetMoveDir(Vector3.zero);
                         Invoke(__instance, "LookAt", new object[] { assignment.Position });
                         return false;
                     }
 
                     if (isCarryingItem && assignment.IsCloseEnough(greylingPosition))
                     {
+                        humanoid.SetMoveDir(Vector3.zero);
                         var needFuel = assignment.NeedFuel;
                         var needOre = assignment.NeedOre;
                         bool isCarryingFuel = m_carrying[instanceId].m_shared.m_name == needFuel?.m_shared?.m_name;
@@ -335,6 +345,7 @@ namespace SlaveGreylings
 
                     if (!knowWhattoFetch && assignment.IsCloseEnough(greylingPosition))
                     {
+                        humanoid.SetMoveDir(Vector3.zero);
                         ___m_aiStatus = UpdateAiStatus(___m_nview, "Checking assignment for task");
                         var needFuel = assignment.NeedFuel;
                         var needOre = assignment.NeedOre;
@@ -410,7 +421,7 @@ namespace SlaveGreylings
                             m_searchcontainer[instanceId] = false;
                             return false;
                         }
-                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 2.0;
+                        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers[instanceId].Peek().transform.position) < 1.5;
                         if (!isCloseToContainer)
                         {
                             ___m_aiStatus = UpdateAiStatus(___m_nview, "Heading to Container");
@@ -419,6 +430,7 @@ namespace SlaveGreylings
                         }
                         else
                         {
+                            humanoid.SetMoveDir(Vector3.zero);
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Chest inventory:{m_containers[instanceId].Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
                             var wantedItemsInChest = m_containers[instanceId].Peek()?.GetInventory()?.GetAllItems()?.Where(i => m_fetchitems[instanceId].Contains(i));
                             foreach (var fetchItem in m_fetchitems[instanceId])
@@ -460,6 +472,7 @@ namespace SlaveGreylings
                         }
                         else // Pickup item from ground
                         {
+                            humanoid.SetMoveDir(Vector3.zero);
                             ___m_aiStatus = UpdateAiStatus(___m_nview, $"Trying to Pickup {m_spottedItem[instanceId].gameObject.name}");
                             var pickedUpInstance = humanoid.PickupPrefab(m_spottedItem[instanceId].m_itemData.m_dropPrefab);
 
