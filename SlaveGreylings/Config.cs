@@ -13,6 +13,7 @@ namespace SlaveGreylings
         public static ConfigEntry<bool> IncludeSmelterInAssignments;
         public static ConfigEntry<bool> IncludeKilnInAssignments;
         public static ConfigEntry<bool> IncludeFireplaceInAssignments;
+        public static ConfigEntry<bool> IncludeHearthInAssignments;
         public static ConfigEntry<bool> IncludeStandingWoodTorchInAssignments;
         public static ConfigEntry<bool> IncludeStandingIronTorchInAssignments;
         public static ConfigEntry<bool> IncludeStandingGreenTorchInAssignments;
@@ -26,7 +27,7 @@ namespace SlaveGreylings
         public static ConfigEntry<int> TimeBeforeAssignmentCanBeRepeated;
         public static ConfigEntry<int> TimeLimitOnAssignment;
         public static ConfigEntry<int> NexusID;
-
+        
 
         public static void Init(ConfigFile Config)
         {
@@ -39,6 +40,7 @@ namespace SlaveGreylings
             IncludeSmelterInAssignments = Config.Bind<bool>("General", "Greyling_IncludeSmelterInAssignment", true, "Should Smelters be included when searching for assigments");
             IncludeKilnInAssignments = Config.Bind<bool>("General", "Greyling_IncludeKilnInAssignments", true, "Should Kiln be included when searching for assigments");
             IncludeFireplaceInAssignments = Config.Bind<bool>("General", "Greyling_IncludeFireplaceInAssignments", true, "Should Fireplace be included when searching for assigments");
+            IncludeHearthInAssignments = Config.Bind<bool>("General", "Greyling_IncludeHearthInAssignments", true, "Should Hearth be included when searching for assigments");
             IncludeStandingWoodTorchInAssignments = Config.Bind<bool>("General", "Greyling_IncludeStandingWoodTorchInAssignment", true, "Should StandingWoodTorch be included when searching for assigments");
             IncludeStandingIronTorchInAssignments = Config.Bind<bool>("General", "Greyling_IncludeStandingIronTorchInAssignment", true, "Should StandingIronTorch be included when searching for assigments");
             IncludeStandingGreenTorchInAssignments = Config.Bind<bool>("General", "Greyling_IncludeStandingGreenTorchInAssignment", true, "Should StandingGreenTorch be included when searching for assigments");

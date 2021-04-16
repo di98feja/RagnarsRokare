@@ -1,6 +1,6 @@
 ﻿RagnarsRokare_DodgeOnDoubleTap.readme
 
-This mod gives you the ability to do a dodge roll by double tapping in either direction.
+This mod gives you the ability to do a dodge roll by double tapping in either direction with keys or game pad.
 The dodge still consumes stamina in the same way as before.
 The timing intervals is configurable.
 
@@ -8,7 +8,7 @@ Installation:
 Copy the RagnarsRokare_DodgeOnDoubleTap.dll-file into the BepInEx pluginfolder and restart Valheim.
 
 Usage:
-Do a double tap of either movement button to perform a dodge roll in that direction.
+Do a double tap of either movement button or left game pad stick to perform a dodge roll in that direction.
 
 Configuration:
 Open the file Valheim\BepInEx\config\RagnarsRokare.DodgeOnDoubleTap.cfg in a text editor.

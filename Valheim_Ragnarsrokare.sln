@@ -15,6 +15,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 	ProjectSection(SolutionItems) = preProject
 		Book of Barg.txt = Book of Barg.txt
 		AutoPickupSelector\itemlist.txt = AutoPickupSelector\itemlist.txt
+		Mode architecture.txt = Mode architecture.txt
 		AutoPickupSelector\PieceList.txt = AutoPickupSelector\PieceList.txt
 	EndProjectSection
 EndProject
