@@ -85,7 +85,7 @@ namespace SlaveGreylings
             }
             if (monsterAi.Tameable().IsHungry())
             {
-                UpdateAiStatus(___m_nview, "Is hungry, no work a do");
+                UpdateAiStatus(NView, "Is hungry, no work a do");
                 if (m_searchcontainer && m_containers.Any())
                 {
                     bool containerIsInvalid = m_containers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
@@ -98,7 +98,7 @@ namespace SlaveGreylings
                     bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers.Peek().transform.position) < 1.5;
                     if (!isCloseToContainer)
                     {
-                        Invoke(monsterAi, "MoveAndAvoid", new object[] { dt, m_containers.Peek().transform.position, 0.5f, false });
+                        Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_containers.Peek().transform.position, 0.5f, false);
                         return;
                     }
                     else
@@ -107,7 +107,7 @@ namespace SlaveGreylings
                         ItemDrop.ItemData item = m_containers.Peek()?.GetInventory()?.GetItem(foodItem.m_itemData.m_shared.m_name);
                         if (item == null)
                         {
-                            UpdateAiStatus(___m_nview, "No Resin in chest");
+                            UpdateAiStatus(NView, "No Resin in chest");
                             Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers);
                             if (nearbyChest != null)
                             {
@@ -124,12 +124,12 @@ namespace SlaveGreylings
                         }
                         else
                         {
-                            UpdateAiStatus(___m_nview, "Resin in chest");
+                            UpdateAiStatus(NView, "Resin in chest");
                             m_containers.Peek().GetInventory().RemoveItem(item, 1);
-                            typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers.Peek(), new object[] { });
-                            typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers.Peek().GetInventory(), new object[] { });
+                            Invoke<Container>(m_containers.Peek(), "Save");
+                            Invoke<Inventory>(m_containers.Peek(), "Changed");
                             monsterAi.m_onConsumedItem(foodItem);
-                            UpdateAiStatus(___m_nview, "Consume item");
+                            UpdateAiStatus(NView, "Consume item");
                             m_assigned = false;
                             m_spottedItem = null;
                             m_searchcontainer = false;
@@ -172,9 +172,9 @@ namespace SlaveGreylings
                 }
                 if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value * multiplicator)
                 {
-                    UpdateAiStatus(___m_nview, $"removing outdated Assignment of {m_assignment.Count()}");
+                    UpdateAiStatus(NView, $"removing outdated Assignment of {m_assignment.Count()}");
                     m_assignment.Remove(assignment);
-                    UpdateAiStatus(___m_nview, $"remaining Assignments {m_assignment.Count()}");
+                    UpdateAiStatus(NView, $"remaining Assignments {m_assignment.Count()}");
                     if (!m_assignment.Any())
                     {
                         m_assigned = false;
@@ -192,19 +192,19 @@ namespace SlaveGreylings
             {
                 if (FindRandomNearbyAssignment(instanceId, greylingPosition))
                 {
-                    UpdateAiStatus(___m_nview, $"Doing assignment: {m_assignment.Peek().TypeOfAssignment.Name}");
+                    UpdateAiStatus(NView, $"Doing assignment: {m_assignment.Peek().TypeOfAssignment.Name}");
                     return;
                 }
                 else
                 {
-                    //UpdateAiStatus(___m_nview, $"No new assignments found");
+                    //UpdateAiStatus(NView, $"No new assignments found");
                     m_assignment.Clear();
                 }
             }
 
             if (m_assigned)
             {
-                var humanoid = ___m_character as Humanoid;
+                var humanoid = this.Character as Humanoid;
                 Assignment assignment = m_assignment.Peek();
                 bool assignmentIsInvalid = assignment?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
                 if (assignmentIsInvalid)
@@ -218,21 +218,20 @@ namespace SlaveGreylings
                 bool isCarryingItem = m_carrying != null;
                 if ((!knowWhattoFetch || isCarryingItem) && !assignment.IsClose(greylingPosition))
                 {
-                    UpdateAiStatus(___m_nview, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
-                    Invoke(monsterAi, "MoveAndAvoid", new object[] { dt, assignment.Position, 0.5f, false });
+                    UpdateAiStatus(NView, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
+                    Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, assignment.Position, 0.5f, false);
                     if (m_stateChangeTimer < 30)
                     {
                         return;
                     }
                 }
 
-                bool isLookingAtAssignment
-                    = (bool)Invoke(monsterAi, "IsLookingAt", new object[] { assignment.Position, 20f });
+                bool isLookingAtAssignment = (bool)Invoke<MonsterAI>(instance, "IsLookingAt", assignment.Position, 20f);
                 if (isCarryingItem && assignment.IsClose(greylingPosition) && !isLookingAtAssignment)
                 {
-                    UpdateAiStatus(___m_nview, $"Looking at Assignment: {assignment.TypeOfAssignment.Name} ");
+                    UpdateAiStatus(NView, $"Looking at Assignment: {assignment.TypeOfAssignment.Name} ");
                     humanoid.SetMoveDir(Vector3.zero);
-                    Invoke(monsterAi, "LookAt", new object[] { assignment.Position });
+                    Invoke<MonsterAI>(instance, "LookAt", assignment.Position);
                     return;
                 }
 
@@ -246,19 +245,20 @@ namespace SlaveGreylings
 
                     if (isCarryingFuel)
                     {
-                        UpdateAiStatus(___m_nview, $"Unload to {assignment.TypeOfAssignment.Name} -> Fuel");
+                        UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Fuel");
                         assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                         humanoid.GetInventory().RemoveOneItem(m_carrying);
                     }
                     else if (isCarryingMatchingOre)
                     {
-                        UpdateAiStatus(___m_nview, $"Unload to {assignment.TypeOfAssignment.Name} -> Ore");
+                        UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Ore");
+
                         assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying.m_dropPrefab.name) });
                         humanoid.GetInventory().RemoveOneItem(m_carrying);
                     }
                     else
                     {
-                        UpdateAiStatus(___m_nview, Localization.instance.Localize($"Dropping {m_carrying.m_shared.m_name} on the ground"));
+                        UpdateAiStatus(NView, Localization.instance.Localize($"Dropping {m_carrying.m_shared.m_name} on the ground"));
                         humanoid.DropItem(humanoid.GetInventory(), m_carrying, 1);
                     }
 
@@ -272,19 +272,19 @@ namespace SlaveGreylings
                 if (!knowWhattoFetch && assignment.IsCloseEnough(greylingPosition))
                 {
                     humanoid.SetMoveDir(Vector3.zero);
-                    UpdateAiStatus(___m_nview, "Checking assignment for task");
+                    UpdateAiStatus(NView, "Checking assignment for task");
                     var needFuel = assignment.NeedFuel;
                     var needOre = assignment.NeedOre;
                     Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
                     if (needFuel != null)
                     {
                         m_fetchitems.Add(needFuel);
-                        UpdateAiStatus(___m_nview, Localization.instance.Localize($"Adding {needFuel.m_shared.m_name} to search list"));
+                        UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needFuel.m_shared.m_name} to search list"));
                     }
                     if (needOre.Any())
                     {
                         m_fetchitems.AddRange(needOre);
-                        UpdateAiStatus(___m_nview, Localization.instance.Localize($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list"));
+                        UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list"));
                     }
                     if (!m_fetchitems.Any())
                     {
@@ -298,7 +298,7 @@ namespace SlaveGreylings
                 bool searchForItemToPickup = knowWhattoFetch && !hasSpottedAnItem && !isCarryingItem && !m_searchcontainer;
                 if (searchForItemToPickup)
                 {
-                    UpdateAiStatus(___m_nview, "Search the ground for item to pickup");
+                    UpdateAiStatus(NView, "Search the ground for item to pickup");
                     ItemDrop spottedItem = GetNearbyItem(greylingPosition, m_fetchitems, GreylingsConfig.ItemSearchRadius.Value);
                     if (spottedItem != null)
                     {
@@ -307,7 +307,7 @@ namespace SlaveGreylings
                         return;
                     }
 
-                    UpdateAiStatus(___m_nview, "Trying to remeber content of known Chests");
+                    UpdateAiStatus(NView, "Trying to remeber content of known Chests");
                     foreach (Container chest in m_containers)
                     {
                         foreach (var fetchItem in m_fetchitems)
@@ -316,7 +316,7 @@ namespace SlaveGreylings
                             if (item == null) continue;
                             else
                             {
-                                UpdateAiStatus(___m_nview, "Item found in old chest");
+                                UpdateAiStatus(NView, "Item found in old chest");
                                 m_containers.Remove(chest);
                                 m_containers.Push(chest);
                                 m_searchcontainer = true;
@@ -326,11 +326,11 @@ namespace SlaveGreylings
                         }
                     }
 
-                    UpdateAiStatus(___m_nview, "Search for nerby Chests");
+                    UpdateAiStatus(NView, "Search for nerby Chests");
                     Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers);
                     if (nearbyChest != null)
                     {
-                        UpdateAiStatus(___m_nview, "Chest found");
+                        UpdateAiStatus(NView, "Chest found");
                         m_containers.Push(nearbyChest);
                         m_searchcontainer = true;
                         m_stateChangeTimer = 0;
@@ -350,14 +350,14 @@ namespace SlaveGreylings
                     bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers.Peek().transform.position) < 1.5;
                     if (!isCloseToContainer)
                     {
-                        UpdateAiStatus(___m_nview, "Heading to Container");
-                        Invoke(monsterAi, "MoveAndAvoid", new object[] { dt, m_containers.Peek().transform.position, 0.5f, false });
+                        UpdateAiStatus(NView, "Heading to Container");
+                        Invoke<MonsterAI>(instance, "MoveAndAvoid",  dt, m_containers.Peek().transform.position, 0.5f, false);
                         return;
                     }
                     else
                     {
                         humanoid.SetMoveDir(Vector3.zero);
-                        UpdateAiStatus(___m_nview, $"Chest inventory:{m_containers.Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
+                        UpdateAiStatus(NView, $"Chest inventory:{m_containers.Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
                         var wantedItemsInChest = m_containers.Peek()?.GetInventory()?.GetAllItems()?.Where(i => m_fetchitems.Contains(i));
                         foreach (var fetchItem in m_fetchitems)
                         {
@@ -365,13 +365,13 @@ namespace SlaveGreylings
                             if (item == null) continue;
                             else
                             {
-                                UpdateAiStatus(___m_nview, $"Trying to Pickup {item} from Chest ");
+                                UpdateAiStatus(NView, $"Trying to Pickup {item} from Chest ");
                                 var pickedUpInstance = humanoid.PickupPrefab(item.m_dropPrefab);
                                 humanoid.GetInventory().Print();
                                 humanoid.EquipItem(pickedUpInstance);
                                 m_containers.Peek().GetInventory().RemoveItem(item, 1);
-                                typeof(Container).GetMethod("Save", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers.Peek(), new object[] { });
-                                typeof(Inventory).GetMethod("Changed", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(m_containers.Peek().GetInventory(), new object[] { });
+                                Invoke<Container>(m_containers.Peek(), "Save");
+                                Invoke<Inventory>(m_containers.Peek(), "Changed");
                                 m_carrying = pickedUpInstance;
                                 m_spottedItem = null;
                                 m_fetchitems.Clear();
@@ -392,14 +392,14 @@ namespace SlaveGreylings
                     bool isNotCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem.transform.position) > 1;
                     if (isNotCloseToPickupItem)
                     {
-                        UpdateAiStatus(___m_nview, "Heading to pickup item");
-                        Invoke(monsterAi, "MoveAndAvoid", new object[] { dt, m_spottedItem.transform.position, 0.5f, false });
+                        UpdateAiStatus(NView, "Heading to pickup item");
+                        Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_spottedItem.transform.position, 0.5f, false);
                         return;
                     }
                     else // Pickup item from ground
                     {
                         humanoid.SetMoveDir(Vector3.zero);
-                        UpdateAiStatus(___m_nview, $"Trying to Pickup {m_spottedItem.gameObject.name}");
+                        UpdateAiStatus(NView, $"Trying to Pickup {m_spottedItem.gameObject.name}");
                         var pickedUpInstance = humanoid.PickupPrefab(m_spottedItem.m_itemData.m_dropPrefab);
 
                         humanoid.GetInventory().Print();
@@ -407,7 +407,7 @@ namespace SlaveGreylings
                         humanoid.EquipItem(pickedUpInstance);
                         if (m_spottedItem.m_itemData.m_stack == 1)
                         {
-                            if (___m_nview.GetZDO() == null)
+                            if (NView.GetZDO() == null)
                             {
                                 Destroy(m_spottedItem.gameObject);
                             }
@@ -429,12 +429,12 @@ namespace SlaveGreylings
                     }
                 }
 
-                UpdateAiStatus(___m_nview, $"Done with assignment");
+                UpdateAiStatus(NView, $"Done with assignment");
                 if (m_carrying != null)
                 {
                     humanoid.UnequipItem(m_carrying, false);
                     m_carrying = null;
-                    UpdateAiStatus(___m_nview, $"Dropping unused item");
+                    UpdateAiStatus(NView, $"Dropping unused item");
                 }
                 m_fetchitems.Clear();
                 m_spottedItem = null;
@@ -445,8 +445,8 @@ namespace SlaveGreylings
                 return;
             }
 
-            UpdateAiStatus(___m_nview, "Random movement (No new assignments found)");
-            typeof(MonsterAI).GetMethod("IdleMovement", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(monsterAi, new object[] { dt });
+            UpdateAiStatus(NView, "Random movement (No new assignments found)");
+            Invoke<MonsterAI>(instance, "IdleMovement", dt);
 
         }
         public static string UpdateAiStatus(ZNetView nview, string newStatus)
