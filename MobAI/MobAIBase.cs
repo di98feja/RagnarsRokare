@@ -14,7 +14,7 @@ namespace RagnarsRokare.MobAI
             get
             {
                 if (Instance == null) throw new ArgumentException("Instance is missing");
-                return Traverse.Create(Instance).Field("m_character").GetValue(Instance) as Character;
+                return Instance.GetType().GetField("m_character", BindingFlags.NonPublic|BindingFlags.Instance).GetValue(Instance) as Character;
             }
         }
 
@@ -23,7 +23,7 @@ namespace RagnarsRokare.MobAI
             get
             {
                 if (Instance == null) throw new ArgumentException("Instance is missing");
-                return Traverse.Create(Instance).Field("m_nview").GetValue(Instance) as ZNetView;
+                return Instance.GetType().GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance) as ZNetView;
             }
         }
 
@@ -32,7 +32,7 @@ namespace RagnarsRokare.MobAI
             get
             {
                 if (Instance == null) throw new ArgumentException("Instance is missing");
-                return (float)Traverse.Create(Instance).Field("m_timeSinceHurt").GetValue(Instance);
+                return (float)Instance.GetType().GetField("m_timeSinceHurt", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance);
             }
         }
 

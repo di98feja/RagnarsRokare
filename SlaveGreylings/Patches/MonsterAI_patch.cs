@@ -97,8 +97,9 @@ namespace SlaveGreylings
 
             private static string InitInstanceIfNeeded(MonsterAI instance)
             {
-                var character = Traverse.Create(instance).Field("m_character").GetValue(instance) as Character;
-                var nview = Traverse.Create(character).Field("m_nview").GetValue(character) as ZNetView;
+                var nview = typeof(BaseAI).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as ZNetView;
+                //Debug.Log($"Field exists:{Traverse.Create(typeof(BaseAI)).Field("m_character").FieldExists()}");
+                //var nview = Traverse.Create<BaseAI>().Field("m_nview").GetValue<ZNetView>(instance);
                 var uniqueId = nview.GetZDO().GetString(Constants.Z_CharacterId);
 
                 if (!MobManager.IsControlledMob(uniqueId))

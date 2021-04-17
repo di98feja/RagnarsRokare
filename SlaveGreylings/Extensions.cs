@@ -1,5 +1,5 @@
-﻿using HarmonyLib;
-using System;
+﻿using System;
+using System.Reflection;
 
 namespace SlaveGreylings
 {
@@ -8,7 +8,7 @@ namespace SlaveGreylings
         public static Tameable Tameable(this MonsterAI instance)
         {
             if (instance == null) throw new ArgumentException("Instance is missing");
-            return Traverse.Create(instance).Field("m_tameable").GetValue(instance) as Tameable;
+            return instance.GetType().GetField("m_tamable", BindingFlags.Instance|BindingFlags.NonPublic).GetValue(instance) as Tameable;
         }
     }
 }

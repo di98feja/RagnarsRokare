@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RagnarsRokare.MobAI;
+using Stateless;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +22,25 @@ namespace SlaveGreylings
         public float m_assignedTimer;
         public float m_stateChangeTimer;
         public string[] m_acceptedContainerNames;
+
+        enum State
+        {
+            Idle,
+            Flee,
+            Follow,
+            AvoidFire
+        }
+
+        enum Trigger
+        {
+            TakeDamage,
+            Follow,
+            CloseToFire
+        }
+
+        State CurrentState = State.Idle;
+        StateMachine<State, Trigger> Brain;
+
 
         public GreylingAI()
         {

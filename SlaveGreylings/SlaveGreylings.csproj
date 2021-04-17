@@ -46,6 +46,9 @@
     <Reference Include="BepInEx">
       <HintPath>..\Libs\BepInEx.dll</HintPath>
     </Reference>
+    <Reference Include="stateless, Version=4.0.0.0, Culture=neutral, PublicKeyToken=93038f0927583c9a, processorArchitecture=MSIL">
+      <HintPath>..\packages\stateless.5.10.1\lib\net472\stateless.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -98,10 +101,14 @@
       <Name>MobAI</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
 xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y
+xcopy $(TargetDir)stateless.dll $(SolutionDir)Output /S /Y
 </PostBuildEvent>
   </PropertyGroup>
 </Project>
