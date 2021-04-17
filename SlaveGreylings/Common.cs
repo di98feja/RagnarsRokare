@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace SlaveGreylings
 {
-    public partial class SlaveGreylings
+    public class Common
     {
         public static ItemDrop GetNearbyItem(Vector3 center, List<ItemDrop.ItemData> acceptedNames, int range = 10)
         {
@@ -37,9 +37,9 @@ namespace SlaveGreylings
             return ClosestObject;
         }
 
-        public static bool FindRandomNearbyAssignment(int instanceId, Vector3 greylingPosition)
+        public static Assignment FindRandomNearbyAssignment(Vector3 greylingPosition, MaxStack<Assignment> knownassignments)
         {
-            Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
+            SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(greylingPosition, (float)GreylingsConfig.AssignmentSearchRadius.Value, pieceList);
@@ -47,36 +47,30 @@ namespace SlaveGreylings
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
             {
-                return false;
+                return null;
             }
 
             // filter out assignments already in list
-            var newAssignments = allAssignablePieces.Where(p => !m_assignment[instanceId].Any(a => a.AssignmentObject == p.gameObject));
+            var newAssignments = allAssignablePieces.Where(p => !knownassignments.Any(a => a.AssignmentObject == p.gameObject));
 
             // filter out inaccessible assignments
             //newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, true, true));
 
             if (!newAssignments.Any())
             {
-                return false;
+                return null;
             }
 
             // select random piece
             var random = new System.Random();
             int index = random.Next(newAssignments.Count());
-            Assignment randomAssignment = new Assignment(instanceId, newAssignments.ElementAt(index));
-            // Create assignment and return true
-            m_assignment[instanceId].Push(randomAssignment);
-            m_assigned[instanceId] = true;
-            m_assignedTimer[instanceId] = 0;
-            m_fetchitems[instanceId].Clear();
-            m_spottedItem[instanceId] = null;
-            return true;
+            Assignment randomAssignment = new Assignment(newAssignments.ElementAt(index));
+            return randomAssignment;
         }
 
-        public static Container FindRandomNearbyContainer(Vector3 greylingPosition, MaxStack<Container> knownContainers)
+        public static Container FindRandomNearbyContainer(Vector3 greylingPosition, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames)
         {
-            Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
+            SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(greylingPosition, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));

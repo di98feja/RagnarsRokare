@@ -108,7 +108,7 @@ namespace SlaveGreylings
                         if (item == null)
                         {
                             UpdateAiStatus(NView, "No Resin in chest");
-                            Container nearbyChest = SlaveGreylings.FindRandomNearbyContainer(greylingPosition, m_containers);
+                            Container nearbyChest = Common.FindRandomNearbyContainer(greylingPosition, m_containers, m_acceptedContainerNames);
                             if (nearbyChest != null)
                             {
                                 m_containers.Push(nearbyChest);
@@ -140,7 +140,7 @@ namespace SlaveGreylings
                 }
                 else
                 {
-                    Container nearbyChest = SlaveGreylings.FindRandomNearbyContainer(greylingPosition, m_containers);
+                    Container nearbyChest = Common.FindRandomNearbyContainer(greylingPosition, m_containers, m_acceptedContainerNames);
                     if (nearbyChest != null)
                     {
                         m_containers.Push(nearbyChest);
@@ -190,9 +190,15 @@ namespace SlaveGreylings
 
             if (!m_assigned)
             {
-                if (SlaveGreylings.FindRandomNearbyAssignment(instanceId, greylingPosition))
+                Assignment newassignment = Common.FindRandomNearbyAssignment(greylingPosition, m_assignment);
+                if (newassignment != null)
                 {
                     UpdateAiStatus(NView, $"Doing assignment: {m_assignment.Peek().TypeOfAssignment.Name}");
+                    m_assignment.Push(newassignment);
+                    m_assigned = true;
+                    m_assignedTimer = 0;
+                    m_fetchitems.Clear();
+                    m_spottedItem = null;
                     return;
                 }
                 else
@@ -253,7 +259,7 @@ namespace SlaveGreylings
                     {
                         UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Ore");
 
-                        assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { SlaveGreylings.GetPrefabName(m_carrying.m_dropPrefab.name) });
+                        assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
                         humanoid.GetInventory().RemoveOneItem(m_carrying);
                     }
                     else
@@ -299,7 +305,7 @@ namespace SlaveGreylings
                 if (searchForItemToPickup)
                 {
                     UpdateAiStatus(NView, "Search the ground for item to pickup");
-                    ItemDrop spottedItem = SlaveGreylings.GetNearbyItem(greylingPosition, m_fetchitems, GreylingsConfig.ItemSearchRadius.Value);
+                    ItemDrop spottedItem = Common.GetNearbyItem(greylingPosition, m_fetchitems, GreylingsConfig.ItemSearchRadius.Value);
                     if (spottedItem != null)
                     {
                         m_spottedItem = spottedItem;
@@ -327,7 +333,7 @@ namespace SlaveGreylings
                     }
 
                     UpdateAiStatus(NView, "Search for nerby Chests");
-                    Container nearbyChest = SlaveGreylings.FindRandomNearbyContainer(greylingPosition, m_containers);
+                    Container nearbyChest = Common.FindRandomNearbyContainer(greylingPosition, m_containers, m_acceptedContainerNames);
                     if (nearbyChest != null)
                     {
                         UpdateAiStatus(NView, "Chest found");

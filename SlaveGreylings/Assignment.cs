@@ -40,7 +40,7 @@ namespace SlaveGreylings
     {
         private Vector3 m_position;
 
-        public int BelongsTo { get; set; }
+        //public int BelongsTo { get; set; }
         public GameObject AssignmentObject { get; set; }
         public AssignmentType TypeOfAssignment { get; set; }
         public float AssignmentTime { get; set; }
@@ -124,9 +124,9 @@ namespace SlaveGreylings
             return Vector3.Distance(point, Position) < TypeOfAssignment.InteractDist + 1;
         }
 
-        public Assignment(int instanceId, Piece piece)
+        public Assignment(Piece piece)
         {
-            BelongsTo = instanceId;
+            //BelongsTo = instanceId;
             TypeOfAssignment = GetAssignmentType(piece);
             AssignmentObject = piece.gameObject;
             AssignmentTime = 0;
