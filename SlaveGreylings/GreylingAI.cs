@@ -20,7 +20,7 @@ namespace SlaveGreylings
         public ItemDrop m_spottedItem;
         public float m_assignedTimer;
         public float m_stateChangeTimer;
-        private string[] m_acceptedContainerNames;
+        public string[] m_acceptedContainerNames;
 
         public GreylingAI()
         {
@@ -108,7 +108,7 @@ namespace SlaveGreylings
                         if (item == null)
                         {
                             UpdateAiStatus(NView, "No Resin in chest");
-                            Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers);
+                            Container nearbyChest = SlaveGreylings.FindRandomNearbyContainer(greylingPosition, m_containers);
                             if (nearbyChest != null)
                             {
                                 m_containers.Push(nearbyChest);
@@ -140,7 +140,7 @@ namespace SlaveGreylings
                 }
                 else
                 {
-                    Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers);
+                    Container nearbyChest = SlaveGreylings.FindRandomNearbyContainer(greylingPosition, m_containers);
                     if (nearbyChest != null)
                     {
                         m_containers.Push(nearbyChest);
@@ -190,7 +190,7 @@ namespace SlaveGreylings
 
             if (!m_assigned)
             {
-                if (FindRandomNearbyAssignment(instanceId, greylingPosition))
+                if (SlaveGreylings.FindRandomNearbyAssignment(instanceId, greylingPosition))
                 {
                     UpdateAiStatus(NView, $"Doing assignment: {m_assignment.Peek().TypeOfAssignment.Name}");
                     return;
@@ -253,7 +253,7 @@ namespace SlaveGreylings
                     {
                         UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Ore");
 
-                        assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { GetPrefabName(m_carrying.m_dropPrefab.name) });
+                        assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { SlaveGreylings.GetPrefabName(m_carrying.m_dropPrefab.name) });
                         humanoid.GetInventory().RemoveOneItem(m_carrying);
                     }
                     else
@@ -275,7 +275,7 @@ namespace SlaveGreylings
                     UpdateAiStatus(NView, "Checking assignment for task");
                     var needFuel = assignment.NeedFuel;
                     var needOre = assignment.NeedOre;
-                    Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
+                    SlaveGreylings.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
                     if (needFuel != null)
                     {
                         m_fetchitems.Add(needFuel);
@@ -299,7 +299,7 @@ namespace SlaveGreylings
                 if (searchForItemToPickup)
                 {
                     UpdateAiStatus(NView, "Search the ground for item to pickup");
-                    ItemDrop spottedItem = GetNearbyItem(greylingPosition, m_fetchitems, GreylingsConfig.ItemSearchRadius.Value);
+                    ItemDrop spottedItem = SlaveGreylings.GetNearbyItem(greylingPosition, m_fetchitems, GreylingsConfig.ItemSearchRadius.Value);
                     if (spottedItem != null)
                     {
                         m_spottedItem = spottedItem;
@@ -327,7 +327,7 @@ namespace SlaveGreylings
                     }
 
                     UpdateAiStatus(NView, "Search for nerby Chests");
-                    Container nearbyChest = FindRandomNearbyContainer(greylingPosition, m_containers);
+                    Container nearbyChest = SlaveGreylings.FindRandomNearbyContainer(greylingPosition, m_containers);
                     if (nearbyChest != null)
                     {
                         UpdateAiStatus(NView, "Chest found");
@@ -409,7 +409,7 @@ namespace SlaveGreylings
                         {
                             if (NView.GetZDO() == null)
                             {
-                                Destroy(m_spottedItem.gameObject);
+                                SlaveGreylings.Destroy(m_spottedItem.gameObject);
                             }
                             else
                             {
