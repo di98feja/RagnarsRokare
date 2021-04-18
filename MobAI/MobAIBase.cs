@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using Stateless;
 using System;
 using System.Reflection;
 using UnityEngine;
@@ -8,6 +9,15 @@ namespace RagnarsRokare.MobAI
     public abstract class MobAIBase
     {
         public BaseAI Instance { get; private set; }
+
+        public StateMachine<string, string> Brain;
+
+        public string CurrentState { get; private set; }
+
+        public MobAIBase()
+        {
+            Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
+        }
 
         public Character Character
         {
@@ -39,8 +49,6 @@ namespace RagnarsRokare.MobAI
         public virtual void UpdateAI(BaseAI instance, float dt)
         {
             Instance = instance;
-
-
         }
 
         public static object Invoke<T>(object instance, string methodName, params object[] argumentList)

@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Stateless;
 using System;
 using System.Collections.Generic;
 
@@ -50,6 +51,34 @@ namespace MabAI_Tests
             myB.f3 = new A(123, "Banan", new List<string> { "Rev", "En", "Annan", "Räv" });
             var myC = new C(myB);
 
+        }
+
+
+        enum State
+        {
+            First,
+            Second,
+            Third
+        }
+
+        enum Trigger
+        {
+            Tick,
+            Reset
+        }
+
+        [TestMethod]
+        public void TestPermitIf()
+        {
+            var fsm = new StateMachine<State, Trigger>(State.First);
+            fsm.Configure(State.First)
+                .Permit(Trigger.Tick, State.Second);
+            fsm.Configure(State.Second)
+                .Permit(Trigger.Tick, State.Third);
+            fsm.Configure(State.Third)
+                .SubstateOf(State.First)
+                .SubstateOf(State.Second)
+                .Permit(Trigger.Tick, State.First);
         }
     }
 }

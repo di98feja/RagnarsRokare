@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MobAI;
 using RagnarsRokare.MobAI;
 using Stateless;
 using System;
@@ -23,26 +24,37 @@ namespace SlaveGreylings
         public float m_stateChangeTimer;
         public string[] m_acceptedContainerNames;
 
-        enum State
+        public enum State
         {
             Idle,
             Flee,
             Follow,
-            AvoidFire
+            AvoidFire,
+            Hungry,
+            SearchForItem,
+            EatFromGround,
+            EatFromChest
         }
 
-        enum Trigger
+        public enum Trigger
         {
             TakeDamage,
             Follow,
-            CloseToFire
+            UnFollow,
+            CloseToFire,
+            CalmDown,
+            Hungry,
+            ConsumeItem,
+            ItemFound,
+            ItemNotFound
         }
 
-        State CurrentState = State.Idle;
-        StateMachine<State, Trigger> Brain;
+        StateMachine<string,string>.TriggerWithParameters<float> CloseToFireTrigger;
+        StateMachine<string,string>.TriggerWithParameters<MonsterAI> UnFollowTrigger;
+        StateMachine<string,string>.TriggerWithParameters<(MonsterAI m, float dt)> EatFromGroundTrigger;
+        State m_parentState;
 
-
-        public GreylingAI()
+        public GreylingAI() : base()
         {
             m_assignment = new MaxStack<Assignment>(20);
             m_assigned = false;
@@ -54,56 +66,124 @@ namespace SlaveGreylings
             m_assignedTimer = 0f;
             m_stateChangeTimer = 0f;
             m_acceptedContainerNames = GreylingsConfig.IncludedContainersList.Value.Split();
+            CloseToFireTrigger = Brain.SetTriggerParameters<float>(Trigger.CloseToFire.ToString());
+            UnFollowTrigger = Brain.SetTriggerParameters<MonsterAI>(Trigger.UnFollow.ToString());
+            EatFromGroundTrigger = Brain.SetTriggerParameters<(MonsterAI m, float dt)>(Trigger.ConsumeItem.ToString());
 
+            ConfigureAvoidFire();
+            ConfigureFlee();
+            ConfigureFollow();
+            ConfigureIsHungry();
         }
+
+        private void ConfigureIsHungry()
+        {
+            Brain.Configure(State.Hungry.ToString())
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
+                .Permit(Trigger.ItemFound.ToString(), State.EatFromGround.ToString())
+                .Permit(Trigger.ItemNotFound.ToString(), State.EatFromChest.ToString())
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Is hungry, no work a do");
+                });
+
+            Brain.Configure(State.EatFromGround.ToString())
+                .SubstateOf(State.Hungry.ToString())
+                .PermitIf(EatFromGroundTrigger, State.Idle.ToString(), (args) => (bool)Invoke<MonsterAI>(args.m, "UpdateConsumeItem", this.Character as Humanoid, args.dt));
+
+            Brain.Configure(State.EatFromChest.ToString())
+                .SubstateOf(State.Hungry.ToString())
+                .PermitIf();
+        }
+
+        private void ConfigureFollow()
+        {
+            Brain.Configure(State.Follow.ToString())
+                .PermitIf(UnFollowTrigger, State.Idle.ToString(), (m) => (bool)m.GetFollowTarget())
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Follow");
+                    Invoke<MonsterAI>(Instance, "SetAlerted", false);
+                    m_assignment.Clear();
+                    m_fetchitems.Clear();
+                    m_assigned = false;
+                    m_spottedItem = null;
+                    m_containers.Clear();
+                    m_searchcontainer = false;
+                    m_stateChangeTimer = 0;
+                });
+        }
+
+        private void ConfigureFlee()
+        {
+            Brain.Configure(State.Flee.ToString())
+                .PermitIf(Trigger.CalmDown.ToString(), State.Idle.ToString(), () => TimeSinceHurt >= 20f)
+                .Permit(Trigger.Follow.ToString(), State.Follow.ToString())
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Got hurt, flee!");
+                    Instance.Alert();
+                })
+                .OnExit(t =>
+                {
+                    Invoke<MonsterAI>(Instance, "SetAlerted", false);
+                    //m_attacker = null;
+                });
+        }
+
+        private void ConfigureAvoidFire()
+        {
+            Brain.Configure(State.AvoidFire.ToString())
+                .SubstateOf(State.Flee.ToString())
+                .SubstateOf(State.Follow.ToString())
+                .OnEntry(t =>
+                {
+                    m_parentState = t.Source.ToStateEnum();
+                    UpdateAiStatus(NView, "Avoiding fire");
+                    if (m_assignment.Any() && m_assignment.Peek().IsClose(this.Character.transform.position))
+                    {
+                        m_assigned = false;
+                    }
+                })
+                .PermitIf(CloseToFireTrigger, m_parentState.ToString(), (dt) => AvoidFire(dt));
+        }
+
         public override void UpdateAI(BaseAI instance, float dt)
         {
             base.UpdateAI(instance, dt);
             var monsterAi = instance as MonsterAI;
             Vector3 greylingPosition = this.Character.transform.position;
 
-            if (TimeSinceHurt < 20f)
+            
+
+            if (Brain.IsInState(State.Flee.ToString()))
             {
-                instance.Alert();
+                if (Brain.IsInState(State.AvoidFire.ToString()))
+                {
+                    Brain.Fire(CloseToFireTrigger, dt);
+                }
+                Brain.Fire(Trigger.CalmDown.ToString());
                 //var fleeFrom = m_attacker == null ? ___m_character.transform.position : m_attacker.transform.position;
                 Invoke<MonsterAI>(instance, "Flee", dt, Character.transform.position);
-                UpdateAiStatus(NView, "Got hurt, flee!");
                 return;
             }
-            else
+
+            if (Brain.IsInState(State.Follow.ToString()))
             {
-                //m_attacker = null;
-                Invoke<MonsterAI>(instance, "SetAlerted", false );
-            }
-            if ((bool)monsterAi.GetFollowTarget())
-            {
-                Invoke<MonsterAI>(instance, "Follow", monsterAi.GetFollowTarget(), dt );
-                UpdateAiStatus(NView, "Follow");
-                Invoke<MonsterAI>(instance, "SetAlerted", false );
-                m_assignment.Clear();
-                m_fetchitems.Clear();
-                m_assigned = false;
-                m_spottedItem = null;
-                m_containers.Clear();
-                m_searchcontainer = false;
-                m_stateChangeTimer = 0;
-                return;
-            }
-            if (AvoidFire(dt))
-            {
-                UpdateAiStatus(NView, "Avoiding fire");
-                if (m_assignment.Any() && m_assignment.Peek().IsClose(this.Character.transform.position))
+                if (Brain.IsInState(State.AvoidFire.ToString()))
                 {
-                    m_assigned = false;
+                    Brain.Fire(CloseToFireTrigger, dt);
                 }
+                Brain.Fire(UnFollowTrigger, monsterAi);
+                Invoke<MonsterAI>(instance, "Follow", monsterAi.GetFollowTarget(), dt);
                 return;
             }
-            if (!monsterAi.IsAlerted() && (bool)Invoke<MonsterAI>(monsterAi, "UpdateConsumeItem", this.Character as Humanoid, dt))
+            if (Brain.IsInState(State.EatFromGround.ToString()))
             {
-                UpdateAiStatus(NView, "Consume item");
+                Brain.Fire(EatFromGroundTrigger, (monsterAi, dt));
                 return;
             }
-            if (monsterAi.Tameable().IsHungry())
+            if (Brain.IsInState(State.EatFromChest.ToString()))
             {
                 UpdateAiStatus(NView, "Is hungry, no work a do");
                 if (m_searchcontainer && m_containers.Any())
@@ -377,7 +457,7 @@ namespace SlaveGreylings
                     if (!isCloseToContainer)
                     {
                         UpdateAiStatus(NView, "Heading to Container");
-                        Invoke<MonsterAI>(instance, "MoveAndAvoid",  dt, m_containers.Peek().transform.position, 0.5f, false);
+                        Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_containers.Peek().transform.position, 0.5f, false);
                         return;
                     }
                     else
