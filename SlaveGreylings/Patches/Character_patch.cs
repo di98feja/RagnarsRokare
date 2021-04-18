@@ -80,7 +80,7 @@ namespace SlaveGreylings
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
                         ai.m_randomMoveRange = 5;
-                        ai.m_consumeSearchRange = 50;
+                        ai.m_consumeSearchRange = GreylingsConfig.ItemSearchRadius.Value;
                         string givenName = ___m_nview?.GetZDO()?.GetString(Constants.Z_GivenName);
                         if (!string.IsNullOrEmpty(givenName))
                         {

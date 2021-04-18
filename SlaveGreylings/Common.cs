@@ -17,7 +17,7 @@ namespace SlaveGreylings
             return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
         }
 
-        public static ItemDrop GetNearbyItem(Vector3 center, List<ItemDrop.ItemData> acceptedNames, int range = 10)
+        public static ItemDrop GetNearbyItem(Vector3 center, IEnumerable<ItemDrop.ItemData> acceptedNames, int range = 10)
         {
             ItemDrop ClosestObject = null;
             foreach (Collider collider in Physics.OverlapSphere(center, range, LayerMask.GetMask(new string[] { "item" })))

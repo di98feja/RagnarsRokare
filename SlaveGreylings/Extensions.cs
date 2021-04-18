@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace SlaveGreylings
@@ -19,6 +21,14 @@ namespace SlaveGreylings
                 return state;
             }
             throw new ArgumentException($"Unknown State string:{s}");
+        }
+
+        public static T RandomOrDefault<T>(this IEnumerable<T> list)
+        {
+            if (list == null || !list.Any()) return list.FirstOrDefault();
+
+            int index = new Random().Next(list.Count());
+            return list.ElementAt(index);
         }
     }
 }

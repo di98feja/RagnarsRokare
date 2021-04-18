@@ -52,6 +52,8 @@ namespace SlaveGreylings
         StateMachine<string,string>.TriggerWithParameters<float> CloseToFireTrigger;
         StateMachine<string,string>.TriggerWithParameters<MonsterAI> UnFollowTrigger;
         StateMachine<string,string>.TriggerWithParameters<(MonsterAI m, float dt)> EatFromGroundTrigger;
+        StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, IEnumerable<ItemDrop> Items, MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)> EatFromChestTrigger;
+        StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>> ItemFoundTrigger;
         State m_parentState;
 
         public GreylingAI() : base()
@@ -69,6 +71,8 @@ namespace SlaveGreylings
             CloseToFireTrigger = Brain.SetTriggerParameters<float>(Trigger.CloseToFire.ToString());
             UnFollowTrigger = Brain.SetTriggerParameters<MonsterAI>(Trigger.UnFollow.ToString());
             EatFromGroundTrigger = Brain.SetTriggerParameters<(MonsterAI m, float dt)>(Trigger.ConsumeItem.ToString());
+            EatFromChestTrigger = Brain.SetTriggerParameters<(MonsterAI instance, IEnumerable<ItemDrop> Items, MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)>(Trigger.ConsumeItem.ToString());
+            ItemFoundTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
 
             ConfigureAvoidFire();
             ConfigureFlee();
@@ -80,8 +84,8 @@ namespace SlaveGreylings
         {
             Brain.Configure(State.Hungry.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
-                .Permit(Trigger.ItemFound.ToString(), State.EatFromGround.ToString())
-                .Permit(Trigger.ItemNotFound.ToString(), State.EatFromChest.ToString())
+                .PermitIf(ItemFoundTrigger, State.EatFromGround.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null)
+                .PermitIf(ItemFoundTrigger, State.EatFromChest.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
@@ -93,7 +97,7 @@ namespace SlaveGreylings
 
             Brain.Configure(State.EatFromChest.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitIf();
+                .PermitIf(EatFromChestTrigger, State.Idle.ToString(), (args) => EatFromContainer(args.instance, args.Items, args.KnownContainers, args.AcceptedContainerNames, args.dt));
         }
 
         private void ConfigureFollow()
@@ -178,8 +182,13 @@ namespace SlaveGreylings
                 Invoke<MonsterAI>(instance, "Follow", monsterAi.GetFollowTarget(), dt);
                 return;
             }
+            if(Brain.IsInState(State.Hungry.ToString()))
+            {
+                Brain.Fire(ItemFoundTrigger, monsterAi.m_consumeItems);
+            }
             if (Brain.IsInState(State.EatFromGround.ToString()))
             {
+                
                 Brain.Fire(EatFromGroundTrigger, (monsterAi, dt));
                 return;
             }
