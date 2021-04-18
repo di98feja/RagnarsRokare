@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -11,6 +12,11 @@ namespace SlaveGreylings
 {
     public class Common
     {
+        public static object Invoke<T>(object instance, string methodName, params object[] argumentList)
+        {
+            return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
+        }
+
         public static ItemDrop GetNearbyItem(Vector3 center, List<ItemDrop.ItemData> acceptedNames, int range = 10)
         {
             ItemDrop ClosestObject = null;
@@ -98,6 +104,45 @@ namespace SlaveGreylings
             else
                 result = name;
             return result;
+        }
+
+        public static (string, ItemDrop.ItemData) SearchContainersforItem(MonsterAI instance, ItemDrop Item, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
+        {
+            bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
+            if (containerIsInvalid)
+            {
+                KnownContainers.Pop();
+                return ("ContainerLost", null);
+            }
+            bool isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
+            ItemDrop.ItemData foundItem = KnownContainers.Peek()?.GetInventory()?.GetItem(Item.m_itemData.m_shared.m_name);
+            if (!KnownContainers.Any() || (isCloseToContainer && foundItem == null))
+            {
+                Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, KnownContainers, AcceptedContainerNames);
+                if (nearbyChest != null)
+                {
+                    KnownContainers.Push(nearbyChest);
+                    return ("FoundContainer", null);
+                }
+                else
+                {
+                    KnownContainers.Clear();
+                    return ("CannotFindContainers", null);
+                }
+            }
+            if (!isCloseToContainer)
+            {
+                Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
+                return ("MovingtoContainer", null);
+            }
+            else if (foundItem != null)
+            {
+                KnownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
+                Invoke<Container>(KnownContainers.Peek(), "Save");
+                Invoke<Inventory>(KnownContainers.Peek(), "Changed");
+                return ("ItemFound", foundItem);
+            }
+            return ("", null);
         }
     }
 }
