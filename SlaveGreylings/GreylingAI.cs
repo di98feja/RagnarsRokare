@@ -46,6 +46,7 @@ namespace SlaveGreylings
             Hungry,
             ConsumeItem,
             ItemFound,
+            Update,
             ItemNotFound
         }
 
@@ -86,7 +87,7 @@ namespace SlaveGreylings
         {
             Brain.Configure(State.Hungry.ToString())
                 .PermitDynamic(Trigger.TakeDamage.ToString(), () => TimeSinceHurt < 20 ? State.Flee.ToString() : State.Hungry.ToString())
-                .PermitDynamic(Trigger.ItemFoundTrigger.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null ? State.EatFromGround.ToString() : State.EatFromChest.ToString())
+                .PermitDynamic(ItemFoundTrigger, (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null ? State.EatFromGround.ToString() : State.EatFromChest.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
@@ -94,17 +95,17 @@ namespace SlaveGreylings
 
             Brain.Configure(State.EatFromGround.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitDynamic(Trigger.UpdateTrigger.ToString() , (args) => (bool)Invoke<MonsterAI>(args.instance, "UpdateConsumeItem", this.Character as Humanoid, args.dt) ?  State.Idle.ToString() : State.EatFromGround.ToString());
+                .PermitDynamic(UpdateTrigger , (args) => (bool)Invoke<MonsterAI>(args.instance, "UpdateConsumeItem", this.Character as Humanoid, args.dt) ?  State.Idle.ToString() : State.EatFromGround.ToString());
 
             Brain.Configure(State.EatFromChest.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitDynamic(Trigger.UpdateTrigger.ToString(), (args) => Common.EatFromContainers(args.instance, ref m_containers, m_acceptedContainerNames, args.dt) ? State.Idle.ToString() : State.EatFromChest.ToString());
+                .PermitDynamic(UpdateTrigger, (args) => Common.EatFromContainers(args.instance, ref m_containers, m_acceptedContainerNames, args.dt) ? State.Idle.ToString() : State.EatFromChest.ToString());
         }
 
         private void ConfigureFollow()
         {
             Brain.Configure(State.Follow.ToString())
-                .PermitDynamic(Trigger.UpdateTrigger.ToString(), (args) => (bool)args.instance.GetFollowTarget() ?  State.Idle.ToString() : State.Follow.ToString())
+                .PermitDynamic(UpdateTrigger, (args) => (bool)args.instance.GetFollowTarget() ?  State.Idle.ToString() : State.Follow.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Follow");
@@ -150,7 +151,7 @@ namespace SlaveGreylings
                         m_assigned = false;
                     }
                 })
-                .PermitDynamic(Trigger.UpdateTrigger.ToString() ,(args) => AvoidFire(args.dt) ?  m_parentState.ToString() : State.AvoidFire.ToString());
+                .PermitDynamic(UpdateTrigger ,(args) => AvoidFire(args.dt) ?  m_parentState.ToString() : State.AvoidFire.ToString());
         }
 
         public override void UpdateAI(BaseAI instance, float dt)
@@ -162,7 +163,7 @@ namespace SlaveGreylings
             Brain.Fire(Trigger.TakeDamage.ToString());
             Brain.Fire(Trigger.Follow.ToString());
             Brain.Fire(Trigger.Hungry.ToString());
-            //Brain.Fire(UpdateTrigger, (monsterAi, dt));
+            Brain.Fire(UpdateTrigger, (monsterAi, dt));
 
             if (Brain.IsInState(State.Flee.ToString()))
             {
