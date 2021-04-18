@@ -74,11 +74,11 @@ namespace SlaveGreylings
             return randomAssignment;
         }
 
-        public static Container FindRandomNearbyContainer(Vector3 greylingPosition, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames)
+        public static Container FindRandomNearbyContainer(Vector3 center, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames)
         {
             SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
             var pieceList = new List<Piece>();
-            Piece.GetAllPiecesInRadius(greylingPosition, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
+            Piece.GetAllPiecesInRadius(center, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
             // no containers detected, return false
 
@@ -106,7 +106,7 @@ namespace SlaveGreylings
             return result;
         }
 
-        public static (string, ItemDrop.ItemData) SearchContainersforItem(MonsterAI instance, ItemDrop Item, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
+        public static (string, ItemDrop.ItemData) SearchContainersforItems(MonsterAI instance, IEnumerable<ItemDrop> Items, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
         {
             bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
             if (containerIsInvalid)
@@ -115,7 +115,7 @@ namespace SlaveGreylings
                 return ("ContainerLost", null);
             }
             bool isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
-            ItemDrop.ItemData foundItem = KnownContainers.Peek()?.GetInventory()?.GetItem(Item.m_itemData.m_shared.m_name);
+            ItemDrop.ItemData foundItem = KnownContainers.Peek()?.GetInventory()?.GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).FirstOrDefault();
             if (!KnownContainers.Any() || (isCloseToContainer && foundItem == null))
             {
                 Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, KnownContainers, AcceptedContainerNames);
@@ -144,5 +144,17 @@ namespace SlaveGreylings
             }
             return ("", null);
         }
+
+        public static bool EatFromContainers(MonsterAI instance, IEnumerable<ItemDrop> Items, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
+        {
+           (string trigger, ItemDrop.ItemData foundItem) = SearchContainersforItems(instance, Items, ref KnownContainers, AcceptedContainerNames, dt);
+            if (foundItem != null)
+            {
+                instance.m_onConsumedItem(Items.FirstOrDefault());
+                return true;
+            }
+            return false;
+        }
+
     }
 }
