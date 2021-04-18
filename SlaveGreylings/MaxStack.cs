@@ -31,7 +31,11 @@ namespace SlaveGreylings
 
         public T Peek()
         {
-            return m_stack.Peek();
+            if (m_stack.Any())
+            {
+                return m_stack.Peek();
+            }
+            return default(T);
         }
 
         public void Clear()

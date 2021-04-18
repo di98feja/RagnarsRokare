@@ -49,14 +49,11 @@ namespace SlaveGreylings
             ItemNotFound
         }
 
-        StateMachine<string,string>.TriggerWithParameters<float> CloseToFireTrigger;
-        StateMachine<string,string>.TriggerWithParameters<MonsterAI> UnFollowTrigger;
-        StateMachine<string,string>.TriggerWithParameters<(MonsterAI m, float dt)> EatFromGroundTrigger;
-        StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, IEnumerable<ItemDrop> Items, MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)> EatFromChestTrigger;
+        StateMachine<string,string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>> ItemFoundTrigger;
         State m_parentState;
 
-        public GreylingAI() : base()
+        public GreylingAI() : base(State.Idle.ToString())
         {
             m_assignment = new MaxStack<Assignment>(20);
             m_assigned = false;
@@ -68,16 +65,21 @@ namespace SlaveGreylings
             m_assignedTimer = 0f;
             m_stateChangeTimer = 0f;
             m_acceptedContainerNames = GreylingsConfig.IncludedContainersList.Value.Split();
-            CloseToFireTrigger = Brain.SetTriggerParameters<float>(Trigger.CloseToFire.ToString());
-            UnFollowTrigger = Brain.SetTriggerParameters<MonsterAI>(Trigger.UnFollow.ToString());
-            EatFromGroundTrigger = Brain.SetTriggerParameters<(MonsterAI m, float dt)>(Trigger.ConsumeItem.ToString());
-            EatFromChestTrigger = Brain.SetTriggerParameters<(MonsterAI instance, IEnumerable<ItemDrop> Items, MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)>(Trigger.ConsumeItem.ToString());
+            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.ConsumeItem.ToString());
             ItemFoundTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
 
             ConfigureAvoidFire();
             ConfigureFlee();
             ConfigureFollow();
             ConfigureIsHungry();
+            Brain.Configure(State.Idle.ToString())
+                .PermitDynamic(Trigger.TakeDamage.ToString(), () => TimeSinceHurt < 20 ? State.Flee.ToString() : State.Idle.ToString())
+                .PermitDynamic(Trigger.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget() ? State.Follow.ToString() : State.Idle.ToString())
+                .PermitDynamic(Trigger.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry() ? State.Hungry.ToString() : State.Idle.ToString())
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Nothing to do, bored");
+                });
         }
 
         private void ConfigureIsHungry()
@@ -93,17 +95,17 @@ namespace SlaveGreylings
 
             Brain.Configure(State.EatFromGround.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitIf(EatFromGroundTrigger, State.Idle.ToString(), (args) => (bool)Invoke<MonsterAI>(args.m, "UpdateConsumeItem", this.Character as Humanoid, args.dt));
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => (bool)Invoke<MonsterAI>(args.instance, "UpdateConsumeItem", this.Character as Humanoid, args.dt));
 
             Brain.Configure(State.EatFromChest.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitIf(EatFromChestTrigger, State.Idle.ToString(), (args) => EatFromContainer(args.instance, args.Items, args.KnownContainers, args.AcceptedContainerNames, args.dt));
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => Common.EatFromContainers(args.instance, ref m_containers, m_acceptedContainerNames, args.dt));
         }
 
         private void ConfigureFollow()
         {
             Brain.Configure(State.Follow.ToString())
-                .PermitIf(UnFollowTrigger, State.Idle.ToString(), (m) => (bool)m.GetFollowTarget())
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => (bool)args.instance.GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Follow");
@@ -149,7 +151,7 @@ namespace SlaveGreylings
                         m_assigned = false;
                     }
                 })
-                .PermitIf(CloseToFireTrigger, m_parentState.ToString(), (dt) => AvoidFire(dt));
+                .PermitIf(UpdateTrigger, m_parentState.ToString(), (args) => AvoidFire(args.dt));
         }
 
         public override void UpdateAI(BaseAI instance, float dt)
@@ -158,14 +160,13 @@ namespace SlaveGreylings
             var monsterAi = instance as MonsterAI;
             Vector3 greylingPosition = this.Character.transform.position;
 
-            
+            Brain.Fire(Trigger.TakeDamage.ToString());
+            Brain.Fire(Trigger.Follow.ToString());
+            Brain.Fire(Trigger.Hungry.ToString());
+            //Brain.Fire(UpdateTrigger, (monsterAi, dt));
 
             if (Brain.IsInState(State.Flee.ToString()))
             {
-                if (Brain.IsInState(State.AvoidFire.ToString()))
-                {
-                    Brain.Fire(CloseToFireTrigger, dt);
-                }
                 Brain.Fire(Trigger.CalmDown.ToString());
                 //var fleeFrom = m_attacker == null ? ___m_character.transform.position : m_attacker.transform.position;
                 Invoke<MonsterAI>(instance, "Flee", dt, Character.transform.position);
@@ -174,98 +175,29 @@ namespace SlaveGreylings
 
             if (Brain.IsInState(State.Follow.ToString()))
             {
-                if (Brain.IsInState(State.AvoidFire.ToString()))
-                {
-                    Brain.Fire(CloseToFireTrigger, dt);
-                }
-                Brain.Fire(UnFollowTrigger, monsterAi);
                 Invoke<MonsterAI>(instance, "Follow", monsterAi.GetFollowTarget(), dt);
                 return;
             }
             if(Brain.IsInState(State.Hungry.ToString()))
             {
-                Brain.Fire(ItemFoundTrigger, monsterAi.m_consumeItems);
+                Debug.LogWarning($"IsHungry state");
+                Brain.Fire(ItemFoundTrigger, monsterAi.m_consumeItems.Select(i => i.m_itemData));
             }
             if (Brain.IsInState(State.EatFromGround.ToString()))
             {
-                
-                Brain.Fire(EatFromGroundTrigger, (monsterAi, dt));
+                Debug.LogWarning($"IsHungry, EatFromGround state");
+                Brain.Fire(UpdateTrigger, (monsterAi, dt));
                 return;
             }
             if (Brain.IsInState(State.EatFromChest.ToString()))
             {
-                UpdateAiStatus(NView, "Is hungry, no work a do");
-                if (m_searchcontainer && m_containers.Any())
-                {
-                    bool containerIsInvalid = m_containers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
-                    if (containerIsInvalid)
-                    {
-                        m_containers.Pop();
-                        m_searchcontainer = false;
-                        return;
-                    }
-                    bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers.Peek().transform.position) < 1.5;
-                    if (!isCloseToContainer)
-                    {
-                        Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_containers.Peek().transform.position, 0.5f, false);
-                        return;
-                    }
-                    else
-                    {
-                        ItemDrop foodItem = monsterAi.m_consumeItems.ElementAt<ItemDrop>(0);
-                        ItemDrop.ItemData item = m_containers.Peek()?.GetInventory()?.GetItem(foodItem.m_itemData.m_shared.m_name);
-                        if (item == null)
-                        {
-                            UpdateAiStatus(NView, "No Resin in chest");
-                            Container nearbyChest = Common.FindRandomNearbyContainer(greylingPosition, m_containers, m_acceptedContainerNames);
-                            if (nearbyChest != null)
-                            {
-                                m_containers.Push(nearbyChest);
-                                m_searchcontainer = true;
-                                return;
-                            }
-                            else
-                            {
-                                m_containers.Clear();
-                                m_searchcontainer = false;
-                                return;
-                            }
-                        }
-                        else
-                        {
-                            UpdateAiStatus(NView, "Resin in chest");
-                            m_containers.Peek().GetInventory().RemoveItem(item, 1);
-                            Invoke<Container>(m_containers.Peek(), "Save");
-                            Invoke<Inventory>(m_containers.Peek(), "Changed");
-                            monsterAi.m_onConsumedItem(foodItem);
-                            UpdateAiStatus(NView, "Consume item");
-                            m_assigned = false;
-                            m_spottedItem = null;
-                            m_searchcontainer = false;
-                            m_stateChangeTimer = 0;
-                            return;
-                        }
-                    }
-                }
-                else
-                {
-                    Container nearbyChest = Common.FindRandomNearbyContainer(greylingPosition, m_containers, m_acceptedContainerNames);
-                    if (nearbyChest != null)
-                    {
-                        m_containers.Push(nearbyChest);
-                        m_searchcontainer = true;
-                        return;
-                    }
-                    else
-                    {
-                        m_searchcontainer = false;
-                        return;
-                    }
-                }
+                Debug.LogWarning($"IsHungry, Eat from chest state");
+                Brain.Fire(UpdateTrigger, (monsterAi, dt));
+                return;
             }
 
             // Here starts the fun.
-
+            return;
             //Assigned timeout-function 
             m_assignedTimer += dt;
             if (m_assignedTimer > GreylingsConfig.TimeLimitOnAssignment.Value) m_assigned = false;

@@ -12,11 +12,12 @@ namespace RagnarsRokare.MobAI
 
         public StateMachine<string, string> Brain;
 
-        public string CurrentState { get; private set; }
+        public string CurrentState { get; protected set; }
 
-        public MobAIBase()
+        public MobAIBase(string initState)
         {
             Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
+            CurrentState = initState;
         }
 
         public Character Character

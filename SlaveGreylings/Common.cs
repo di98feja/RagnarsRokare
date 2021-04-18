@@ -89,9 +89,7 @@ namespace SlaveGreylings
             }
 
             // select random piece
-            var random = new System.Random();
-            int index = random.Next(containers.Count());
-            return containers.ElementAt(index);
+            return containers.RandomOrDefault();
         }
 
         public static string GetPrefabName(string name)
@@ -114,8 +112,13 @@ namespace SlaveGreylings
                 KnownContainers.Pop();
                 return ("ContainerLost", null);
             }
-            bool isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
-            ItemDrop.ItemData foundItem = KnownContainers.Peek()?.GetInventory()?.GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).FirstOrDefault();
+            ItemDrop.ItemData foundItem = null;
+            bool isCloseToContainer = false;
+            if (KnownContainers.Any())
+            {
+                isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
+                foundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
+            }
             if (!KnownContainers.Any() || (isCloseToContainer && foundItem == null))
             {
                 Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, KnownContainers, AcceptedContainerNames);
@@ -145,12 +148,12 @@ namespace SlaveGreylings
             return ("", null);
         }
 
-        public static bool EatFromContainers(MonsterAI instance, IEnumerable<ItemDrop> Items, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
+        public static bool EatFromContainers(MonsterAI instance, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
         {
-           (string trigger, ItemDrop.ItemData foundItem) = SearchContainersforItems(instance, Items, ref KnownContainers, AcceptedContainerNames, dt);
+           (string trigger, ItemDrop.ItemData foundItem) = SearchContainersforItems(instance, instance.m_consumeItems, ref KnownContainers, AcceptedContainerNames, dt);
             if (foundItem != null)
             {
-                instance.m_onConsumedItem(Items.FirstOrDefault());
+                instance.m_onConsumedItem(instance.m_consumeItems.FirstOrDefault());
                 return true;
             }
             return false;
