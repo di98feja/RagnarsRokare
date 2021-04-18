@@ -66,7 +66,7 @@ namespace SlaveGreylings
             m_assignedTimer = 0f;
             m_stateChangeTimer = 0f;
             m_acceptedContainerNames = GreylingsConfig.IncludedContainersList.Value.Split();
-            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.ConsumeItem.ToString());
+            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
             ItemFoundTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
 
             ConfigureAvoidFire();
@@ -87,7 +87,8 @@ namespace SlaveGreylings
         {
             Brain.Configure(State.Hungry.ToString())
                 .PermitDynamic(Trigger.TakeDamage.ToString(), () => TimeSinceHurt < 20 ? State.Flee.ToString() : State.Hungry.ToString())
-                .PermitDynamic(ItemFoundTrigger, (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null ? State.EatFromGround.ToString() : State.EatFromChest.ToString())
+                .PermitDynamic(ItemFoundTrigger, (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null ? State.EatFromGround.ToString() : State.Hungry.ToString())
+                .PermitDynamic(ItemFoundTrigger, (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null ? State.EatFromChest.ToString() : State.Hungry.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
