@@ -1,13 +1,13 @@
 ﻿using Stateless;
 using System.Collections.Generic;
 
-namespace MobAI
+namespace RagnarsRokare.MobAI
 {
     public interface IBehaviour
     {
         IEnumerable<string> RegisterStates();
         IEnumerable<string> RegisterTriggers();
-        void Configure(StateMachine<string, string> brain);
-        void Update();
+        void Configure(StateMachine<string, string> brain, string ExitState);
+        void Update(MobAIBase instance, float dt);
     }
 }

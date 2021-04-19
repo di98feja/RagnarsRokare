@@ -76,15 +76,15 @@ namespace SlaveGreylings
 
         public static Container FindRandomNearbyContainer(Vector3 center, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames)
         {
-            SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}");
+            SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(center, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
-            // no containers detected, return false
-
+            SlaveGreylings.Dbgl($"Found { allcontainerPieces.Count() } containers, filtering");
             var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c));
             if (!containers.Any())
             {
+                SlaveGreylings.Dbgl("No containers found, returning null");
                 return null;
             }
 
@@ -112,6 +112,7 @@ namespace SlaveGreylings
                 KnownContainers.Pop();
                 return ("ContainerLost", null);
             }
+
             ItemDrop.ItemData foundItem = null;
             bool isCloseToContainer = false;
             if (KnownContainers.Any())
@@ -125,7 +126,7 @@ namespace SlaveGreylings
                 if (nearbyChest != null)
                 {
                     KnownContainers.Push(nearbyChest);
-                    return ("FoundContainer", null);
+                    //return ("FoundContainer", null);
                 }
                 else
                 {
@@ -138,19 +139,34 @@ namespace SlaveGreylings
                 Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
                 return ("MovingtoContainer", null);
             }
+            else if (!KnownContainers.Peek()?.IsInUse() ?? false)
+            {
+                Debug.Log("Open chest");
+                KnownContainers.Peek().SetInUse(inUse: true);
+                return ("OpenContainer", null);
+            }
             else if (foundItem != null)
             {
+                Debug.Log("Item found, Close chest");
+
+                KnownContainers.Peek().SetInUse(inUse: false);
+
                 KnownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
                 Invoke<Container>(KnownContainers.Peek(), "Save");
                 Invoke<Inventory>(KnownContainers.Peek(), "Changed");
                 return ("ItemFound", foundItem);
+            }
+            else
+            {
+                Debug.Log("Item not found, Close chest");
+                KnownContainers.Peek().SetInUse(inUse: false);
             }
             return ("", null);
         }
 
         public static bool EatFromContainers(MonsterAI instance, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
         {
-           (string trigger, ItemDrop.ItemData foundItem) = SearchContainersforItems(instance, instance.m_consumeItems, ref KnownContainers, AcceptedContainerNames, dt);
+            (string trigger, ItemDrop.ItemData foundItem) = SearchContainersforItems(instance, instance.m_consumeItems, ref KnownContainers, AcceptedContainerNames, dt);
             if (foundItem != null)
             {
                 instance.m_onConsumedItem(instance.m_consumeItems.FirstOrDefault());

@@ -1,8 +1,6 @@
-﻿using HarmonyLib;
-using Stateless;
+﻿using Stateless;
 using System;
 using System.Reflection;
-using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
@@ -17,6 +15,7 @@ namespace RagnarsRokare.MobAI
         public MobAIBase(string initState)
         {
             Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
+            Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentState = initState;
         }
 
