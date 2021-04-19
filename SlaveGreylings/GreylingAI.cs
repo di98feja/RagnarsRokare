@@ -72,6 +72,8 @@ namespace SlaveGreylings
             ConfigureFollow();
             ConfigureIsHungry();
             ConfigureIdle();
+            ConfigureAssigned();
+
         }
 
         private void ConfigureIdle()
@@ -486,14 +488,16 @@ namespace SlaveGreylings
         public static bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
         {
             Assignment newassignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
+            Debug.LogWarning($"New assignment search");
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);
+                Debug.LogWarning($"New assignment added");
                 return true;
             }
             else
             {
-                //UpdateAiStatus(NView, $"No new assignments found");
+                Debug.LogWarning($"No assignment found");
                 return false;
             }
         }
