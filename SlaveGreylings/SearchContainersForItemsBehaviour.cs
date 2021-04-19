@@ -1,15 +1,10 @@
 ﻿using RagnarsRokare.MobAI;
 using Stateless;
-using Stateless.Graph;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SlaveGreylings
 {
-    class SearchContainersForItemsBehaviour : MobAI.IBehaviour
+    class SearchContainersForItemsBehaviour : IBehaviour
     {
         private const string Prefix = "RR_SFIIC";
 
@@ -108,58 +103,58 @@ namespace SlaveGreylings
                 instance.Brain.Fire(Failed_trigger);
                 return;
             }
-            ItemDrop.ItemData foundItem = null;
-            bool isCloseToContainer = false;
-            if (instance.Brain.IsInState(SearchForRandomContainer_state))
-            {
-                if (KnownContainers.Any())
-                {
-                    isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
-                    foundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
-                }
-                if (!KnownContainers.Any() || (isCloseToContainer && foundItem == null))
-                {
-                    Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, KnownContainers, AcceptedContainerNames);
-                    if (nearbyChest != null)
-                    {
-                        KnownContainers.Push(nearbyChest);
-                        return (ContainerFound, null);
-                    }
-                    else
-                    {
-                        KnownContainers.Clear();
-                        return ("CannotFindContainers", null);
-                    }
-                }
-            }
-            if (!isCloseToContainer)
-            {
-                Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
-                return ("MovingtoContainer", null);
-            }
-            else if (!KnownContainers.Peek()?.IsInUse() ?? false)
-            {
-                Debug.Log("Open chest");
-                KnownContainers.Peek().SetInUse(inUse: true);
-                return ("OpenContainer", null);
-            }
-            else if (foundItem != null)
-            {
-                Debug.Log("Item found, Close chest");
+            //ItemDrop.ItemData foundItem = null;
+            //bool isCloseToContainer = false;
+            //if (instance.Brain.IsInState(SearchForRandomContainer_state))
+            //{
+            //    if (KnownContainers.Any())
+            //    {
+            //        isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
+            //        foundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
+            //    }
+            //    if (!KnownContainers.Any() || (isCloseToContainer && foundItem == null))
+            //    {
+            //        Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, KnownContainers, AcceptedContainerNames);
+            //        if (nearbyChest != null)
+            //        {
+            //            KnownContainers.Push(nearbyChest);
+            //            return (ContainerFound, null);
+            //        }
+            //        else
+            //        {
+            //            KnownContainers.Clear();
+            //            return ("CannotFindContainers", null);
+            //        }
+            //    }
+            //}
+            //if (!isCloseToContainer)
+            //{
+            //    Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
+            //    return ("MovingtoContainer", null);
+            //}
+            //else if (!KnownContainers.Peek()?.IsInUse() ?? false)
+            //{
+            //    Debug.Log("Open chest");
+            //    KnownContainers.Peek().SetInUse(inUse: true);
+            //    return ("OpenContainer", null);
+            //}
+            //else if (foundItem != null)
+            //{
+            //    Debug.Log("Item found, Close chest");
 
-                KnownContainers.Peek().SetInUse(inUse: false);
+            //    KnownContainers.Peek().SetInUse(inUse: false);
 
-                KnownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
-                Invoke<Container>(KnownContainers.Peek(), "Save");
-                Invoke<Inventory>(KnownContainers.Peek(), "Changed");
-                return (ItemFound_trigger, foundItem);
-            }
-            else
-            {
-                Debug.Log("Item not found, Close chest");
-                KnownContainers.Peek().SetInUse(inUse: false);
-            }
-            return ("", null);
+            //    KnownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
+            //    Invoke<Container>(KnownContainers.Peek(), "Save");
+            //    Invoke<Inventory>(KnownContainers.Peek(), "Changed");
+            //    return (ItemFound_trigger, foundItem);
+            //}
+            //else
+            //{
+            //    Debug.Log("Item not found, Close chest");
+            //    KnownContainers.Peek().SetInUse(inUse: false);
+            //}
+            //return ("", null);
 
         }
     }
