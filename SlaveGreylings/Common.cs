@@ -159,5 +159,28 @@ namespace SlaveGreylings
             return false;
         }
 
+        public static bool AssignmentTimeoutCheck(ref MaxStack<Assignment> assignments, float dt)
+        {
+            foreach (Assignment assignment in assignments)
+            {
+                assignment.AssignmentTime += dt;
+                int multiplicator = 1;
+                if (assignment.TypeOfAssignment.ComponentType == typeof(Fireplace))
+                {
+                    multiplicator = 3;
+                }
+                if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value * multiplicator)
+                {
+                    assignments.Remove(assignment);
+                    if (!assignments.Any())
+                    {
+                        return false;
+                    }
+                    break;
+                }
+            }
+            return true;
+        }
+
     }
 }

@@ -198,37 +198,18 @@ namespace SlaveGreylings
             }
 
             // Here starts the fun.
-            return;
+
             //Assigned timeout-function 
             m_assignedTimer += dt;
             if (m_assignedTimer > GreylingsConfig.TimeLimitOnAssignment.Value) m_assigned = false;
 
             //Assignment timeout-function
-            foreach (Assignment assignment in m_assignment)
-            {
-                assignment.AssignmentTime += dt;
-                int multiplicator = 1;
-                if (assignment.TypeOfAssignment.ComponentType == typeof(Fireplace))
-                {
-                    multiplicator = 3;
-                }
-                if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value * multiplicator)
-                {
-                    UpdateAiStatus(NView, $"removing outdated Assignment of {m_assignment.Count()}");
-                    m_assignment.Remove(assignment);
-                    UpdateAiStatus(NView, $"remaining Assignments {m_assignment.Count()}");
-                    if (!m_assignment.Any())
-                    {
-                        m_assigned = false;
-                    }
-                    break;
-                }
-            }
+
+            m_assigned = Common.AssignmentTimeoutCheck(ref m_assignment, dt);
 
             //stateChangeTimer Updated
             m_stateChangeTimer += dt;
             if (m_stateChangeTimer < 1) return;
-
 
             if (!m_assigned)
             {
