@@ -112,7 +112,8 @@ namespace SlaveGreylings
         private void ConfigureFollow()
         {
             Brain.Configure(State.Follow.ToString())
-                .PermitDynamic(UpdateTrigger, (args) => (bool)args.instance.GetFollowTarget() ?  State.Idle.ToString() : State.Follow.ToString())
+                .PermitIf(UpdateTrigger, State.Follow.ToString(), (args) => (bool)args.instance.GetFollowTarget())
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => !(bool)args.instance.GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Follow");
@@ -130,7 +131,7 @@ namespace SlaveGreylings
         private void ConfigureFlee()
         {
             Brain.Configure(State.Flee.ToString())
-                .PermitDynamic(Trigger.CalmDown.ToString(), () => TimeSinceHurt >= 20f ? State.Idle.ToString() : State.Flee.ToString())
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => TimeSinceHurt >= 20f)
                 .Permit(Trigger.Follow.ToString(), State.Follow.ToString())
                 .OnEntry(t =>
                 {
@@ -158,7 +159,7 @@ namespace SlaveGreylings
                         m_assigned = false;
                     }
                 })
-                .PermitDynamic(UpdateTrigger ,(args) => AvoidFire(args.dt) ?  m_parentState.ToString() : State.AvoidFire.ToString());
+                .PermitIf(UpdateTrigger, m_parentState.ToString(), (args) => AvoidFire(args.dt));
         }
 
         private void ConfigureAssigned()
