@@ -53,6 +53,7 @@ namespace SlaveGreylings
         StateMachine<string,string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>> ItemFoundTrigger;
         State m_parentState;
+        private float m_triggerTimer;
 
         public GreylingAI() : base(State.Idle.ToString())
         {
@@ -86,9 +87,10 @@ namespace SlaveGreylings
         private void ConfigureIsHungry()
         {
             Brain.Configure(State.Hungry.ToString())
-                .PermitDynamic(Trigger.TakeDamage.ToString(), () => TimeSinceHurt < 20 ? State.Flee.ToString() : State.Hungry.ToString())
-                .PermitDynamic(ItemFoundTrigger, (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null ? State.EatFromGround.ToString() : State.Hungry.ToString())
-                .PermitDynamic(ItemFoundTrigger, (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null ? State.EatFromChest.ToString() : State.Hungry.ToString())
+                .PermitReentry(UpdateTrigger.ToString())
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20 )
+                .PermitIf(ItemFoundTrigger, State.EatFromGround.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null)
+                .PermitIf(ItemFoundTrigger, State.EatFromChest.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
@@ -96,11 +98,13 @@ namespace SlaveGreylings
 
             Brain.Configure(State.EatFromGround.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitDynamic(UpdateTrigger , (args) => (bool)Invoke<MonsterAI>(args.instance, "UpdateConsumeItem", this.Character as Humanoid, args.dt) ?  State.Idle.ToString() : State.EatFromGround.ToString());
+                .PermitReentry(UpdateTrigger.ToString())
+                .PermitDynamic(UpdateTrigger , (args) => (bool)Invoke<MonsterAI>(args.instance, "UpdateConsumeItem", this.Character as Humanoid, args.dt) ?  State.Idle.ToString() : State.Hungry.ToString());
 
             Brain.Configure(State.EatFromChest.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitDynamic(UpdateTrigger, (args) => Common.EatFromContainers(args.instance, ref m_containers, m_acceptedContainerNames, args.dt) ? State.Idle.ToString() : State.EatFromChest.ToString());
+                .PermitReentry(UpdateTrigger.ToString())
+                .PermitDynamic(UpdateTrigger, (args) => Common.EatFromContainers(args.instance, ref m_containers, m_acceptedContainerNames, args.dt) ? State.Idle.ToString() : State.Hungry.ToString());
         }
 
         private void ConfigureFollow()
@@ -158,13 +162,20 @@ namespace SlaveGreylings
         public override void UpdateAI(BaseAI instance, float dt)
         {
             base.UpdateAI(instance, dt);
+            m_triggerTimer += dt;
+            if (m_triggerTimer < 0.1f) return;
+            m_triggerTimer = 0f;
             var monsterAi = instance as MonsterAI;
             Vector3 greylingPosition = this.Character.transform.position;
+
+            SlaveGreylings.Dbgl($"Greyling:{greylingPosition}, monsterAi:{monsterAi.transform.position}");
+
 
             Brain.Fire(Trigger.TakeDamage.ToString());
             Brain.Fire(Trigger.Follow.ToString());
             Brain.Fire(Trigger.Hungry.ToString());
             Brain.Fire(UpdateTrigger, (monsterAi, dt));
+
 
             if (Brain.IsInState(State.Flee.ToString()))
             {
@@ -181,18 +192,15 @@ namespace SlaveGreylings
             }
             if(Brain.IsInState(State.Hungry.ToString()))
             {
-                Debug.LogWarning($"IsHungry state");
                 Brain.Fire(ItemFoundTrigger, monsterAi.m_consumeItems.Select(i => i.m_itemData));
             }
             if (Brain.IsInState(State.EatFromGround.ToString()))
             {
-                Debug.LogWarning($"IsHungry, EatFromGround state");
                 Brain.Fire(UpdateTrigger, (monsterAi, dt));
                 return;
             }
             if (Brain.IsInState(State.EatFromChest.ToString()))
             {
-                Debug.LogWarning($"IsHungry, Eat from chest state");
                 Brain.Fire(UpdateTrigger, (monsterAi, dt));
                 return;
             }
