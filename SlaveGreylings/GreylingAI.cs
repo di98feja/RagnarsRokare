@@ -161,6 +161,23 @@ namespace SlaveGreylings
                 .PermitDynamic(UpdateTrigger ,(args) => AvoidFire(args.dt) ?  m_parentState.ToString() : State.AvoidFire.ToString());
         }
 
+        private void ConfigureAssigned()
+        {
+            Brain.Configure(State.Assigned.ToString())
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) => AddNewAssignment(arg.instance.transform.position, m_assignment))
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Nothing to do, bored");
+                    m_assigned = true;
+                    m_assignedTimer = 0;
+                    m_fetchitems.Clear();
+                    m_spottedItem = null;
+                });
+        }
+
         public override void UpdateAI(BaseAI instance, float dt)
         {
             base.UpdateAI(instance, dt);
@@ -483,10 +500,6 @@ namespace SlaveGreylings
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);
-                //m_assigned = true;
-                //m_assignedTimer = 0;
-                //m_fetchitems.Clear();
-                //m_spottedItem = null;
                 return true;
             }
             else
