@@ -71,13 +71,14 @@ namespace SlaveGreylings
             ConfigureFlee();
             ConfigureFollow();
             ConfigureIsHungry();
+            ConfigureIdle();
         }
 
         private void ConfigureIdle()
         {
             Brain.Configure(State.Idle.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(),() => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => { Debug.LogWarning($"followTarget:{(bool)(Instance as MonsterAI).GetFollowTarget()}"); return (bool)(Instance as MonsterAI).GetFollowTarget(); })
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
                 .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) => AddNewAssignment(arg.instance.transform.position, m_assignment))
                 .OnEntry(t =>
@@ -93,6 +94,7 @@ namespace SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20 )
                 .PermitIf(ItemFoundTrigger, State.EatFromGround.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null)
                 .PermitIf(ItemFoundTrigger, State.EatFromChest.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null)
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
@@ -112,7 +114,6 @@ namespace SlaveGreylings
         private void ConfigureFollow()
         {
             Brain.Configure(State.Follow.ToString())
-                .PermitIf(UpdateTrigger, State.Follow.ToString(), (args) => (bool)args.instance.GetFollowTarget())
                 .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => !(bool)args.instance.GetFollowTarget())
                 .OnEntry(t =>
                 {
