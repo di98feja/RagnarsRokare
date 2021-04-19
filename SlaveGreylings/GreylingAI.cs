@@ -78,7 +78,7 @@ namespace SlaveGreylings
         {
             Brain.Configure(State.Idle.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(),() => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => { Debug.LogWarning($"followTarget:{(bool)(Instance as MonsterAI).GetFollowTarget()}"); return (bool)(Instance as MonsterAI).GetFollowTarget(); })
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
                 .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) => AddNewAssignment(arg.instance.transform.position, m_assignment))
                 .OnEntry(t =>
