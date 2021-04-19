@@ -26,6 +26,7 @@ namespace SlaveGreylings
             Flee,
             Follow,
             AvoidFire,
+            Assigned,
             Hungry,
             SearchForItem,
             EatFromGround,
@@ -70,10 +71,15 @@ namespace SlaveGreylings
             ConfigureFlee();
             ConfigureFollow();
             ConfigureIsHungry();
+        }
+
+        private void ConfigureIdle()
+        {
             Brain.Configure(State.Idle.ToString())
-                .PermitDynamic(Trigger.TakeDamage.ToString(), () => TimeSinceHurt < 20 ? State.Flee.ToString() : State.Idle.ToString())
-                .PermitDynamic(Trigger.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget() ? State.Follow.ToString() : State.Idle.ToString())
-                .PermitDynamic(Trigger.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry() ? State.Hungry.ToString() : State.Idle.ToString())
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(),() => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) => AddNewAssignment(arg.instance.transform.position, m_assignment))
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Nothing to do, bored");
@@ -215,24 +221,12 @@ namespace SlaveGreylings
             m_stateChangeTimer += dt;
             if (m_stateChangeTimer < 1) return;
 
-            if (!m_assigned)
+            
+            
+            if (Brain.IsInState(State.Idle.ToString()))
             {
-                Assignment newassignment = Common.FindRandomNearbyAssignment(greylingPosition, m_assignment);
-                if (newassignment != null)
-                {
-                    UpdateAiStatus(NView, $"Doing assignment: {m_assignment.Peek().TypeOfAssignment.Name}");
-                    m_assignment.Push(newassignment);
-                    m_assigned = true;
-                    m_assignedTimer = 0;
-                    m_fetchitems.Clear();
-                    m_spottedItem = null;
-                    return;
-                }
-                else
-                {
-                    //UpdateAiStatus(NView, $"No new assignments found");
-                    m_assignment.Clear();
-                }
+                Brain.Fire(UpdateTrigger, (monsterAi, dt));
+                return;
             }
 
             if (m_assigned)
@@ -482,6 +476,26 @@ namespace SlaveGreylings
             Invoke<MonsterAI>(instance, "IdleMovement", dt);
 
         }
+
+        public static bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
+        {
+            Assignment newassignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
+            if (newassignment != null)
+            {
+                KnownAssignments.Push(newassignment);
+                //m_assigned = true;
+                //m_assignedTimer = 0;
+                //m_fetchitems.Clear();
+                //m_spottedItem = null;
+                return true;
+            }
+            else
+            {
+                //UpdateAiStatus(NView, $"No new assignments found");
+                return false;
+            }
+        }
+
         public static string UpdateAiStatus(ZNetView nview, string newStatus)
         {
             string currentAiStatus = nview?.GetZDO()?.GetString(Constants.Z_AiStatus);
