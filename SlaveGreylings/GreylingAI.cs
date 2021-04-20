@@ -480,24 +480,21 @@ namespace SlaveGreylings
             //    return;
             //}
 
-            UpdateAiStatus(NView, "Random movement (No new assignments found)");
-            Invoke<MonsterAI>(instance, "IdleMovement", dt);
+            //UpdateAiStatus(NView, "Random movement (No new assignments found)");
+            //Invoke<MonsterAI>(instance, "IdleMovement", dt);
 
         }
 
         public bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
         {
             Assignment newassignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
-            Debug.LogWarning($"New assignment search");
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);
-                Debug.LogWarning($"New assignment added");
                 return true;
             }
             else
             {
-                Debug.LogWarning($"No assignment found");
                 return false;
             }
         }

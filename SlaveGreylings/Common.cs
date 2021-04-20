@@ -74,7 +74,6 @@ namespace SlaveGreylings
             var selekted = newAssignments.RandomOrDefault();
             SlaveGreylings.Dbgl($"Returning assignment: {selekted.name}");
             Assignment randomAssignment = new Assignment(selekted);
-            SlaveGreylings.Dbgl($"Returning assignment: {randomAssignment?.name}");
             return randomAssignment;
         }
 
