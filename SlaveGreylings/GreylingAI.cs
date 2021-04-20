@@ -28,9 +28,11 @@ namespace SlaveGreylings
             AvoidFire,
             Assigned,
             Hungry,
-            SearchForItem,
+            SearchForItemsInContainers,
             EatFromGround,
-            EatFromChest
+            EatFromChest,
+            HaveItem,
+            HaveNoItem
         }
 
         public enum Trigger
@@ -44,14 +46,15 @@ namespace SlaveGreylings
             ConsumeItem,
             ItemFound,
             Update,
-            ItemNotFound
+            ItemNotFound,
+            SearchChestsForItems
         }
 
         StateMachine<string,string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
-        StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>> ItemFoundTrigger;
+        StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>> LookForItemTrigger;
         State m_parentState;
         private float m_triggerTimer;
-
+        SearchContainersForItemsBehaviour searchChestsBehaviour;
         public GreylingAI() : base(State.Idle.ToString())
         {
             m_assignment = new MaxStack<Assignment>(20);
@@ -65,13 +68,31 @@ namespace SlaveGreylings
             m_stateChangeTimer = 0f;
             m_acceptedContainerNames = GreylingsConfig.IncludedContainersList.Value.Split();
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
-            ItemFoundTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
+            LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
+
+            searchChestsBehaviour = new SearchContainersForItemsBehaviour();
+            searchChestsBehaviour.Configure(Brain, Trigger.ItemFound.ToString(), Trigger.ItemNotFound.ToString(), State.SearchForItemsInContainers.ToString());
 
             ConfigureAvoidFire();
             ConfigureFlee();
             ConfigureFollow();
             ConfigureIsHungry();
             ConfigureIdle();
+            ConfigureSearchContainers();
+        }
+
+        private void ConfigureSearchContainers()
+        {
+            Brain.Configure(State.SearchForItemsInContainers.ToString())
+                .SubstateOf(State.Hungry.ToString())
+                .Permit(Trigger.SearchChestsForItems.ToString(), searchChestsBehaviour.InitState)
+                .OnEntry(t =>
+                {
+                    searchChestsBehaviour.KnownContainers = m_containers;
+                    searchChestsBehaviour.Items = (Instance as MonsterAI).m_consumeItems;
+                    searchChestsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
+                    Brain.Fire(Trigger.SearchChestsForItems.ToString());
+                });
         }
 
         private void ConfigureIdle()
@@ -92,9 +113,11 @@ namespace SlaveGreylings
             Brain.Configure(State.Hungry.ToString())
                 .PermitReentry(UpdateTrigger.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20 )
-                .PermitIf(ItemFoundTrigger, State.EatFromGround.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null)
-                .PermitIf(ItemFoundTrigger, State.EatFromChest.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null)
+                .PermitIf(LookForItemTrigger, State.EatFromGround.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null)
+                .PermitIf(LookForItemTrigger, State.EatFromChest.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .Permit(Trigger.ItemFound.ToString(), State.HaveItem.ToString())
+                .Permit(Trigger.ItemNotFound.ToString(), State.HaveNoItem.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
@@ -103,12 +126,37 @@ namespace SlaveGreylings
             Brain.Configure(State.EatFromGround.ToString())
                 .SubstateOf(State.Hungry.ToString())
                 .PermitReentry(UpdateTrigger.ToString())
-                .PermitDynamic(UpdateTrigger , (args) => (bool)Invoke<MonsterAI>(args.instance, "UpdateConsumeItem", this.Character as Humanoid, args.dt) ?  State.Idle.ToString() : State.Hungry.ToString());
+                .PermitDynamic(UpdateTrigger, (args) =>
+                { return (bool)Invoke<MonsterAI>(args.instance, "UpdateConsumeItem", this.Character as Humanoid, args.dt) ? State.Idle.ToString() : State.Hungry.ToString(); });
 
             Brain.Configure(State.EatFromChest.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitReentry(UpdateTrigger.ToString())
-                .PermitDynamic(UpdateTrigger, (args) => Common.EatFromContainers(args.instance, ref m_containers, m_acceptedContainerNames, args.dt) ? State.Idle.ToString() : State.Hungry.ToString());
+                .PermitReentry(UpdateTrigger.ToString());
+
+            Brain.Configure(State.HaveItem.ToString())
+                .SubstateOf(State.Hungry.ToString())
+                .PermitIf(Trigger.ConsumeItem.ToString(), State.Idle.ToString())
+                .OnEntry(t =>
+                {
+                    (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
+                    humanoid.m_consumeItemEffects.Create(base.transform.position, Quaternion.identity);
+                    m_animator.SetTrigger("consume");
+                    if (m_consumeHeal > 0f)
+                    {
+                        m_character.Heal(m_consumeHeal);
+                    }
+
+                    Brain.Fire(Trigger.ConsumeItem.ToString());
+                });
+            Brain.Configure(State.HaveNoItem.ToString())
+                .SubstateOf(State.Hungry.ToString())
+                .PermitIf(Trigger.ItemNotFound.ToString(), State.Idle.ToString())
+                .OnEntry(t =>
+                {
+                    (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
+                    Brain.Fire(Trigger.ConsumeItem.ToString());
+                });
+
         }
 
         private void ConfigureFollow()
@@ -194,15 +242,21 @@ namespace SlaveGreylings
                 Invoke<MonsterAI>(instance, "Follow", monsterAi.GetFollowTarget(), dt);
                 return;
             }
-            if(Brain.IsInState(State.Hungry.ToString()))
-            {
-                Brain.Fire(ItemFoundTrigger, monsterAi.m_consumeItems.Select(i => i.m_itemData));
-            }
+            //if(Brain.IsInState(State.Hungry.ToString()))
+            //{
+            //    Brain.Fire(LookForItemTrigger, monsterAi.m_consumeItems.Select(i => i.m_itemData));
+            //}
             if (Brain.IsInState(State.EatFromGround.ToString()))
             {
                 Brain.Fire(UpdateTrigger, (monsterAi, dt));
                 return;
             }
+            if (Brain.IsInState(searchChestsBehaviour.InitState))
+            {
+                searchChestsBehaviour.Update(this, dt);
+                return;
+            }
+
             if (Brain.IsInState(State.EatFromChest.ToString()))
             {
                 Brain.Fire(UpdateTrigger, (monsterAi, dt));

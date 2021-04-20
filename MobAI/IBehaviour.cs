@@ -7,7 +7,7 @@ namespace RagnarsRokare.MobAI
     {
         IEnumerable<string> RegisterStates();
         IEnumerable<string> RegisterTriggers();
-        void Configure(StateMachine<string, string> brain, string ExitState);
+        void Configure(StateMachine<string, string> brain, string SuccessState, string FailedState, string parentState);
         void Update(MobAIBase instance, float dt);
     }
 }

@@ -10,23 +10,24 @@ namespace SlaveGreylings
     {
         private const string Prefix = "RR_SFIIC";
 
-        private string SearchForItemsInContainers_state = Prefix + "SearchForItemsInContainers";
-        private string SearchForRandomContainer_state   = Prefix + "SearchForRandomContainer";
-        private string MoveToContainer_state            = Prefix + "MoveToContainer";
-        private string OpenContainer_state              = Prefix + "OpenContainer";
-        private string SearchForItem_state              = Prefix + "SearchForItem";
+        private const string SearchForItemsInContainers_state = Prefix + "SearchForItemsInContainers";
+        private const string SearchForRandomContainer_state = Prefix + "SearchForRandomContainer";
+        private const string MoveToContainer_state = Prefix + "MoveToContainer";
+        private const string OpenContainer_state = Prefix + "OpenContainer";
+        private const string SearchForItem_state = Prefix + "SearchForItem";
 
-        private string ItemFound_trigger                = Prefix + "ItemFound";
-        private string ItemNotFound_trigger             = Prefix + "ItemNotFound";
-        private string ContainerFound_trigger           = Prefix + "ContainerFound";
-        private string ContainerNotFound_trigger        = Prefix + "ContainerNotFound";
-        private string ContainerIsClose_trigger         = Prefix + "ContainerIsClose";
-        private string Failed_trigger                   = Prefix + "Failed";
-        private string ContainerOpened_trigger          = Prefix + "ContainerOpened";
-        private string Update_trigger                   = Prefix + "Update";
+        private const string ItemFound_trigger = Prefix + "ItemFound";
+        private const string ItemNotFound_trigger = Prefix + "ItemNotFound";
+        private const string ContainerFound_trigger = Prefix + "ContainerFound";
+        private const string ContainerNotFound_trigger = Prefix + "ContainerNotFound";
+        private const string ContainerIsClose_trigger = Prefix + "ContainerIsClose";
+        private const string Failed_trigger = Prefix + "Failed";
+        private const string ContainerOpened_trigger = Prefix + "ContainerOpened";
+        private const string Update_trigger = Prefix + "Update";
 
         StateMachine<string, string>.TriggerWithParameters<(MobAIBase aiBase, float dt)> UpdateTrigger;
         private float OpenChestTimer;
+        private float CurrentSearchTime;
 
         public IEnumerable<ItemDrop> Items { get; set; }
         public MaxStack<Container> KnownContainers { get; set; }
@@ -35,13 +36,19 @@ namespace SlaveGreylings
         public ItemDrop.ItemData FoundItem { get; private set; }
         public float OpenChestDelay { get; private set; } = 1;
 
-        public void Configure(StateMachine<string, string> brain, string ExitState)
+        public float MaxSearchTime { get; set; } = 60;
+
+        public string InitState { get { return SearchForItemsInContainers_state; } }
+
+        public void Configure(StateMachine<string, string> brain, string SuccessState, string FailState, string parentState)
         {
             UpdateTrigger = brain.SetTriggerParameters<(MobAIBase aiBase, float dt)>(Update_trigger);
 
             brain.Configure(SearchForItemsInContainers_state)
+                .SubstateOf(parentState)
                 .InitialTransition(SearchForRandomContainer_state)
                 .Permit(Update_trigger, SearchForRandomContainer_state)
+                .Permit(ContainerNotFound_trigger, FailState)
                 .OnEntry(t =>
                 {
                 });
@@ -49,7 +56,8 @@ namespace SlaveGreylings
             brain.Configure(SearchForRandomContainer_state)
                 .SubstateOf(SearchForItemsInContainers_state)
                 .Permit(ContainerFound_trigger, MoveToContainer_state)
-                .Permit(ContainerNotFound_trigger, ExitState)
+                .Permit(ContainerNotFound_trigger, FailState)
+                .Permit(Failed_trigger, FailState)
                 .OnEntry(t =>
                 {
                     var aiBase = t.Parameters[0] as MobAIBase;
@@ -79,6 +87,7 @@ namespace SlaveGreylings
                 .SubstateOf(SearchForItemsInContainers_state)
                 .Permit(ContainerIsClose_trigger, OpenContainer_state)
                 .Permit(Failed_trigger, SearchForRandomContainer_state)
+                .Permit(ContainerNotFound_trigger, FailState)
                 .OnEntry(t =>
                 {
 
@@ -87,6 +96,7 @@ namespace SlaveGreylings
                 .SubstateOf(SearchForItemsInContainers_state)
                 .Permit(ContainerOpened_trigger, SearchForItem_state)
                 .Permit(Failed_trigger, SearchForRandomContainer_state)
+                .Permit(ContainerNotFound_trigger, FailState)
                 .OnEntry(t =>
                 {
                     if (KnownContainers.Peek().IsInUse())
@@ -99,11 +109,27 @@ namespace SlaveGreylings
 
             brain.Configure(SearchForItem_state)
                 .SubstateOf(SearchForItemsInContainers_state)
-                .Permit(ItemFound_trigger, ExitState)
+                .Permit(ItemFound_trigger, SuccessState)
                 .Permit(ItemNotFound_trigger, SearchForRandomContainer_state)
+                .Permit(ContainerNotFound_trigger, FailState)
                 .OnEntry(t =>
                 {
-
+                    FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
+                    if (FoundItem != null)
+                    {
+                        KnownContainers.Peek().GetInventory().RemoveItem(FoundItem, 1);
+                        Common.Invoke<Container>(KnownContainers.Peek(), "Save");
+                        Common.Invoke<Inventory>(KnownContainers.Peek(), "Changed");
+                        brain.Fire(ItemFound_trigger);
+                    }
+                    else
+                    {
+                        brain.Fire(ItemNotFound_trigger);
+                    }
+                })
+                .OnExit(t =>
+                {
+                    KnownContainers.Peek().SetInUse(inUse: false);
                 });
         }
 
@@ -135,7 +161,10 @@ namespace SlaveGreylings
 
         public void Update(MobAIBase aiBase, float dt)
         {
-
+            if ((CurrentSearchTime += dt) > MaxSearchTime)
+            {
+                aiBase.Brain.Fire(ContainerNotFound_trigger);
+            }
             bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
             if (containerIsInvalid)
             {
@@ -156,26 +185,11 @@ namespace SlaveGreylings
 
             if (aiBase.Brain.IsInState(OpenContainer_state))
             {
-                if (OpenChestTimer += dt > OpenChestDelay)
-                return ("OpenContainer", null);
+                if ((OpenChestTimer += dt) > OpenChestDelay)
+                {
+                    aiBase.Brain.Fire(ContainerOpened_trigger);
+                }
             }
-            //else if (foundItem != null)
-            //{
-            //    Debug.Log("Item found, Close chest");
-
-            //    KnownContainers.Peek().SetInUse(inUse: false);
-
-            //    KnownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
-            //    Invoke<Container>(KnownContainers.Peek(), "Save");
-            //    Invoke<Inventory>(KnownContainers.Peek(), "Changed");
-            //    return (ItemFound_trigger, foundItem);
-            //}
-            //else
-            //{
-            //    Debug.Log("Item not found, Close chest");
-            //    KnownContainers.Peek().SetInUse(inUse: false);
-            //}
-            //return ("", null);
 
         }
     }
