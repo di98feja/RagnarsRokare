@@ -1,6 +1,8 @@
 ﻿using RagnarsRokare.MobAI;
 using Stateless;
 using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace SlaveGreylings
 {
@@ -21,25 +23,57 @@ namespace SlaveGreylings
         private string ContainerIsClose_trigger         = Prefix + "ContainerIsClose";
         private string Failed_trigger                   = Prefix + "Failed";
         private string ContainerOpened_trigger          = Prefix + "ContainerOpened";
+        private string Update_trigger                   = Prefix + "Update";
+
+        StateMachine<string, string>.TriggerWithParameters<(MobAIBase aiBase, float dt)> UpdateTrigger;
+        private float OpenChestTimer;
+
         public IEnumerable<ItemDrop> Items { get; set; }
         public MaxStack<Container> KnownContainers { get; set; }
         public string[] AcceptedContainerNames { get; set; }
 
+        public ItemDrop.ItemData FoundItem { get; private set; }
+        public float OpenChestDelay { get; private set; } = 1;
+
         public void Configure(StateMachine<string, string> brain, string ExitState)
         {
+            UpdateTrigger = brain.SetTriggerParameters<(MobAIBase aiBase, float dt)>(Update_trigger);
+
             brain.Configure(SearchForItemsInContainers_state)
-                .Permit(ItemFound_trigger, ExitState)
+                .InitialTransition(SearchForRandomContainer_state)
+                .Permit(Update_trigger, SearchForRandomContainer_state)
                 .OnEntry(t =>
                 {
-
                 });
+
             brain.Configure(SearchForRandomContainer_state)
                 .SubstateOf(SearchForItemsInContainers_state)
                 .Permit(ContainerFound_trigger, MoveToContainer_state)
                 .Permit(ContainerNotFound_trigger, ExitState)
                 .OnEntry(t =>
                 {
-
+                    var aiBase = t.Parameters[0] as MobAIBase;
+                    if (KnownContainers.Any())
+                    {
+                        var matchingContainer = KnownContainers.Where(c => c.GetInventory().GetAllItems().Any(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name))).RandomOrDefault();
+                        KnownContainers.Remove(matchingContainer);
+                        KnownContainers.Push(matchingContainer);
+                        brain.Fire(ContainerFound_trigger);
+                    }
+                    else
+                    {
+                        Container nearbyChest = Common.FindRandomNearbyContainer(aiBase.Instance.transform.position, KnownContainers, AcceptedContainerNames);
+                        if (nearbyChest != null)
+                        {
+                            KnownContainers.Push(nearbyChest);
+                            aiBase.Brain.Fire(ContainerFound_trigger);
+                        }
+                        else
+                        {
+                            KnownContainers.Clear();
+                            aiBase.Brain.Fire(ContainerNotFound_trigger);
+                        }
+                    }
                 });
             brain.Configure(MoveToContainer_state)
                 .SubstateOf(SearchForItemsInContainers_state)
@@ -55,7 +89,12 @@ namespace SlaveGreylings
                 .Permit(Failed_trigger, SearchForRandomContainer_state)
                 .OnEntry(t =>
                 {
-
+                    if (KnownContainers.Peek().IsInUse())
+                    {
+                        brain.Fire(Failed_trigger);
+                    }
+                    KnownContainers.Peek().SetInUse(inUse: true);
+                    OpenChestTimer = 0f;
                 });
 
             brain.Configure(SearchForItem_state)
@@ -94,50 +133,32 @@ namespace SlaveGreylings
             };
         }
 
-        public void Update(MobAIBase instance, float dt)
+        public void Update(MobAIBase aiBase, float dt)
         {
+
             bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
             if (containerIsInvalid)
             {
                 KnownContainers.Pop();
-                instance.Brain.Fire(Failed_trigger);
+                aiBase.Brain.Fire(Failed_trigger);
                 return;
             }
-            //ItemDrop.ItemData foundItem = null;
-            //bool isCloseToContainer = false;
-            //if (instance.Brain.IsInState(SearchForRandomContainer_state))
-            //{
-            //    if (KnownContainers.Any())
-            //    {
-            //        isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
-            //        foundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
-            //    }
-            //    if (!KnownContainers.Any() || (isCloseToContainer && foundItem == null))
-            //    {
-            //        Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, KnownContainers, AcceptedContainerNames);
-            //        if (nearbyChest != null)
-            //        {
-            //            KnownContainers.Push(nearbyChest);
-            //            return (ContainerFound, null);
-            //        }
-            //        else
-            //        {
-            //            KnownContainers.Clear();
-            //            return ("CannotFindContainers", null);
-            //        }
-            //    }
-            //}
-            //if (!isCloseToContainer)
-            //{
-            //    Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
-            //    return ("MovingtoContainer", null);
-            //}
-            //else if (!KnownContainers.Peek()?.IsInUse() ?? false)
-            //{
-            //    Debug.Log("Open chest");
-            //    KnownContainers.Peek().SetInUse(inUse: true);
-            //    return ("OpenContainer", null);
-            //}
+
+            if (aiBase.Brain.IsInState(MoveToContainer_state))
+            {
+                Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
+                if (Vector3.Distance(aiBase.Instance.transform.position, KnownContainers.Peek().transform.position) < 1.5)
+                {
+                    aiBase.Brain.Fire(ContainerIsClose_trigger);
+                }
+                return;
+            }
+
+            if (aiBase.Brain.IsInState(OpenContainer_state))
+            {
+                if (OpenChestTimer += dt > OpenChestDelay)
+                return ("OpenContainer", null);
+            }
             //else if (foundItem != null)
             //{
             //    Debug.Log("Item found, Close chest");

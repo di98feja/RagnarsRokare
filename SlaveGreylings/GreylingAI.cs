@@ -479,12 +479,12 @@ namespace SlaveGreylings
 
         }
 
-        public static bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
+        public bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
         {
-            Assignment newassignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
-            if (newassignment != null)
+            var newAssignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
+            if (newAssignment != null)
             {
-                KnownAssignments.Push(newassignment);
+                KnownAssignments.Push(newAssignment);
                 //m_assigned = true;
                 //m_assignedTimer = 0;
                 //m_fetchitems.Clear();

@@ -36,7 +36,7 @@ namespace SlaveGreylings
     //    piece_brazierceiling01
     //}
 
-    public class Assignment : MonoBehaviour
+    public class Assignment 
     {
         private Vector3 m_position;
 
