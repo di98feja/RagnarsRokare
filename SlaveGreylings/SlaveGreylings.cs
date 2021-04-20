@@ -8,7 +8,7 @@ namespace SlaveGreylings
     [BepInPlugin("RagnarsRokare.SlaveGreylings", "SlaveGreylings", "0.4")]
     public partial class SlaveGreylings : BaseUnityPlugin
     {
-        private static readonly bool isDebug = false;
+        private static readonly bool isDebug = true;
 
         private void Awake()
         {

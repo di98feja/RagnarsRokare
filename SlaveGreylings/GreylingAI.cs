@@ -78,6 +78,8 @@ namespace SlaveGreylings
             ConfigureFollow();
             ConfigureIsHungry();
             ConfigureIdle();
+            ConfigureAssigned();
+
             ConfigureSearchContainers();
         }
 
@@ -211,6 +213,23 @@ namespace SlaveGreylings
                 .PermitIf(UpdateTrigger, m_parentState.ToString(), (args) => AvoidFire(args.dt));
         }
 
+        private void ConfigureAssigned()
+        {
+            Brain.Configure(State.Assigned.ToString())
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (arg) => MoveToAssignment((Instance as MonsterAI), m_assignment, m_stateChangeTimer, arg.dt))
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "I'm on it Boss");
+                    m_assigned = true;
+                    m_assignedTimer = 0;
+                    m_fetchitems.Clear();
+                    m_spottedItem = null;
+                });
+        }
+
         public override void UpdateAI(BaseAI instance, float dt)
         {
             base.UpdateAI(instance, dt);
@@ -285,272 +304,271 @@ namespace SlaveGreylings
                 return;
             }
 
-            if (m_assigned)
+            if (Brain.IsInState(State.Assigned.ToString()))
             {
-                var humanoid = this.Character as Humanoid;
-                Assignment assignment = m_assignment.Peek();
-                bool assignmentIsInvalid = assignment?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
-                if (assignmentIsInvalid)
-                {
-                    m_assignment.Pop();
-                    m_assigned = false;
-                    return;
-                }
-
-                bool knowWhattoFetch = m_fetchitems.Any();
-                bool isCarryingItem = m_carrying != null;
-                if ((!knowWhattoFetch || isCarryingItem) && !assignment.IsClose(greylingPosition))
-                {
-                    UpdateAiStatus(NView, $"Move To Assignment: {assignment.TypeOfAssignment.Name} ");
-                    Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, assignment.Position, 0.5f, false);
-                    if (m_stateChangeTimer < 30)
-                    {
-                        return;
-                    }
-                }
-
-                bool isLookingAtAssignment = (bool)Invoke<MonsterAI>(instance, "IsLookingAt", assignment.Position, 20f);
-                if (isCarryingItem && assignment.IsClose(greylingPosition) && !isLookingAtAssignment)
-                {
-                    UpdateAiStatus(NView, $"Looking at Assignment: {assignment.TypeOfAssignment.Name} ");
-                    humanoid.SetMoveDir(Vector3.zero);
-                    Invoke<MonsterAI>(instance, "LookAt", assignment.Position);
-                    return;
-                }
-
-                if (isCarryingItem && assignment.IsCloseEnough(greylingPosition))
-                {
-                    humanoid.SetMoveDir(Vector3.zero);
-                    var needFuel = assignment.NeedFuel;
-                    var needOre = assignment.NeedOre;
-                    bool isCarryingFuel = m_carrying.m_shared.m_name == needFuel?.m_shared?.m_name;
-                    bool isCarryingMatchingOre = needOre?.Any(c => m_carrying.m_shared.m_name == c?.m_shared?.m_name) ?? false;
-
-                    if (isCarryingFuel)
-                    {
-                        UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Fuel");
-                        assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
-                        humanoid.GetInventory().RemoveOneItem(m_carrying);
-                    }
-                    else if (isCarryingMatchingOre)
-                    {
-                        UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Ore");
-
-                        assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
-                        humanoid.GetInventory().RemoveOneItem(m_carrying);
-                    }
-                    else
-                    {
-                        UpdateAiStatus(NView, Localization.instance.Localize($"Dropping {m_carrying.m_shared.m_name} on the ground"));
-                        humanoid.DropItem(humanoid.GetInventory(), m_carrying, 1);
-                    }
-
-                    humanoid.UnequipItem(m_carrying, false);
-                    m_carrying = null;
-                    m_fetchitems.Clear();
-                    m_stateChangeTimer = 0;
-                    return;
-                }
-
-                if (!knowWhattoFetch && assignment.IsCloseEnough(greylingPosition))
-                {
-                    humanoid.SetMoveDir(Vector3.zero);
-                    UpdateAiStatus(NView, "Checking assignment for task");
-                    var needFuel = assignment.NeedFuel;
-                    var needOre = assignment.NeedOre;
-                    SlaveGreylings.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
-                    if (needFuel != null)
-                    {
-                        m_fetchitems.Add(needFuel);
-                        UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needFuel.m_shared.m_name} to search list"));
-                    }
-                    if (needOre.Any())
-                    {
-                        m_fetchitems.AddRange(needOre);
-                        UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list"));
-                    }
-                    if (!m_fetchitems.Any())
-                    {
-                        m_assigned = false;
-                    }
-                    m_stateChangeTimer = 0;
-                    return;
-                }
-
-                bool hasSpottedAnItem = m_spottedItem != null;
-                bool searchForItemToPickup = knowWhattoFetch && !hasSpottedAnItem && !isCarryingItem && !m_searchcontainer;
-                if (searchForItemToPickup)
-                {
-                    UpdateAiStatus(NView, "Search the ground for item to pickup");
-                    ItemDrop spottedItem = Common.GetNearbyItem(greylingPosition, m_fetchitems, GreylingsConfig.ItemSearchRadius.Value);
-                    if (spottedItem != null)
-                    {
-                        m_spottedItem = spottedItem;
-                        m_stateChangeTimer = 0;
-                        return;
-                    }
-
-                    UpdateAiStatus(NView, "Trying to remeber content of known Chests");
-                    foreach (Container chest in m_containers)
-                    {
-                        foreach (var fetchItem in m_fetchitems)
-                        {
-                            ItemDrop.ItemData item = chest?.GetInventory()?.GetItem(fetchItem.m_shared.m_name);
-                            if (item == null) continue;
-                            else
-                            {
-                                UpdateAiStatus(NView, "Item found in old chest");
-                                m_containers.Remove(chest);
-                                m_containers.Push(chest);
-                                m_searchcontainer = true;
-                                m_stateChangeTimer = 0;
-                                return;
-                            }
-                        }
-                    }
-
-                    UpdateAiStatus(NView, "Search for nerby Chests");
-                    Container nearbyChest = Common.FindRandomNearbyContainer(greylingPosition, m_containers, m_acceptedContainerNames);
-                    if (nearbyChest != null)
-                    {
-                        UpdateAiStatus(NView, "Chest found");
-                        m_containers.Push(nearbyChest);
-                        m_searchcontainer = true;
-                        m_stateChangeTimer = 0;
-                        return;
-                    }
-                }
-
-                if (m_searchcontainer)
-                {
-                    bool containerIsInvalid = m_containers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
-                    if (containerIsInvalid)
-                    {
-                        m_containers.Pop();
-                        m_searchcontainer = false;
-                        return;
-                    }
-                    bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers.Peek().transform.position) < 1.5;
-                    if (!isCloseToContainer)
-                    {
-                        UpdateAiStatus(NView, "Heading to Container");
-                        Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_containers.Peek().transform.position, 0.5f, false);
-                        return;
-                    }
-                    else
-                    {
-                        humanoid.SetMoveDir(Vector3.zero);
-                        UpdateAiStatus(NView, $"Chest inventory:{m_containers.Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
-                        var wantedItemsInChest = m_containers.Peek()?.GetInventory()?.GetAllItems()?.Where(i => m_fetchitems.Contains(i));
-                        foreach (var fetchItem in m_fetchitems)
-                        {
-                            ItemDrop.ItemData item = m_containers.Peek()?.GetInventory()?.GetItem(fetchItem.m_shared.m_name);
-                            if (item == null) continue;
-                            else
-                            {
-                                UpdateAiStatus(NView, $"Trying to Pickup {item} from Chest ");
-                                var pickedUpInstance = humanoid.PickupPrefab(item.m_dropPrefab);
-                                humanoid.GetInventory().Print();
-                                humanoid.EquipItem(pickedUpInstance);
-                                m_containers.Peek().GetInventory().RemoveItem(item, 1);
-                                Invoke<Container>(m_containers.Peek(), "Save");
-                                Invoke<Inventory>(m_containers.Peek(), "Changed");
-                                m_carrying = pickedUpInstance;
-                                m_spottedItem = null;
-                                m_fetchitems.Clear();
-                                m_searchcontainer = false;
-                                m_stateChangeTimer = 0;
-                                return;
-                            }
-                        }
-
-                        m_searchcontainer = false;
-                        m_stateChangeTimer = 0;
-                        return;
-                    }
-                }
-
-                if (hasSpottedAnItem)
-                {
-                    bool isNotCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem.transform.position) > 1;
-                    if (isNotCloseToPickupItem)
-                    {
-                        UpdateAiStatus(NView, "Heading to pickup item");
-                        Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_spottedItem.transform.position, 0.5f, false);
-                        return;
-                    }
-                    else // Pickup item from ground
-                    {
-                        humanoid.SetMoveDir(Vector3.zero);
-                        UpdateAiStatus(NView, $"Trying to Pickup {m_spottedItem.gameObject.name}");
-                        var pickedUpInstance = humanoid.PickupPrefab(m_spottedItem.m_itemData.m_dropPrefab);
-
-                        humanoid.GetInventory().Print();
-
-                        humanoid.EquipItem(pickedUpInstance);
-                        if (m_spottedItem.m_itemData.m_stack == 1)
-                        {
-                            if (NView.GetZDO() == null)
-                            {
-                                SlaveGreylings.Destroy(m_spottedItem.gameObject);
-                            }
-                            else
-                            {
-                                ZNetScene.instance.Destroy(m_spottedItem.gameObject);
-                            }
-                        }
-                        else
-                        {
-                            m_spottedItem.m_itemData.m_stack--;
-                            Traverse.Create(m_spottedItem).Method("Save").GetValue();
-                        }
-                        m_carrying = pickedUpInstance;
-                        m_spottedItem = null;
-                        m_fetchitems.Clear();
-                        m_stateChangeTimer = 0;
-                        return;
-                    }
-                }
-
-                UpdateAiStatus(NView, $"Done with assignment");
-                if (m_carrying != null)
-                {
-                    humanoid.UnequipItem(m_carrying, false);
-                    m_carrying = null;
-                    UpdateAiStatus(NView, $"Dropping unused item");
-                }
-                m_fetchitems.Clear();
-                m_spottedItem = null;
-                m_containers.Clear();
-                m_searchcontainer = false;
-                m_assigned = false;
-                m_stateChangeTimer = 0;
+                Brain.Fire(UpdateTrigger, (monsterAi, dt));
                 return;
             }
+            return;
 
-            UpdateAiStatus(NView, "Random movement (No new assignments found)");
-            Invoke<MonsterAI>(instance, "IdleMovement", dt);
+            //    var humanoid = this.Character as Humanoid;
+            //    Assignment assignment = m_assignment.Peek();
+
+
+            //    bool isLookingAtAssignment = (bool)Invoke<MonsterAI>(instance, "IsLookingAt", assignment.Position, 20f);
+            //    if (isCarryingItem && assignment.IsClose(greylingPosition) && !isLookingAtAssignment)
+            //    {
+            //        UpdateAiStatus(NView, $"Looking at Assignment: {assignment.TypeOfAssignment.Name} ");
+            //        humanoid.SetMoveDir(Vector3.zero);
+            //        Invoke<MonsterAI>(instance, "LookAt", assignment.Position);
+            //        return;
+            //    }
+
+            //    if (isCarryingItem && assignment.IsCloseEnough(greylingPosition))
+            //    {
+            //        humanoid.SetMoveDir(Vector3.zero);
+            //        var needFuel = assignment.NeedFuel;
+            //        var needOre = assignment.NeedOre;
+            //        bool isCarryingFuel = m_carrying.m_shared.m_name == needFuel?.m_shared?.m_name;
+            //        bool isCarryingMatchingOre = needOre?.Any(c => m_carrying.m_shared.m_name == c?.m_shared?.m_name) ?? false;
+
+            //        if (isCarryingFuel)
+            //        {
+            //            UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Fuel");
+            //            assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+            //            humanoid.GetInventory().RemoveOneItem(m_carrying);
+            //        }
+            //        else if (isCarryingMatchingOre)
+            //        {
+            //            UpdateAiStatus(NView, $"Unload to {assignment.TypeOfAssignment.Name} -> Ore");
+
+            //            assignment.AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
+            //            humanoid.GetInventory().RemoveOneItem(m_carrying);
+            //        }
+            //        else
+            //        {
+            //            UpdateAiStatus(NView, Localization.instance.Localize($"Dropping {m_carrying.m_shared.m_name} on the ground"));
+            //            humanoid.DropItem(humanoid.GetInventory(), m_carrying, 1);
+            //        }
+
+            //        humanoid.UnequipItem(m_carrying, false);
+            //        m_carrying = null;
+            //        m_fetchitems.Clear();
+            //        m_stateChangeTimer = 0;
+            //        return;
+            //    }
+
+            //    if (!knowWhattoFetch && assignment.IsCloseEnough(greylingPosition))
+            //    {
+            //        humanoid.SetMoveDir(Vector3.zero);
+            //        UpdateAiStatus(NView, "Checking assignment for task");
+            //        var needFuel = assignment.NeedFuel;
+            //        var needOre = assignment.NeedOre;
+            //        SlaveGreylings.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
+            //        if (needFuel != null)
+            //        {
+            //            m_fetchitems.Add(needFuel);
+            //            UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needFuel.m_shared.m_name} to search list"));
+            //        }
+            //        if (needOre.Any())
+            //        {
+            //            m_fetchitems.AddRange(needOre);
+            //            UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list"));
+            //        }
+            //        if (!m_fetchitems.Any())
+            //        {
+            //            m_assigned = false;
+            //        }
+            //        m_stateChangeTimer = 0;
+            //        return;
+            //    }
+
+            //    bool hasSpottedAnItem = m_spottedItem != null;
+            //    bool searchForItemToPickup = knowWhattoFetch && !hasSpottedAnItem && !isCarryingItem && !m_searchcontainer;
+            //    if (searchForItemToPickup)
+            //    {
+            //        UpdateAiStatus(NView, "Search the ground for item to pickup");
+            //        ItemDrop spottedItem = Common.GetNearbyItem(greylingPosition, m_fetchitems, GreylingsConfig.ItemSearchRadius.Value);
+            //        if (spottedItem != null)
+            //        {
+            //            m_spottedItem = spottedItem;
+            //            m_stateChangeTimer = 0;
+            //            return;
+            //        }
+
+            //        UpdateAiStatus(NView, "Trying to remeber content of known Chests");
+            //        foreach (Container chest in m_containers)
+            //        {
+            //            foreach (var fetchItem in m_fetchitems)
+            //            {
+            //                ItemDrop.ItemData item = chest?.GetInventory()?.GetItem(fetchItem.m_shared.m_name);
+            //                if (item == null) continue;
+            //                else
+            //                {
+            //                    UpdateAiStatus(NView, "Item found in old chest");
+            //                    m_containers.Remove(chest);
+            //                    m_containers.Push(chest);
+            //                    m_searchcontainer = true;
+            //                    m_stateChangeTimer = 0;
+            //                    return;
+            //                }
+            //            }
+            //        }
+
+            //        UpdateAiStatus(NView, "Search for nerby Chests");
+            //        Container nearbyChest = Common.FindRandomNearbyContainer(greylingPosition, m_containers, m_acceptedContainerNames);
+            //        if (nearbyChest != null)
+            //        {
+            //            UpdateAiStatus(NView, "Chest found");
+            //            m_containers.Push(nearbyChest);
+            //            m_searchcontainer = true;
+            //            m_stateChangeTimer = 0;
+            //            return;
+            //        }
+            //    }
+
+            //    if (m_searchcontainer)
+            //    {
+            //        bool containerIsInvalid = m_containers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
+            //        if (containerIsInvalid)
+            //        {
+            //            m_containers.Pop();
+            //            m_searchcontainer = false;
+            //            return;
+            //        }
+            //        bool isCloseToContainer = Vector3.Distance(greylingPosition, m_containers.Peek().transform.position) < 1.5;
+            //        if (!isCloseToContainer)
+            //        {
+            //            UpdateAiStatus(NView, "Heading to Container");
+            //            Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_containers.Peek().transform.position, 0.5f, false);
+            //            return;
+            //        }
+            //        else
+            //        {
+            //            humanoid.SetMoveDir(Vector3.zero);
+            //            UpdateAiStatus(NView, $"Chest inventory:{m_containers.Peek()?.GetInventory().GetAllItems().Join(i => i.m_shared.m_name)} from Chest ");
+            //            var wantedItemsInChest = m_containers.Peek()?.GetInventory()?.GetAllItems()?.Where(i => m_fetchitems.Contains(i));
+            //            foreach (var fetchItem in m_fetchitems)
+            //            {
+            //                ItemDrop.ItemData item = m_containers.Peek()?.GetInventory()?.GetItem(fetchItem.m_shared.m_name);
+            //                if (item == null) continue;
+            //                else
+            //                {
+            //                    UpdateAiStatus(NView, $"Trying to Pickup {item} from Chest ");
+            //                    var pickedUpInstance = humanoid.PickupPrefab(item.m_dropPrefab);
+            //                    humanoid.GetInventory().Print();
+            //                    humanoid.EquipItem(pickedUpInstance);
+            //                    m_containers.Peek().GetInventory().RemoveItem(item, 1);
+            //                    Invoke<Container>(m_containers.Peek(), "Save");
+            //                    Invoke<Inventory>(m_containers.Peek(), "Changed");
+            //                    m_carrying = pickedUpInstance;
+            //                    m_spottedItem = null;
+            //                    m_fetchitems.Clear();
+            //                    m_searchcontainer = false;
+            //                    m_stateChangeTimer = 0;
+            //                    return;
+            //                }
+            //            }
+
+            //            m_searchcontainer = false;
+            //            m_stateChangeTimer = 0;
+            //            return;
+            //        }
+            //    }
+
+            //    if (hasSpottedAnItem)
+            //    {
+            //        bool isNotCloseToPickupItem = Vector3.Distance(greylingPosition, m_spottedItem.transform.position) > 1;
+            //        if (isNotCloseToPickupItem)
+            //        {
+            //            UpdateAiStatus(NView, "Heading to pickup item");
+            //            Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, m_spottedItem.transform.position, 0.5f, false);
+            //            return;
+            //        }
+            //        else // Pickup item from ground
+            //        {
+            //            humanoid.SetMoveDir(Vector3.zero);
+            //            UpdateAiStatus(NView, $"Trying to Pickup {m_spottedItem.gameObject.name}");
+            //            var pickedUpInstance = humanoid.PickupPrefab(m_spottedItem.m_itemData.m_dropPrefab);
+
+            //            humanoid.GetInventory().Print();
+
+            //            humanoid.EquipItem(pickedUpInstance);
+            //            if (m_spottedItem.m_itemData.m_stack == 1)
+            //            {
+            //                if (NView.GetZDO() == null)
+            //                {
+            //                    SlaveGreylings.Destroy(m_spottedItem.gameObject);
+            //                }
+            //                else
+            //                {
+            //                    ZNetScene.instance.Destroy(m_spottedItem.gameObject);
+            //                }
+            //            }
+            //            else
+            //            {
+            //                m_spottedItem.m_itemData.m_stack--;
+            //                Traverse.Create(m_spottedItem).Method("Save").GetValue();
+            //            }
+            //            m_carrying = pickedUpInstance;
+            //            m_spottedItem = null;
+            //            m_fetchitems.Clear();
+            //            m_stateChangeTimer = 0;
+            //            return;
+            //        }
+            //    }
+
+            //    UpdateAiStatus(NView, $"Done with assignment");
+            //    if (m_carrying != null)
+            //    {
+            //        humanoid.UnequipItem(m_carrying, false);
+            //        m_carrying = null;
+            //        UpdateAiStatus(NView, $"Dropping unused item");
+            //    }
+            //    m_fetchitems.Clear();
+            //    m_spottedItem = null;
+            //    m_containers.Clear();
+            //    m_searchcontainer = false;
+            //    m_assigned = false;
+            //    m_stateChangeTimer = 0;
+            //    return;
+            //}
+
+            //UpdateAiStatus(NView, "Random movement (No new assignments found)");
+            //Invoke<MonsterAI>(instance, "IdleMovement", dt);
 
         }
 
         public bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
         {
-            var newAssignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
-            if (newAssignment != null)
+            Assignment newassignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
+            if (newassignment != null)
             {
-                KnownAssignments.Push(newAssignment);
-                //m_assigned = true;
-                //m_assignedTimer = 0;
-                //m_fetchitems.Clear();
-                //m_spottedItem = null;
+                KnownAssignments.Push(newassignment);
                 return true;
             }
             else
             {
-                //UpdateAiStatus(NView, $"No new assignments found");
                 return false;
             }
         }
+        
+        public static bool MoveToAssignment(MonsterAI instance, MaxStack<Assignment> KnownAssignments, float StateChangeTimer, float dt)
+        {
+            bool assignmentIsInvalid = KnownAssignments.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
+            if (assignmentIsInvalid)
+            {
+                KnownAssignments.Pop();
+                return true; 
+            }
+            Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownAssignments.Peek().Position, 0.5f, false);
+            if (StateChangeTimer > 30 || KnownAssignments.Peek().IsClose(instance.transform.position))
+            {
+                return true;
+            }
+            return false;
+        }
+
 
         public static string UpdateAiStatus(ZNetView nview, string newStatus)
         {

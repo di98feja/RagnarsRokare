@@ -43,21 +43,22 @@ namespace SlaveGreylings
             return ClosestObject;
         }
 
-        public static Assignment FindRandomNearbyAssignment(Vector3 greylingPosition, MaxStack<Assignment> knownassignments)
+        public static Assignment FindRandomNearbyAssignment(Vector3 centre, MaxStack<Assignment> knownassignments)
         {
             SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
-            Piece.GetAllPiecesInRadius(greylingPosition, (float)GreylingsConfig.AssignmentSearchRadius.Value, pieceList);
+            Piece.GetAllPiecesInRadius(centre, (float)GreylingsConfig.AssignmentSearchRadius.Value, pieceList);
             var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && a.Activated));
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
             {
                 return null;
             }
-
+            SlaveGreylings.Dbgl($"Assignments found: {allAssignablePieces.Select(n => n.name).Join()}");
             // filter out assignments already in list
             var newAssignments = allAssignablePieces.Where(p => !knownassignments.Any(a => a.AssignmentObject == p.gameObject));
+            SlaveGreylings.Dbgl($"Assignments after filter: {newAssignments.Select(n => n.name).Join()}");
 
             // filter out inaccessible assignments
             //newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, true, true));
@@ -68,9 +69,11 @@ namespace SlaveGreylings
             }
 
             // select random piece
-            var random = new System.Random();
-            int index = random.Next(newAssignments.Count());
-            Assignment randomAssignment = new Assignment(newAssignments.ElementAt(index));
+            //var random = new System.Random();
+            //int index = random.Next(newAssignments.Count());
+            var selekted = newAssignments.RandomOrDefault();
+            SlaveGreylings.Dbgl($"Returning assignment: {selekted.name}");
+            Assignment randomAssignment = new Assignment(selekted);
             return randomAssignment;
         }
 
