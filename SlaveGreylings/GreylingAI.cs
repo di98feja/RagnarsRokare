@@ -69,7 +69,7 @@ namespace SlaveGreylings
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
-            searchForItemsBehaviour.Configure(Brain, Trigger.ItemFound.ToString(), Trigger.ItemNotFound.ToString(), State.SearchForItems.ToString());
+            searchForItemsBehaviour.Configure(Brain, Trigger.ItemFound.ToString(), Trigger.ItemNotFound.ToString(), State.Hungry.ToString());
 
             ConfigureAvoidFire();
             ConfigureFlee();
@@ -89,7 +89,7 @@ namespace SlaveGreylings
                 .OnEntry(t =>
                 {
                     searchForItemsBehaviour.KnownContainers = m_containers;
-                    searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
+                    searchForItemsBehaviour.Items = (t.Parameters[0] as IEnumerable<ItemDrop>).Select(i => i.m_itemData);
                     searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
                     Brain.Fire(Trigger.SearchForItems.ToString());
                 });
