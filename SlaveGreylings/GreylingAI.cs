@@ -115,7 +115,7 @@ namespace SlaveGreylings
             Brain.Configure(State.Hungry.ToString())
                 .PermitReentry(UpdateTrigger.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20 )
-                .PermitIf(LookForItemTrigger, State.EatFromGround.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null)
+                
                 .PermitIf(LookForItemTrigger, State.EatFromChest.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .Permit(Trigger.ItemFound.ToString(), State.HaveItem.ToString())
