@@ -115,7 +115,7 @@ namespace SlaveGreylings
             Brain.Configure(State.Hungry.ToString())
                 .PermitReentry(UpdateTrigger.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20 )
-                .PermitIf(LookForItemTrigger, State.EatFromGround.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) != null)
+                
                 .PermitIf(LookForItemTrigger, State.EatFromChest.ToString(), (items) => Common.GetNearbyItem(Instance.transform.position, items, GreylingsConfig.ItemSearchRadius.Value) == null)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .Permit(Trigger.ItemFound.ToString(), State.HaveItem.ToString())
@@ -141,6 +141,13 @@ namespace SlaveGreylings
                 .OnEntry(t =>
                 {
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
+                    (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
+                    Invoke<BaseAI>(Instance, "consume");
+                    float ConsumeHeal = (Instance as MonsterAI).m_consumeHeal;
+                    if (ConsumeHeal > 0f)
+                    {
+                        Instance.GetComponent<Character>().Heal(ConsumeHeal);
+                    }
                     Brain.Fire(Trigger.ConsumeItem.ToString());
                 });
             Brain.Configure(State.HaveNoItem.ToString())
