@@ -6,11 +6,11 @@ using UnityEngine;
 
 namespace SlaveGreylings
 {
-    class SearchContainersForItemsBehaviour : IBehaviour
+    class SearchForItemsBehaviour : IBehaviour
     {
-        private const string Prefix = "RR_SFIIC";
+        private const string Prefix = "RR_SFI";
 
-        private const string SearchForItemsInContainers_state = Prefix + "SearchForItemsInContainers";
+        private const string Main_state = Prefix + "Main";
         private const string SearchForRandomContainer_state = Prefix + "SearchForRandomContainer";
         private const string MoveToContainer_state = Prefix + "MoveToContainer";
         private const string OpenContainer_state = Prefix + "OpenContainer";
@@ -24,6 +24,7 @@ namespace SlaveGreylings
         private const string Failed_trigger = Prefix + "Failed";
         private const string ContainerOpened_trigger = Prefix + "ContainerOpened";
         private const string Update_trigger = Prefix + "Update";
+        private const string Timeout_trigger = Prefix + "Timeout";
 
         StateMachine<string, string>.TriggerWithParameters<(MobAIBase aiBase, float dt)> UpdateTrigger;
         private float OpenChestTimer;
@@ -38,15 +39,14 @@ namespace SlaveGreylings
 
         public float MaxSearchTime { get; set; } = 60;
 
-        public string InitState { get { return SearchForItemsInContainers_state; } }
+        public string InitState { get { return Main_state; } }
 
         public void Configure(StateMachine<string, string> brain, string SuccessState, string FailState, string parentState)
         {
             UpdateTrigger = brain.SetTriggerParameters<(MobAIBase aiBase, float dt)>(Update_trigger);
 
-            brain.Configure(SearchForItemsInContainers_state)
+            brain.Configure(Main_state)
                 .SubstateOf(parentState)
-                .InitialTransition(SearchForRandomContainer_state)
                 .Permit(Update_trigger, SearchForRandomContainer_state)
                 .Permit(ContainerNotFound_trigger, FailState)
                 .OnEntry(t =>
@@ -54,7 +54,7 @@ namespace SlaveGreylings
                 });
 
             brain.Configure(SearchForRandomContainer_state)
-                .SubstateOf(SearchForItemsInContainers_state)
+                .SubstateOf(Main_state)
                 .Permit(ContainerFound_trigger, MoveToContainer_state)
                 .Permit(ContainerNotFound_trigger, FailState)
                 .Permit(Failed_trigger, FailState)
@@ -84,7 +84,7 @@ namespace SlaveGreylings
                     }
                 });
             brain.Configure(MoveToContainer_state)
-                .SubstateOf(SearchForItemsInContainers_state)
+                .SubstateOf(Main_state)
                 .Permit(ContainerIsClose_trigger, OpenContainer_state)
                 .Permit(Failed_trigger, SearchForRandomContainer_state)
                 .Permit(ContainerNotFound_trigger, FailState)
@@ -93,7 +93,7 @@ namespace SlaveGreylings
 
                 });
             brain.Configure(OpenContainer_state)
-                .SubstateOf(SearchForItemsInContainers_state)
+                .SubstateOf(Main_state)
                 .Permit(ContainerOpened_trigger, SearchForItem_state)
                 .Permit(Failed_trigger, SearchForRandomContainer_state)
                 .Permit(ContainerNotFound_trigger, FailState)
@@ -108,7 +108,7 @@ namespace SlaveGreylings
                 });
 
             brain.Configure(SearchForItem_state)
-                .SubstateOf(SearchForItemsInContainers_state)
+                .SubstateOf(Main_state)
                 .Permit(ItemFound_trigger, SuccessState)
                 .Permit(ItemNotFound_trigger, SearchForRandomContainer_state)
                 .Permit(ContainerNotFound_trigger, FailState)
@@ -137,7 +137,7 @@ namespace SlaveGreylings
         {
             return new List<string>()
             {
-                SearchForItemsInContainers_state,
+                Main_state,
                 SearchForRandomContainer_state,
                 MoveToContainer_state,
                 OpenContainer_state,
@@ -163,7 +163,7 @@ namespace SlaveGreylings
         {
             if ((CurrentSearchTime += dt) > MaxSearchTime)
             {
-                aiBase.Brain.Fire(ContainerNotFound_trigger);
+                aiBase.Brain.Fire(Timeout_trigger);
             }
             bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
             if (containerIsInvalid)

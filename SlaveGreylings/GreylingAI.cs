@@ -54,7 +54,7 @@ namespace SlaveGreylings
         StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>> LookForItemTrigger;
         State m_parentState;
         private float m_triggerTimer;
-        SearchContainersForItemsBehaviour searchChestsBehaviour;
+        SearchForItemsBehaviour searchChestsBehaviour;
         public GreylingAI() : base(State.Idle.ToString())
         {
             m_assignment = new MaxStack<Assignment>(20);
@@ -70,7 +70,7 @@ namespace SlaveGreylings
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
 
-            searchChestsBehaviour = new SearchContainersForItemsBehaviour();
+            searchChestsBehaviour = new SearchForItemsBehaviour();
             searchChestsBehaviour.Configure(Brain, Trigger.ItemFound.ToString(), Trigger.ItemNotFound.ToString(), State.SearchForItemsInContainers.ToString());
 
             ConfigureAvoidFire();
@@ -141,13 +141,6 @@ namespace SlaveGreylings
                 .OnEntry(t =>
                 {
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
-                    humanoid.m_consumeItemEffects.Create(base.transform.position, Quaternion.identity);
-                    m_animator.SetTrigger("consume");
-                    if (m_consumeHeal > 0f)
-                    {
-                        m_character.Heal(m_consumeHeal);
-                    }
-
                     Brain.Fire(Trigger.ConsumeItem.ToString());
                 });
             Brain.Configure(State.HaveNoItem.ToString())

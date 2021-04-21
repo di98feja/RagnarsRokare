@@ -71,7 +71,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SearchContainersForItemsBehaviour.cs" />
+    <Compile Include="SearchForItemsBehaviour.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="GreylingAI.cs" />
