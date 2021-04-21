@@ -27,11 +27,12 @@ namespace SlaveGreylings
         private const string ContainerIsClose_trigger = Prefix + "ContainerIsClose";
         private const string Failed_trigger = Prefix + "Failed";
         private const string ContainerOpened_trigger = Prefix + "ContainerOpened";
-        private const string Timeout_trigger = Prefix + "Timeout"; 
+        private const string Timeout_trigger = Prefix + "Timeout";
+        private const string Update_trigger = Prefix + "Update";
         private const string GroundItemIsClose_trigger = Prefix + "GroundItemIsClose";
         private const string FoundGroundItem_Trigger = Prefix + "FoundGroundItem";
 
-
+        StateMachine<string, string>.TriggerWithParameters<(MobAIBase aiBase, float dt)> UpdateTrigger;
         StateMachine<string, string>.TriggerWithParameters<ItemDrop> FoundGroundItemTrigger;
         private float OpenChestTimer;
         private float CurrentSearchTime;
@@ -48,17 +49,21 @@ namespace SlaveGreylings
         public string InitState { get { return Main_state; } }
 
         private ItemDrop GroundItem;
+        private MobAIBase m_aiBase;
+
 
         public void Configure(StateMachine<string, string> brain, string SuccessState, string FailState, string parentState)
         {
+            UpdateTrigger = brain.SetTriggerParameters<(MobAIBase aiBase, float dt)>(Update_trigger);
             FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(FoundGroundItem_Trigger);
 
             brain.Configure(Main_state)
                 .SubstateOf(parentState)
-                .InitialTransition(SearchItemsOnGround_state)
+                .Permit(UpdateTrigger.Trigger, SearchItemsOnGround_state)
                 .Permit(Timeout_trigger, FailState)
                 .OnEntry(t =>
                 {
+                    Debug.Log("Entered SearchForItemsBehaviour");
                 });
 
             brain.Configure(SearchItemsOnGround_state)
@@ -67,8 +72,9 @@ namespace SlaveGreylings
                 .Permit(Failed_trigger, SearchForRandomContainer_state)
                 .OnEntry(t =>
                 {
-                    var aiBase = t.Parameters[0] as MobAIBase;
-                    ItemDrop groundItem = Common.GetNearbyItem(aiBase.Instance.transform.position, Items, GreylingsConfig.ItemSearchRadius.Value);
+                    Debug.Log("Entered SearchItemsOnGround");
+                    m_aiBase = t.Parameters[0] as MobAIBase;
+                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance.transform.position, Items, GreylingsConfig.ItemSearchRadius.Value);
                     if (groundItem != null)
                     {
                         brain.Fire(FoundGroundItemTrigger, groundItem);
@@ -83,7 +89,6 @@ namespace SlaveGreylings
                 .Permit(Failed_trigger, FailState)
                 .OnEntry(t =>
                 {
-                    var aiBase = t.Parameters[0] as MobAIBase;
                     if (KnownContainers.Any())
                     {
                         var matchingContainer = KnownContainers.Where(c => c.GetInventory().GetAllItems().Any(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name))).RandomOrDefault();
@@ -93,16 +98,16 @@ namespace SlaveGreylings
                     }
                     else
                     {
-                        Container nearbyChest = Common.FindRandomNearbyContainer(aiBase.Instance.transform.position, KnownContainers, AcceptedContainerNames);
+                        Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance.transform.position, KnownContainers, AcceptedContainerNames);
                         if (nearbyChest != null)
                         {
                             KnownContainers.Push(nearbyChest);
-                            aiBase.Brain.Fire(ContainerFound_trigger);
+                            m_aiBase.Brain.Fire(ContainerFound_trigger);
                         }
                         else
                         {
                             KnownContainers.Clear();
-                            aiBase.Brain.Fire(ContainerNotFound_trigger);
+                            m_aiBase.Brain.Fire(ContainerNotFound_trigger);
                         }
                     }
                 });
@@ -184,6 +189,10 @@ namespace SlaveGreylings
 
         public void Update(MobAIBase aiBase, float dt)
         {
+            if (m_aiBase == null)
+            {
+                aiBase.Brain.Fire(UpdateTrigger, (aiBase, dt));
+            }
             if ((CurrentSearchTime += dt) > MaxSearchTime)
             {
                 aiBase.Brain.Fire(Timeout_trigger);

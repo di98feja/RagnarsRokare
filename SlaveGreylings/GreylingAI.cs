@@ -88,8 +88,9 @@ namespace SlaveGreylings
                 .Permit(Trigger.SearchForItems.ToString(), searchForItemsBehaviour.InitState)
                 .OnEntry(t =>
                 {
+                    Debug.Log("ConfigureSearchContainers Initiated");
                     searchForItemsBehaviour.KnownContainers = m_containers;
-                    searchForItemsBehaviour.Items = (t.Parameters[0] as IEnumerable<ItemDrop>).Select(i => i.m_itemData);
+                    searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
                     Brain.Fire(Trigger.SearchForItems.ToString());
                 });
@@ -111,14 +112,13 @@ namespace SlaveGreylings
         private void ConfigureIsHungry()
         {
             Brain.Configure(State.Hungry.ToString())
-                .PermitReentry(UpdateTrigger.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20 )
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .Permit(LookForItemTrigger.ToString(), State.SearchForItems.ToString())
+                .Permit(LookForItemTrigger.Trigger , State.SearchForItems.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
-                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems);
+                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData));
                 });
 
             Brain.Configure(State.HaveItem.ToString())
@@ -138,6 +138,7 @@ namespace SlaveGreylings
                     }
                     Brain.Fire(Trigger.ConsumeItem.ToString());
                 });
+            
             Brain.Configure(State.HaveNoItem.ToString())
                 .SubstateOf(State.Hungry.ToString())
                 .PermitIf(Trigger.ItemNotFound.ToString(), State.Idle.ToString())
@@ -269,19 +270,6 @@ namespace SlaveGreylings
             m_stateChangeTimer += dt;
             if (m_stateChangeTimer < 1) return;
 
-            
-            
-            if (Brain.IsInState(State.Idle.ToString()))
-            {
-                Brain.Fire(UpdateTrigger, (monsterAi, dt));
-                return;
-            }
-
-            if (Brain.IsInState(State.Assigned.ToString()))
-            {
-                Brain.Fire(UpdateTrigger, (monsterAi, dt));
-                return;
-            }
             return;
 
             //    var humanoid = this.Character as Humanoid;
