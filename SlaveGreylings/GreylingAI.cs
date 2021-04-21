@@ -128,8 +128,10 @@ namespace SlaveGreylings
                 {
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
-                    Invoke<BaseAI>(Instance, "consume");
+                    var animator = Instance.GetType().GetField("m_animator", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
+                    animator.SetTrigger("consume");
                     float ConsumeHeal = (Instance as MonsterAI).m_consumeHeal;
+
                     if (ConsumeHeal > 0f)
                     {
                         Instance.GetComponent<Character>().Heal(ConsumeHeal);
