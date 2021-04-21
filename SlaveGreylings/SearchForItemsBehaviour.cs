@@ -11,10 +11,14 @@ namespace SlaveGreylings
         private const string Prefix = "RR_SFI";
 
         private const string Main_state = Prefix + "Main";
+        private const string SearchItemsOnGround_state = Prefix + "SearchItemsOnGround";
+        private const string MoveToGroundItem_state = Prefix + "MoveToGroundItem"; 
         private const string SearchForRandomContainer_state = Prefix + "SearchForRandomContainer";
         private const string MoveToContainer_state = Prefix + "MoveToContainer";
         private const string OpenContainer_state = Prefix + "OpenContainer";
-        private const string SearchForItem_state = Prefix + "SearchForItem";
+        private const string SearchForItem_state = Prefix + "SearchForItem"; 
+        private const string PickUpItemFromGround_state = Prefix + "PickUpItemFromGround";
+
 
         private const string ItemFound_trigger = Prefix + "ItemFound";
         private const string ItemNotFound_trigger = Prefix + "ItemNotFound";
@@ -24,13 +28,15 @@ namespace SlaveGreylings
         private const string Failed_trigger = Prefix + "Failed";
         private const string ContainerOpened_trigger = Prefix + "ContainerOpened";
         private const string Update_trigger = Prefix + "Update";
-        private const string Timeout_trigger = Prefix + "Timeout";
+        private const string Timeout_trigger = Prefix + "Timeout"; 
+        private const string GroundItemIsClose_trigger = Prefix + "GroundItemIsClose";
 
         StateMachine<string, string>.TriggerWithParameters<(MobAIBase aiBase, float dt)> UpdateTrigger;
+        StateMachine<string, string>.TriggerWithParameters<ItemDrop> FoundGroundItemTrigger;
         private float OpenChestTimer;
         private float CurrentSearchTime;
 
-        public IEnumerable<ItemDrop> Items { get; set; }
+        public IEnumerable<ItemDrop.ItemData> Items { get; set; }
         public MaxStack<Container> KnownContainers { get; set; }
         public string[] AcceptedContainerNames { get; set; }
 
@@ -41,16 +47,33 @@ namespace SlaveGreylings
 
         public string InitState { get { return Main_state; } }
 
+        private ItemDrop GroundItem;
+
         public void Configure(StateMachine<string, string> brain, string SuccessState, string FailState, string parentState)
         {
             UpdateTrigger = brain.SetTriggerParameters<(MobAIBase aiBase, float dt)>(Update_trigger);
 
             brain.Configure(Main_state)
                 .SubstateOf(parentState)
-                .Permit(Update_trigger, SearchForRandomContainer_state)
-                .Permit(ContainerNotFound_trigger, FailState)
+                .InitialTransition(SearchItemsOnGround_state)
+                .Permit(Timeout_trigger, FailState)
                 .OnEntry(t =>
                 {
+                });
+
+            brain.Configure(SearchItemsOnGround_state)
+                .SubstateOf(Main_state)
+                .Permit(FoundGroundItemTrigger.Trigger, MoveToGroundItem_state)
+                .Permit(Failed_trigger, SearchForRandomContainer_state)
+                .OnEntry(t =>
+                {
+                    var aiBase = t.Parameters[0] as MobAIBase;
+                    ItemDrop groundItem = Common.GetNearbyItem(aiBase.Instance.transform.position, Items, GreylingsConfig.ItemSearchRadius.Value);
+                    if (groundItem != null)
+                    {
+                        brain.Fire(FoundGroundItemTrigger, groundItem);
+                    }
+                    brain.Fire(Failed_trigger);
                 });
 
             brain.Configure(SearchForRandomContainer_state)
@@ -63,7 +86,7 @@ namespace SlaveGreylings
                     var aiBase = t.Parameters[0] as MobAIBase;
                     if (KnownContainers.Any())
                     {
-                        var matchingContainer = KnownContainers.Where(c => c.GetInventory().GetAllItems().Any(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name))).RandomOrDefault();
+                        var matchingContainer = KnownContainers.Where(c => c.GetInventory().GetAllItems().Any(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name))).RandomOrDefault();
                         KnownContainers.Remove(matchingContainer);
                         KnownContainers.Push(matchingContainer);
                         brain.Fire(ContainerFound_trigger);
@@ -83,6 +106,32 @@ namespace SlaveGreylings
                         }
                     }
                 });
+
+            brain.Configure(MoveToGroundItem_state)
+                .SubstateOf(Main_state)
+                .Permit(GroundItemIsClose_trigger, PickUpItemFromGround_state)
+                .Permit(Failed_trigger, SearchItemsOnGround_state)
+                .OnEntry(t =>
+                {
+                    GroundItem = t.Parameters[0] as ItemDrop;
+                });
+
+
+            brain.Configure(PickUpItemFromGround_state)
+                .SubstateOf(Main_state)
+                .Permit(ItemFound_trigger, SuccessState)
+                .Permit(Failed_trigger, SearchItemsOnGround_state)
+                .OnEntry(t =>
+                {
+                    FoundItem = GroundItem.m_itemData;
+                    if (GroundItem.RemoveOne())
+                    {
+                        brain.Fire(ItemFound_trigger);
+                    }
+                    brain.Fire(Failed_trigger);
+                });
+
+
             brain.Configure(MoveToContainer_state)
                 .SubstateOf(Main_state)
                 .Permit(ContainerIsClose_trigger, OpenContainer_state)
@@ -114,7 +163,7 @@ namespace SlaveGreylings
                 .Permit(ContainerNotFound_trigger, FailState)
                 .OnEntry(t =>
                 {
-                    FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
+                    FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name)).RandomOrDefault();
                     if (FoundItem != null)
                     {
                         KnownContainers.Peek().GetInventory().RemoveItem(FoundItem, 1);
@@ -165,20 +214,36 @@ namespace SlaveGreylings
             {
                 aiBase.Brain.Fire(Timeout_trigger);
             }
-            bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
-            if (containerIsInvalid)
-            {
-                KnownContainers.Pop();
-                aiBase.Brain.Fire(Failed_trigger);
-                return;
-            }
 
             if (aiBase.Brain.IsInState(MoveToContainer_state))
             {
+                bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
+                if (containerIsInvalid)
+                {
+                    KnownContainers.Pop();
+                    aiBase.Brain.Fire(Failed_trigger);
+                    return;
+                }
                 Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
                 if (Vector3.Distance(aiBase.Instance.transform.position, KnownContainers.Peek().transform.position) < 1.5)
                 {
                     aiBase.Brain.Fire(ContainerIsClose_trigger);
+                }
+                return;
+            }
+
+            if (aiBase.Brain.IsInState(MoveToGroundItem_state))
+            {
+                if (GroundItem?.GetComponent<ZNetView>()?.IsValid() != true)
+                {
+                    GroundItem = null;
+                    aiBase.Brain.Fire(Failed_trigger);
+                    return;
+                }
+                Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, GroundItem.transform.position, 0.5f, false);
+                if (Vector3.Distance(aiBase.Instance.transform.position, GroundItem.transform.position) < 1.5)
+                {
+                    aiBase.Brain.Fire(GroundItemIsClose_trigger);
                 }
                 return;
             }
