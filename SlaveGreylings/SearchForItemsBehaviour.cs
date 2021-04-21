@@ -27,11 +27,11 @@ namespace SlaveGreylings
         private const string ContainerIsClose_trigger = Prefix + "ContainerIsClose";
         private const string Failed_trigger = Prefix + "Failed";
         private const string ContainerOpened_trigger = Prefix + "ContainerOpened";
-        private const string Update_trigger = Prefix + "Update";
         private const string Timeout_trigger = Prefix + "Timeout"; 
         private const string GroundItemIsClose_trigger = Prefix + "GroundItemIsClose";
+        private const string FoundGroundItem_Trigger = Prefix + "FoundGroundItem";
 
-        StateMachine<string, string>.TriggerWithParameters<(MobAIBase aiBase, float dt)> UpdateTrigger;
+
         StateMachine<string, string>.TriggerWithParameters<ItemDrop> FoundGroundItemTrigger;
         private float OpenChestTimer;
         private float CurrentSearchTime;
@@ -51,7 +51,7 @@ namespace SlaveGreylings
 
         public void Configure(StateMachine<string, string> brain, string SuccessState, string FailState, string parentState)
         {
-            UpdateTrigger = brain.SetTriggerParameters<(MobAIBase aiBase, float dt)>(Update_trigger);
+            FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(FoundGroundItem_Trigger);
 
             brain.Configure(Main_state)
                 .SubstateOf(parentState)
