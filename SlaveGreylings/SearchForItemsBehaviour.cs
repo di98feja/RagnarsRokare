@@ -30,7 +30,7 @@ namespace SlaveGreylings
         private float OpenChestTimer;
         private float CurrentSearchTime;
 
-        public IEnumerable<ItemDrop> Items { get; set; }
+        public IEnumerable<ItemDrop.ItemData> Items { get; set; }
         public MaxStack<Container> KnownContainers { get; set; }
         public string[] AcceptedContainerNames { get; set; }
 
@@ -47,8 +47,7 @@ namespace SlaveGreylings
 
             brain.Configure(Main_state)
                 .SubstateOf(parentState)
-                .Permit(Update_trigger, SearchForRandomContainer_state)
-                .Permit(ContainerNotFound_trigger, FailState)
+                .Permit(Timeout_trigger, FailState)
                 .OnEntry(t =>
                 {
                 });
@@ -131,32 +130,6 @@ namespace SlaveGreylings
                 {
                     KnownContainers.Peek().SetInUse(inUse: false);
                 });
-        }
-
-        public IEnumerable<string> RegisterStates()
-        {
-            return new List<string>()
-            {
-                Main_state,
-                SearchForRandomContainer_state,
-                MoveToContainer_state,
-                OpenContainer_state,
-                SearchForItem_state,
-            };
-        }
-
-        public IEnumerable<string> RegisterTriggers()
-        {
-            return new List<string>
-            {
-                ItemFound_trigger,
-                ItemNotFound_trigger,
-                ContainerFound_trigger,
-                ContainerNotFound_trigger,
-                ContainerIsClose_trigger,
-                Failed_trigger,
-                ContainerOpened_trigger
-            };
         }
 
         public void Update(MobAIBase aiBase, float dt)

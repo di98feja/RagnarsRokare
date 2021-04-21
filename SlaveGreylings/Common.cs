@@ -144,14 +144,11 @@ namespace SlaveGreylings
             }
             else if (!KnownContainers.Peek()?.IsInUse() ?? false)
             {
-                Debug.Log("Open chest");
                 KnownContainers.Peek().SetInUse(inUse: true);
                 return ("OpenContainer", null);
             }
             else if (foundItem != null)
             {
-                Debug.Log("Item found, Close chest");
-
                 KnownContainers.Peek().SetInUse(inUse: false);
 
                 KnownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
@@ -161,21 +158,9 @@ namespace SlaveGreylings
             }
             else
             {
-                Debug.Log("Item not found, Close chest");
                 KnownContainers.Peek().SetInUse(inUse: false);
             }
             return ("", null);
-        }
-
-        public static bool EatFromContainers(MonsterAI instance, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
-        {
-            (string trigger, ItemDrop.ItemData foundItem) = SearchContainersforItems(instance, instance.m_consumeItems, ref KnownContainers, AcceptedContainerNames, dt);
-            if (foundItem != null)
-            {
-                instance.m_onConsumedItem(instance.m_consumeItems.FirstOrDefault());
-                return true;
-            }
-            return false;
         }
 
         public static bool AssignmentTimeoutCheck(ref MaxStack<Assignment> assignments, float dt)
