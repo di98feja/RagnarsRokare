@@ -69,7 +69,7 @@ namespace SlaveGreylings
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
-            searchForItemsBehaviour.Configure(Brain, Trigger.ItemFound.ToString(), Trigger.ItemNotFound.ToString(), State.Hungry.ToString());
+            searchForItemsBehaviour.Configure(this, Brain, State.HaveItem.ToString(), State.HaveNoItem.ToString(), State.SearchForItems.ToString());
 
             ConfigureAvoidFire();
             ConfigureFlee();
@@ -126,16 +126,24 @@ namespace SlaveGreylings
                 .Permit(Trigger.ConsumeItem.ToString(), State.Idle.ToString())
                 .OnEntry(t =>
                 {
+                    Debug.Log("Dinner time!");
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
+                    Debug.Log("1");
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
+                    Debug.Log("2");
                     var animator = Instance.GetType().GetField("m_animator", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
+                    Debug.Log("3");
                     animator.SetTrigger("consume");
+                    Debug.Log("4");
                     float ConsumeHeal = (Instance as MonsterAI).m_consumeHeal;
+                    Debug.Log("6");
 
                     if (ConsumeHeal > 0f)
                     {
+                        Debug.Log("7");
                         Instance.GetComponent<Character>().Heal(ConsumeHeal);
                     }
+                    Debug.Log("8");
                     Brain.Fire(Trigger.ConsumeItem.ToString());
                 });
             
@@ -529,21 +537,5 @@ namespace SlaveGreylings
             }
             return false;
         }
-
-
-        public static string UpdateAiStatus(ZNetView nview, string newStatus)
-        {
-            string currentAiStatus = nview?.GetZDO()?.GetString(Constants.Z_AiStatus);
-            if (currentAiStatus != newStatus)
-            {
-                string name = nview?.GetZDO()?.GetString(Constants.Z_GivenName);
-                Debug.Log($"{name}: {newStatus}");
-                nview.GetZDO().Set(Constants.Z_AiStatus, newStatus);
-            }
-            return newStatus;
-        }
-
-
-
     }
 }

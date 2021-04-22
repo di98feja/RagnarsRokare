@@ -1,6 +1,7 @@
 ﻿using Stateless;
 using System;
 using System.Reflection;
+using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
@@ -66,6 +67,18 @@ namespace RagnarsRokare.MobAI
             }
             return false;
         }
+        public static string UpdateAiStatus(ZNetView nview, string newStatus)
+        {
+            string currentAiStatus = nview?.GetZDO()?.GetString(Constants.Z_AiStatus);
+            if (currentAiStatus != newStatus)
+            {
+                string name = nview?.GetZDO()?.GetString(Constants.Z_GivenName);
+                Debug.Log($"{name}: {newStatus}");
+                nview.GetZDO().Set(Constants.Z_AiStatus, newStatus);
+            }
+            return newStatus;
+        }
+
 
     }
 }
