@@ -72,11 +72,12 @@ namespace SlaveGreylings
                 .Permit(Failed_trigger, SearchForRandomContainer_state)
                 .OnEntry(t =>
                 {
-                    Debug.Log("Entered SearchItemsOnGround");
-                    m_aiBase = t.Parameters[0] as MobAIBase;
+                    var args = ((MobAIBase aiBase, float dt))t.Parameters[0];
+                    m_aiBase = args.aiBase;
                     ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance.transform.position, Items, GreylingsConfig.ItemSearchRadius.Value);
                     if (groundItem != null)
                     {
+                        Debug.Log($"GroundItem:{groundItem.m_itemData.m_dropPrefab.name ?? string.Empty}");
                         brain.Fire(FoundGroundItemTrigger, groundItem);
                     }
                     brain.Fire(Failed_trigger);
@@ -189,20 +190,26 @@ namespace SlaveGreylings
 
         public void Update(MobAIBase aiBase, float dt)
         {
+            Debug.Log("1");
             if (m_aiBase == null)
             {
+                Debug.Log("2");
                 aiBase.Brain.Fire(UpdateTrigger, (aiBase, dt));
             }
             if ((CurrentSearchTime += dt) > MaxSearchTime)
             {
+                Debug.Log("3");
                 aiBase.Brain.Fire(Timeout_trigger);
             }
 
+            Debug.Log("4");
             if (aiBase.Brain.IsInState(MoveToContainer_state))
             {
+                Debug.Log("5");
                 bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
                 if (containerIsInvalid)
                 {
+                    Debug.Log("6");
                     KnownContainers.Pop();
                     aiBase.Brain.Fire(Failed_trigger);
                     return;
@@ -210,6 +217,7 @@ namespace SlaveGreylings
                 Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
                 if (Vector3.Distance(aiBase.Instance.transform.position, KnownContainers.Peek().transform.position) < 1.5)
                 {
+                    Debug.Log("7");
                     aiBase.Brain.Fire(ContainerIsClose_trigger);
                 }
                 return;
@@ -217,24 +225,31 @@ namespace SlaveGreylings
 
             if (aiBase.Brain.IsInState(MoveToGroundItem_state))
             {
+                Debug.Log("8");
                 if (GroundItem?.GetComponent<ZNetView>()?.IsValid() != true)
                 {
+                    Debug.Log("9");
                     GroundItem = null;
                     aiBase.Brain.Fire(Failed_trigger);
                     return;
                 }
+                Debug.Log("10");
                 Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, GroundItem.transform.position, 0.5f, false);
                 if (Vector3.Distance(aiBase.Instance.transform.position, GroundItem.transform.position) < 1.5)
                 {
+                    Debug.Log("11");
                     aiBase.Brain.Fire(GroundItemIsClose_trigger);
                 }
+                Debug.Log("12");
                 return;
             }
 
             if (aiBase.Brain.IsInState(OpenContainer_state))
             {
+                Debug.Log("13");
                 if ((OpenChestTimer += dt) > OpenChestDelay)
                 {
+                    Debug.Log("14");
                     aiBase.Brain.Fire(ContainerOpened_trigger);
                 }
             }
