@@ -329,14 +329,12 @@ namespace SlaveGreylings
                 .Permit(Trigger.LeaveAssignment.ToString(), State.Idle.ToString())
                 .OnEntry(t =>
                 {
-                    m_assigned = false;
                     if (m_carrying != null)
                     {
                         UpdateAiStatus(NView, $"Dropping {m_carrying.m_shared.m_name} on the ground");
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                         m_carrying = null;
                     }
-                    m_fetchitems.Clear();
                     m_stateChangeTimer = 0;
                     UpdateAiStatus(NView, $"Done doin worksignment!");
                     Brain.Fire(Trigger.LeaveAssignment.ToString());
