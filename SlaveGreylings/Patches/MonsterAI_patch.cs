@@ -85,7 +85,7 @@ namespace SlaveGreylings
 
                 BaseAI_UpdateAI_ReversePatch.UpdateAI(__instance, dt, ___m_nview, ref ___m_jumpInterval, ref ___m_jumpTimer, ref ___m_randomMoveUpdateTimer, ref ___m_timeSinceHurt, ref ___m_alerted);
                 string mobId = InitInstanceIfNeeded(__instance);
-                MobManager.Mobs[mobId].UpdateAI(__instance, dt);
+                MobManager.Mobs[mobId].UpdateAI(dt);
 
                 return false;
             }
@@ -104,7 +104,7 @@ namespace SlaveGreylings
 
                 if (!MobManager.IsControlledMob(uniqueId))
                 {
-                    var mob = new GreylingAI();
+                    var mob = new GreylingAI(instance);
                     MobManager.Mobs.Add(uniqueId, mob);
                 }
                 return uniqueId;

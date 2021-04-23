@@ -13,8 +13,9 @@ namespace RagnarsRokare.MobAI
 
         public string CurrentState { get; protected set; }
 
-        public MobAIBase(string initState)
+        public MobAIBase(BaseAI instance, string initState)
         {
+            Instance = instance;
             Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentState = initState;
@@ -47,9 +48,8 @@ namespace RagnarsRokare.MobAI
             }
         }
 
-        public virtual void UpdateAI(BaseAI instance, float dt)
+        public virtual void UpdateAI(float dt)
         {
-            Instance = instance;
         }
 
         public static object Invoke<T>(object instance, string methodName, params object[] argumentList)
