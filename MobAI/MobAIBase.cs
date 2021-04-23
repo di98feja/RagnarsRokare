@@ -57,7 +57,7 @@ namespace RagnarsRokare.MobAI
             return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
         }
 
-        protected bool AvoidFire(float dt)
+        public bool AvoidFire(float dt)
         {
             EffectArea effectArea2 = EffectArea.IsPointInsideArea(Instance.transform.position, EffectArea.Type.Burning, 2f);
             if ((bool)effectArea2)

@@ -18,6 +18,7 @@ namespace SlaveGreylings
         private const string OpenContainer_state = Prefix + "OpenContainer";
         private const string SearchForItem_state = Prefix + "SearchForItem"; 
         private const string PickUpItemFromGround_state = Prefix + "PickUpItemFromGround";
+        private const string AvoidFire_state = Prefix + "AvoidFire";
 
         private const string ItemFound_trigger = Prefix + "ItemFound";
         private const string ContainerFound_trigger = Prefix + "ContainerFound";
@@ -216,6 +217,7 @@ namespace SlaveGreylings
                     aiBase.Brain.Fire(Failed_trigger);
                     return;
                 }
+                aiBase.AvoidFire(dt);
                 Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
                 if (Vector3.Distance(aiBase.Instance.transform.position, KnownContainers.Peek().transform.position) < 1.5)
                 {
@@ -234,6 +236,7 @@ namespace SlaveGreylings
                     (aiBase.Character as Humanoid).SetMoveDir(Vector3.zero);
                     return;
                 }
+                aiBase.AvoidFire(dt);
                 Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, m_groundItem.transform.position, 0.5f, false);
                 if (Vector3.Distance(aiBase.Instance.transform.position, m_groundItem.transform.position) < 1.5)
                 {
