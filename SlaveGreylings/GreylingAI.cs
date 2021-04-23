@@ -126,6 +126,7 @@ namespace SlaveGreylings
                 .Permit(Trigger.ConsumeItem.ToString(), State.Idle.ToString())
                 .OnEntry(t =>
                 {
+                    UpdateAiStatus(NView, "*burps*");
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
                     var animator = Instance.GetType().GetField("m_animator", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
