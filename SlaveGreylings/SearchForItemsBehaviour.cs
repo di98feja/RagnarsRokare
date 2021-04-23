@@ -44,13 +44,15 @@ namespace SlaveGreylings
         public float OpenChestDelay { get; private set; } = 1;
         public float MaxSearchTime { get; set; } = 60;
         public string InitState { get { return Main_state; } }
+        public string SuccessState { get; set; }
+        public string FailState { get; set; }
 
         private ItemDrop m_groundItem;
         private MobAIBase m_aiBase;
         private float m_openChestTimer;
         private float m_currentSearchTime;
 
-        public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string SuccessState, string FailState, string parentState)
+        public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
             FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(FoundGroundItem_Trigger);
@@ -58,7 +60,7 @@ namespace SlaveGreylings
             brain.Configure(Main_state)
                 .InitialTransition(SearchItemsOnGround_state)
                 .SubstateOf(parentState)
-                .Permit(Timeout_trigger, FailState)
+                .PermitDynamic(Timeout_trigger, () => FailState)
                 .OnEntry(t =>
                 {
                     Debug.Log("Entered SearchForItemsBehaviour");
@@ -84,8 +86,8 @@ namespace SlaveGreylings
             brain.Configure(SearchForRandomContainer_state)
                 .SubstateOf(Main_state)
                 .Permit(ContainerFound_trigger, MoveToContainer_state)
-                .Permit(ContainerNotFound_trigger, FailState)
-                .Permit(Failed_trigger, FailState)
+                .PermitDynamic(ContainerNotFound_trigger, () => FailState)
+                .PermitDynamic(Failed_trigger, () => FailState)
                 .OnEntry(t =>
                 {
                     if (KnownContainers.Any())
@@ -128,7 +130,7 @@ namespace SlaveGreylings
 
             brain.Configure(PickUpItemFromGround_state)
                 .SubstateOf(Main_state)
-                .Permit(ItemFound_trigger, SuccessState)
+                .PermitDynamic(ItemFound_trigger, () => SuccessState)
                 .Permit(Failed_trigger, SearchItemsOnGround_state)
                 .OnEntry(t =>
                 {
@@ -148,7 +150,7 @@ namespace SlaveGreylings
                 .SubstateOf(Main_state)
                 .Permit(ContainerIsClose_trigger, OpenContainer_state)
                 .Permit(Failed_trigger, SearchItemsOnGround_state)
-                .Permit(ContainerNotFound_trigger, FailState)
+                .PermitDynamic(ContainerNotFound_trigger, () => FailState)
                 .OnEntry(t =>
                 {
                     MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Heading to that a bin");
@@ -173,7 +175,7 @@ namespace SlaveGreylings
 
             brain.Configure(SearchForItem_state)
                 .SubstateOf(Main_state)
-                .Permit(ItemFound_trigger, SuccessState)
+                .PermitDynamic(ItemFound_trigger, () => SuccessState)
                 .Permit(Failed_trigger, SearchItemsOnGround_state)
                 .OnEntry(t =>
                 {

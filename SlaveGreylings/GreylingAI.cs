@@ -11,11 +11,7 @@ namespace SlaveGreylings
     {
         public MaxStack<Assignment> m_assignment;
         public MaxStack<Container> m_containers;
-        public bool m_assigned;
-        public bool m_searchcontainer;
-        public List<ItemDrop.ItemData> m_fetchitems;
         public ItemDrop.ItemData m_carrying;
-        public ItemDrop m_spottedItem;
         public float m_assignedTimer;
         public float m_stateChangeTimer;
         public string[] m_acceptedContainerNames;
@@ -25,12 +21,13 @@ namespace SlaveGreylings
             Idle,
             Flee,
             Follow,
-            AvoidFire,
             Assigned,
             Hungry,
             SearchForItems,
-            HaveItem,
-            HaveNoItem,
+            HaveFoodItem,
+            HaveNoFoodItem,
+            HaveAssignmentItem,
+            HaveNoAssignmentItem,
             MoveToAssignment,
             CheckingAssignment,
             DoneWithAssignment,
@@ -42,7 +39,6 @@ namespace SlaveGreylings
             TakeDamage,
             Follow,
             UnFollow,
-            CloseToFire,
             CalmDown,
             Hungry,
             ConsumeItem,
@@ -56,29 +52,24 @@ namespace SlaveGreylings
         }
 
         readonly StateMachine<string,string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
-        readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>> LookForItemTrigger;
+        readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>,string,string> LookForItemTrigger;
         State m_parentState;
         private float m_triggerTimer;
         SearchForItemsBehaviour searchForItemsBehaviour;
         public GreylingAI() : base(State.Idle.ToString())
         {
             m_assignment = new MaxStack<Assignment>(20);
-            m_assigned = false;
             m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
-            m_searchcontainer = false;
-            m_fetchitems = new List<ItemDrop.ItemData>();
             m_carrying = null;
-            m_spottedItem = null;
             m_assignedTimer = 0f;
             m_stateChangeTimer = 0f;
             m_acceptedContainerNames = GreylingsConfig.IncludedContainersList.Value.Split();
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
-            LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>>(Trigger.ItemFound.ToString());
+            LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>,string,string>(Trigger.ItemFound.ToString());
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
-            searchForItemsBehaviour.Configure(this, Brain, State.HaveItem.ToString(), State.HaveNoItem.ToString(), State.SearchForItems.ToString());
+            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
 
-            ConfigureAvoidFire();
             ConfigureFlee();
             ConfigureFollow();
             ConfigureIsHungry();
@@ -103,6 +94,8 @@ namespace SlaveGreylings
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
+                    searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
+                    searchForItemsBehaviour.FailState = t.Parameters[2] as string;
                     Brain.Fire(Trigger.SearchForItems.ToString());
                 });
         }
@@ -129,14 +122,15 @@ namespace SlaveGreylings
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
-                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData));
+                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem.ToString(), State.HaveNoFoodItem.ToString());
                 });
 
-            Brain.Configure(State.HaveItem.ToString())
+            Brain.Configure(State.HaveFoodItem.ToString())
                 .SubstateOf(State.Hungry.ToString())
                 .Permit(Trigger.ConsumeItem.ToString(), State.Idle.ToString())
                 .OnEntry(t =>
                 {
+                    Debug.LogWarning($"Prev state:{t.Source}, current state:{Brain.State}");
                     UpdateAiStatus(NView, "*burps*");
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
@@ -151,7 +145,7 @@ namespace SlaveGreylings
                     Brain.Fire(Trigger.ConsumeItem.ToString());
                 });
             
-            Brain.Configure(State.HaveNoItem.ToString())
+            Brain.Configure(State.HaveNoFoodItem.ToString())
                 .SubstateOf(State.Hungry.ToString())
                 .PermitIf(Trigger.ItemNotFound.ToString(), State.Idle.ToString())
                 .OnEntry(t =>
@@ -169,11 +163,7 @@ namespace SlaveGreylings
                     UpdateAiStatus(NView, "Follow");
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     m_assignment.Clear();
-                    m_fetchitems.Clear();
-                    m_assigned = false;
-                    m_spottedItem = null;
                     m_containers.Clear();
-                    m_searchcontainer = false;
                     m_stateChangeTimer = 0;
                 });
         }
@@ -195,23 +185,6 @@ namespace SlaveGreylings
                 });
         }
 
-        private void ConfigureAvoidFire()
-        {
-            Brain.Configure(State.AvoidFire.ToString())
-                .SubstateOf(State.Flee.ToString())
-                .SubstateOf(State.Follow.ToString())
-                .OnEntry(t =>
-                {
-                    m_parentState = t.Source.ToStateEnum();
-                    UpdateAiStatus(NView, "Avoiding fire");
-                    if (m_assignment.Any() && m_assignment.Peek().IsClose(this.Character.transform.position))
-                    {
-                        m_assigned = false;
-                    }
-                })
-                .PermitIf(UpdateTrigger, m_parentState.ToString(), (args) => AvoidFire(args.dt));
-        }
-
         private void ConfigureAssigned()
         {
             Brain.Configure(State.Assigned.ToString())
@@ -222,13 +195,18 @@ namespace SlaveGreylings
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, $"Check the {m_assignment.Peek().TypeOfAssignment.Name}, I'm on it Boss");
-                    m_assigned = true;
                     m_assignedTimer = 0;
-                    m_fetchitems.Clear();
-                    m_spottedItem = null;
+                })
+                .OnExit(t =>
+                {
+                    if (m_carrying != null)
+                    {
+                        (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
+                        m_carrying = null;
+                    }
                 });
 
-            Brain.Configure(State.HaveItem.ToString())
+            Brain.Configure(State.HaveAssignmentItem.ToString())
                 .SubstateOf(State.Assigned.ToString())
                 .Permit(Trigger.ItemFound.ToString(), State.MoveToAssignment.ToString())
                 .OnEntry(t =>
@@ -241,7 +219,7 @@ namespace SlaveGreylings
                     Brain.Fire(Trigger.ItemFound.ToString());
                 });
 
-            Brain.Configure(State.HaveNoItem.ToString())
+            Brain.Configure(State.HaveNoAssignmentItem.ToString())
                 .SubstateOf(State.Assigned.ToString())
                 .PermitIf(Trigger.ItemNotFound.ToString(), State.DoneWithAssignment.ToString())
                 .OnEntry(t =>
@@ -260,7 +238,7 @@ namespace SlaveGreylings
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Moving to assignment");
-                    if (t.Source == State.HaveItem.ToString())
+                    if (t.Source == State.HaveAssignmentItem.ToString())
                     {
                         nextState = State.UnloadToAssignment;
                     }
@@ -283,25 +261,26 @@ namespace SlaveGreylings
                     UpdateAiStatus(NView, "Checking assignment for task");
                     var needFuel = m_assignment.Peek().NeedFuel;
                     var needOre = m_assignment.Peek().NeedOre;
+                    var fetchItems = new List<ItemDrop.ItemData>();
                     SlaveGreylings.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
                     if (needFuel != null)
                     {
-                        m_fetchitems.Add(needFuel);
+                        fetchItems.Add(needFuel);
                         UpdateAiStatus(NView, $"Adding {needFuel.m_shared.m_name} to search list");
                     }
                     if (needOre.Any())
                     {
-                        m_fetchitems.AddRange(needOre);
+                        fetchItems.AddRange(needOre);
                         UpdateAiStatus(NView, $"Adding {needOre.Join(o => o.m_shared.m_name)} to search list");
                     }
                     m_stateChangeTimer = 0;
-                    if (!m_fetchitems.Any())
+                    if (!fetchItems.Any())
                     {
                         Brain.Fire(Trigger.AssignmentFinished.ToString());
                     }
                     else
                     {
-                        Brain.Fire(LookForItemTrigger, m_fetchitems);
+                        Brain.Fire(LookForItemTrigger, fetchItems, State.HaveAssignmentItem.ToString(), State.HaveNoAssignmentItem.ToString());
                     }
                 });
         }
