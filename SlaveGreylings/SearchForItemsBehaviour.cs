@@ -96,7 +96,7 @@ namespace SlaveGreylings
                         {
                             KnownContainers.Remove(matchingContainer);
                             KnownContainers.Push(matchingContainer);
-                            MobAIBase.UpdateAiStatus(m_aiBase.NView, $"I seen this in a that a bin");
+                            MobAIBase.UpdateAiStatus(m_aiBase.NView, $"I seen this in that a bin");
                             brain.Fire(ContainerFound_trigger);
                             return;
                         }
@@ -151,7 +151,6 @@ namespace SlaveGreylings
                 .SubstateOf(Main_state)
                 .Permit(ContainerIsClose_trigger, OpenContainer_state)
                 .Permit(Failed_trigger, SearchItemsOnGround_state)
-                .Permit(ContainerNotFound_trigger, FailState)
                 .OnEntry(t =>
                 {
                     FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name)).RandomOrDefault();
@@ -167,7 +166,7 @@ namespace SlaveGreylings
                     else
                     {
                         MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Nottin in this a bin..");
-                        brain.Fire(ItemNotFound_trigger);
+                        brain.Fire(Failed_trigger);
                     }
                 })
                 .OnExit(t =>
