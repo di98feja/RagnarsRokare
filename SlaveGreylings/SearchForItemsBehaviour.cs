@@ -212,16 +212,15 @@ namespace SlaveGreylings
                 bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
                 if (containerIsInvalid)
                 {
-                    (aiBase.Character as Humanoid).SetMoveDir(Vector3.zero);
+                    aiBase.StopMoving();
                     KnownContainers.Pop();
                     aiBase.Brain.Fire(Failed_trigger);
                     return;
                 }
-                aiBase.AvoidFire(dt);
-                Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
+                aiBase.MoveAndAvoidFire(KnownContainers.Peek().transform.position, dt, 0.5f);
                 if (Vector3.Distance(aiBase.Instance.transform.position, KnownContainers.Peek().transform.position) < 1.5)
                 {
-                    (aiBase.Character as Humanoid).SetMoveDir(Vector3.zero);
+                    aiBase.StopMoving();
                     aiBase.Brain.Fire(ContainerIsClose_trigger);
                 }
                 return;
@@ -233,14 +232,13 @@ namespace SlaveGreylings
                 {
                     m_groundItem = null;
                     aiBase.Brain.Fire(Failed_trigger);
-                    (aiBase.Character as Humanoid).SetMoveDir(Vector3.zero);
+                    aiBase.StopMoving();
                     return;
                 }
-                aiBase.AvoidFire(dt);
-                Common.Invoke<MonsterAI>(aiBase.Instance, "MoveAndAvoid", dt, m_groundItem.transform.position, 0.5f, false);
+                aiBase.MoveAndAvoidFire(m_groundItem.transform.position, dt, 0.5f);
                 if (Vector3.Distance(aiBase.Instance.transform.position, m_groundItem.transform.position) < 1.5)
                 {
-                    (aiBase.Character as Humanoid).SetMoveDir(Vector3.zero); 
+                    aiBase.StopMoving();
                     aiBase.Brain.Fire(GroundItemIsClose_trigger);
                 }
                 return;

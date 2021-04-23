@@ -185,6 +185,5 @@ namespace SlaveGreylings
             }
             return true;
         }
-
     }
 }

@@ -57,6 +57,12 @@ namespace RagnarsRokare.MobAI
             return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
         }
 
+        public void StopMoving()
+        {
+            if (Instance == null) throw new ArgumentException("Instance is missing");
+            Invoke<BaseAI>(Instance, "StopMoving");
+        }
+
         public bool AvoidFire(float dt)
         {
             EffectArea effectArea2 = EffectArea.IsPointInsideArea(Instance.transform.position, EffectArea.Type.Burning, 2f);
@@ -67,8 +73,17 @@ namespace RagnarsRokare.MobAI
             }
             return false;
         }
+
+        public bool MoveAndAvoidFire(Vector3 destination, float dt, float distance)
+        {
+            if (AvoidFire(dt)) return false;
+
+            return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, false);
+        }
+
         public static string UpdateAiStatus(ZNetView nview, string newStatus)
         {
+            newStatus = Localization.instance.Localize(newStatus);
             string currentAiStatus = nview?.GetZDO()?.GetString(Constants.Z_AiStatus);
             if (currentAiStatus != newStatus)
             {

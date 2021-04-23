@@ -30,7 +30,11 @@ namespace SlaveGreylings
             Hungry,
             SearchForItems,
             HaveItem,
-            HaveNoItem
+            HaveNoItem,
+            MoveToAssignment,
+            CheckingAssignment,
+            DoneWithAssignment,
+            UnloadToAssignment
         }
 
         public enum Trigger
@@ -45,7 +49,10 @@ namespace SlaveGreylings
             ItemFound,
             Update,
             ItemNotFound,
-            SearchForItems
+            SearchForItems,
+            IsCloseToAssignment,
+            AssignmentFinished,
+            LeaveAssignment
         }
 
         readonly StateMachine<string,string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
@@ -77,14 +84,18 @@ namespace SlaveGreylings
             ConfigureIsHungry();
             ConfigureIdle();
             ConfigureAssigned();
-
+            ConfigureMoveToAssignment();
+            ConfigureCheckAsignment();
             ConfigureSearchContainers();
+            ConfigureDoneWithAssignment();
+            ConfigureUnloadToAssignment();
         }
 
         private void ConfigureSearchContainers()
         {
             Brain.Configure(State.SearchForItems.ToString())
                 .SubstateOf(State.Hungry.ToString())
+                .SubstateOf(State.Assigned.ToString())
                 .Permit(Trigger.SearchForItems.ToString(), searchForItemsBehaviour.InitState)
                 .OnEntry(t =>
                 {
@@ -204,17 +215,152 @@ namespace SlaveGreylings
         private void ConfigureAssigned()
         {
             Brain.Configure(State.Assigned.ToString())
+                .InitialTransition(State.MoveToAssignment.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
-                .PermitIf(UpdateTrigger, State.Idle.ToString(), (arg) => MoveToAssignment((Instance as MonsterAI), m_assignment, m_stateChangeTimer, arg.dt))
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, "I'm on it Boss");
+                    UpdateAiStatus(NView, $"Check the {m_assignment.Peek().TypeOfAssignment.Name}, I'm on it Boss");
                     m_assigned = true;
                     m_assignedTimer = 0;
                     m_fetchitems.Clear();
                     m_spottedItem = null;
+                });
+
+            Brain.Configure(State.HaveItem.ToString())
+                .SubstateOf(State.Assigned.ToString())
+                .Permit(Trigger.ItemFound.ToString(), State.MoveToAssignment.ToString())
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, $"Trying to Pickup {searchForItemsBehaviour.FoundItem.m_shared.m_name}");
+                    var pickedUpInstance = (Character as Humanoid).PickupPrefab(searchForItemsBehaviour.FoundItem.m_dropPrefab);
+                    (Character as Humanoid).GetInventory().Print();
+                    (Character as Humanoid).EquipItem(pickedUpInstance);
+                    m_carrying = pickedUpInstance;
+                    Brain.Fire(Trigger.ItemFound.ToString());
+                });
+
+            Brain.Configure(State.HaveNoItem.ToString())
+                .SubstateOf(State.Assigned.ToString())
+                .PermitIf(Trigger.ItemNotFound.ToString(), State.DoneWithAssignment.ToString())
+                .OnEntry(t =>
+                {
+                    Brain.Fire(Trigger.ItemNotFound.ToString());
+                });
+
+        }
+
+        private void ConfigureMoveToAssignment()
+        {
+            State nextState = State.Idle;
+            Brain.Configure(State.MoveToAssignment.ToString())
+                .SubstateOf(State.Assigned.ToString())
+                .PermitDynamicIf(UpdateTrigger, (args) => true ? nextState.ToString() : State.Idle.ToString(), (arg) => MoveToAssignment(m_stateChangeTimer, arg.dt))
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Moving to assignment");
+                    if (t.Source == State.HaveItem.ToString())
+                    {
+                        nextState = State.UnloadToAssignment;
+                    }
+                    else
+                    {
+                        nextState = State.CheckingAssignment;
+                    }
+                });
+        }
+
+        private void ConfigureCheckAsignment()
+        {
+            Brain.Configure(State.CheckingAssignment.ToString())
+                .SubstateOf(State.Assigned.ToString())
+                .Permit(LookForItemTrigger.Trigger, State.SearchForItems.ToString())
+                .Permit(Trigger.AssignmentFinished.ToString(), State.DoneWithAssignment.ToString())
+                .OnEntry(t =>
+                {
+                    StopMoving();
+                    UpdateAiStatus(NView, "Checking assignment for task");
+                    var needFuel = m_assignment.Peek().NeedFuel;
+                    var needOre = m_assignment.Peek().NeedOre;
+                    SlaveGreylings.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
+                    if (needFuel != null)
+                    {
+                        m_fetchitems.Add(needFuel);
+                        UpdateAiStatus(NView, $"Adding {needFuel.m_shared.m_name} to search list");
+                    }
+                    if (needOre.Any())
+                    {
+                        m_fetchitems.AddRange(needOre);
+                        UpdateAiStatus(NView, $"Adding {needOre.Join(o => o.m_shared.m_name)} to search list");
+                    }
+                    m_stateChangeTimer = 0;
+                    if (!m_fetchitems.Any())
+                    {
+                        Brain.Fire(Trigger.AssignmentFinished.ToString());
+                    }
+                    else
+                    {
+                        Brain.Fire(LookForItemTrigger, m_fetchitems);
+                    }
+                });
+        }
+
+        private void ConfigureUnloadToAssignment()
+        {
+            Brain.Configure(State.UnloadToAssignment.ToString())
+                .SubstateOf(State.Assigned.ToString())
+                .Permit(Trigger.AssignmentFinished.ToString(), State.DoneWithAssignment.ToString())
+                .OnEntry(t =>
+                {
+                    StopMoving();
+                    var needFuel = m_assignment.Peek().NeedFuel;
+                    var needOre = m_assignment.Peek().NeedOre;
+                    bool isCarryingFuel = m_carrying.m_shared.m_name == needFuel?.m_shared?.m_name;
+                    bool isCarryingMatchingOre = needOre?.Any(c => m_carrying.m_shared.m_name == c?.m_shared?.m_name) ?? false;
+
+                    if (isCarryingFuel)
+                    {
+                        UpdateAiStatus(NView, $"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Fuel");
+                        m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+                        (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
+                    }
+                    else if (isCarryingMatchingOre)
+                    {
+                        UpdateAiStatus(NView, $"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Ore");
+
+                        m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
+                        (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
+                    }
+                    else
+                    {
+                        UpdateAiStatus(NView, $"Dropping {m_carrying.m_shared.m_name} on the ground");
+                        (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
+                    }
+                    (Character as Humanoid).UnequipItem(m_carrying, false);
+
+                    Brain.Fire(Trigger.AssignmentFinished.ToString());
+                });
+        }
+
+        private void ConfigureDoneWithAssignment()
+        {
+            Brain.Configure(State.DoneWithAssignment.ToString())
+                .SubstateOf(State.Assigned.ToString())
+                .Permit(Trigger.LeaveAssignment.ToString(), State.Idle.ToString())
+                .OnEntry(t =>
+                {
+                    m_assigned = false;
+                    if (m_carrying != null)
+                    {
+                        UpdateAiStatus(NView, $"Dropping {m_carrying.m_shared.m_name} on the ground");
+                        (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
+                        m_carrying = null;
+                    }
+                    m_fetchitems.Clear();
+                    m_stateChangeTimer = 0;
+                    UpdateAiStatus(NView, $"Done doin worksignment!");
+                    Brain.Fire(Trigger.LeaveAssignment.ToString());
                 });
         }
 
@@ -308,7 +454,7 @@ namespace SlaveGreylings
             //        }
             //        else
             //        {
-            //            UpdateAiStatus(NView, Localization.instance.Localize($"Dropping {m_carrying.m_shared.m_name} on the ground"));
+            //            UpdateAiStatus(NView, $"Dropping {m_carrying.m_shared.m_name} on the ground");
             //            humanoid.DropItem(humanoid.GetInventory(), m_carrying, 1);
             //        }
 
@@ -329,12 +475,12 @@ namespace SlaveGreylings
             //        if (needFuel != null)
             //        {
             //            m_fetchitems.Add(needFuel);
-            //            UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needFuel.m_shared.m_name} to search list"));
+            //            UpdateAiStatus(NView, $"Adding {needFuel.m_shared.m_name} to search list");
             //        }
             //        if (needOre.Any())
             //        {
             //            m_fetchitems.AddRange(needOre);
-            //            UpdateAiStatus(NView, Localization.instance.Localize($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list"));
+            //            UpdateAiStatus(NView, $"Adding {needOre.Join(o => o.m_shared.m_name)} to search list");
             //        }
             //        if (!m_fetchitems.Any())
             //        {
@@ -514,16 +660,16 @@ namespace SlaveGreylings
             }
         }
         
-        public static bool MoveToAssignment(MonsterAI instance, MaxStack<Assignment> KnownAssignments, float StateChangeTimer, float dt)
+        public bool MoveToAssignment(float StateChangeTimer, float dt)
         {
-            bool assignmentIsInvalid = KnownAssignments.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
+            bool assignmentIsInvalid = m_assignment.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
             {
-                KnownAssignments.Pop();
+                m_assignment.Pop();
                 return true; 
             }
-            Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownAssignments.Peek().Position, 0.5f, false);
-            if (StateChangeTimer > 30 || KnownAssignments.Peek().IsClose(instance.transform.position))
+            MoveAndAvoidFire(m_assignment.Peek().Position, dt, 0.5f);
+            if (StateChangeTimer > 30 || m_assignment.Peek().IsClose(Instance.transform.position))
             {
                 return true;
             }
