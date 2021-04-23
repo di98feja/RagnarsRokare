@@ -151,6 +151,33 @@ namespace SlaveGreylings
                 .SubstateOf(Main_state)
                 .Permit(ContainerIsClose_trigger, OpenContainer_state)
                 .Permit(Failed_trigger, SearchItemsOnGround_state)
+                .Permit(ContainerNotFound_trigger, FailState)
+                .OnEntry(t =>
+                {
+                    MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Heading to that a bin");
+                });
+
+            brain.Configure(OpenContainer_state)
+                .SubstateOf(Main_state)
+                .Permit(ContainerOpened_trigger, SearchForItem_state)
+                .Permit(Failed_trigger, SearchItemsOnGround_state)
+                .OnEntry(t =>
+                {
+                    if (KnownContainers.Peek().IsInUse())
+                    {
+                        brain.Fire(Failed_trigger);
+                    }
+                    else
+                    {
+                        KnownContainers.Peek().SetInUse(inUse: true);
+                        OpenChestTimer = 0f;
+                    }
+                });
+
+            brain.Configure(SearchForItem_state)
+                .SubstateOf(Main_state)
+                .Permit(ItemFound_trigger, SuccessState)
+                .Permit(Failed_trigger, SearchItemsOnGround_state)
                 .OnEntry(t =>
                 {
                     FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name)).RandomOrDefault();
@@ -179,6 +206,7 @@ namespace SlaveGreylings
         {
             if ((CurrentSearchTime += dt) > MaxSearchTime)
             {
+                CurrentSearchTime = 0f;
                 aiBase.Brain.Fire(Timeout_trigger);
             }
 
