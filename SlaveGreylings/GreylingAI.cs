@@ -51,6 +51,7 @@ namespace SlaveGreylings
             ItemNotFound,
             SearchForItems,
             IsCloseToAssignment,
+            AssignmentTimedOut,
             AssignmentFinished,
             LeaveAssignment
         }
@@ -106,7 +107,7 @@ namespace SlaveGreylings
                     Brain.Fire(Trigger.SearchForItems.ToString());
                 });
         }
-
+        
         private void ConfigureIdle()
         {
             Brain.Configure(State.Idle.ToString())
@@ -219,9 +220,11 @@ namespace SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .Permit(Trigger.AssignmentTimedOut.ToString(), State.DoneWithAssignment.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, $"Check the {m_assignment.Peek().TypeOfAssignment.Name}, I'm on it Boss");
+
                     m_assigned = true;
                     m_assignedTimer = 0;
                     m_fetchitems.Clear();
@@ -381,6 +384,20 @@ namespace SlaveGreylings
             Brain.Fire(Trigger.Hungry.ToString());
             Brain.Fire(UpdateTrigger, (monsterAi, dt));
 
+            //Assigned timeout-function 
+            m_assignedTimer += dt;
+            if (m_assignedTimer > GreylingsConfig.TimeLimitOnAssignment.Value)
+            {
+                Brain.Fire(Trigger.AssignmentTimedOut.ToString());
+            }
+
+            //Assignment timeout-function
+
+            if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt))
+            {
+                Brain.Fire(Trigger.AssignmentTimedOut.ToString());
+            }
+
 
             if (Brain.IsInState(State.Flee.ToString()))
             {
@@ -404,13 +421,7 @@ namespace SlaveGreylings
 
             // Here starts the fun.
 
-            //Assigned timeout-function 
-            m_assignedTimer += dt;
-            if (m_assignedTimer > GreylingsConfig.TimeLimitOnAssignment.Value) m_assigned = false;
 
-            //Assignment timeout-function
-
-            m_assigned = Common.AssignmentTimeoutCheck(ref m_assignment, dt);
 
             //stateChangeTimer Updated
             m_stateChangeTimer += dt;
