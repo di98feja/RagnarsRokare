@@ -75,11 +75,11 @@ namespace SlaveGreylings
                     ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance.transform.position, Items, GreylingsConfig.ItemSearchRadius.Value);
                     if (groundItem != null)
                     {
-                        Debug.Log($"GroundItem:{groundItem.m_itemData.m_dropPrefab.name ?? string.Empty}");
-                        MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Found {groundItem.m_itemData.m_shared.m_name} on the ground");
+                        MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
                         brain.Fire(FoundGroundItemTrigger, groundItem);
                         return;
                     }
+                    MobAIBase.UpdateAiStatus(m_aiBase.NView, $"I seen nottin on da ground.");
                     brain.Fire(Failed_trigger);
                 });
 

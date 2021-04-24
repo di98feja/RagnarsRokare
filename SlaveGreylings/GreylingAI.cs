@@ -87,8 +87,8 @@ namespace SlaveGreylings
         private void ConfigureSearchContainers()
         {
             Brain.Configure(State.SearchForItems.ToString())
-                .SubstateOf(State.Hungry.ToString())
-                .SubstateOf(State.Assigned.ToString())
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .Permit(Trigger.SearchForItems.ToString(), searchForItemsBehaviour.InitState)
                 .OnEntry(t =>
                 {
@@ -371,7 +371,6 @@ namespace SlaveGreylings
             {
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
-
 
             if (Brain.IsInState(State.Flee.ToString()))
             {
