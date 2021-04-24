@@ -55,6 +55,8 @@ namespace RagnarsRokare.MobAI
 
         public Character Attacker { get; set; }
 
+        public abstract void Follow(Player player);
+
         public virtual void UpdateAI(float dt)
         {
         }

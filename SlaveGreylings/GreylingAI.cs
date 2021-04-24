@@ -444,5 +444,10 @@ namespace SlaveGreylings
                 TamingTime = GreylingsConfig.TamingTime.Value
             };
         }
+
+        public override void Follow(Player player)
+        {
+            (Instance as MonsterAI).SetFollowTarget(player.gameObject);
+        }
     }
 }

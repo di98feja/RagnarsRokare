@@ -56,11 +56,6 @@ namespace SlaveGreylings
         [HarmonyPatch(typeof(MonsterAI), "UpdateAI")]
         static class MonsterAI_UpdateAI_Patch
         {
-
-            static MonsterAI_UpdateAI_Patch()
-            {
-            }
-
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_timeSinceHurt, 
                 ref float ___m_jumpInterval, ref float ___m_jumpTimer, ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted)
             {
