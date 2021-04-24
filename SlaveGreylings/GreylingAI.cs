@@ -304,7 +304,7 @@ namespace SlaveGreylings
         {
             Brain.Configure(State.UnloadToAssignment.ToString())
                 .SubstateOf(State.Assigned.ToString())
-                .Permit(Trigger.AssignmentFinished.ToString(), State.DoneWithAssignment.ToString())
+                .Permit(Trigger.AssignmentFinished.ToString(), State.CheckingAssignment.ToString())
                 .OnEntry(t =>
                 {
                     StopMoving();
