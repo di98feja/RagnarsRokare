@@ -175,6 +175,7 @@ namespace SlaveGreylings
                 }
                 if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value * multiplicator)
                 {
+                    SlaveGreylings.Dbgl($"GreAssignment: {assignment} forgotten");
                     assignments.Remove(assignment);
                     if (!assignments.Any())
                     {
