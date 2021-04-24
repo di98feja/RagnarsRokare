@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace SlaveGreylings
 {
-    public class GreylingAI : MobAIBase
+    public class GreylingAI : MobAIBase, IControllableMob
     {
         public MaxStack<Assignment> m_assignment;
         public MaxStack<Container> m_containers;
@@ -60,6 +60,9 @@ namespace SlaveGreylings
         private float m_closeEnoughTimer;
 
         public float CloseEnoughTimeout { get; private set; } = 30;
+
+        public GreylingAI() : base(null, string.Empty)
+        { }
 
         public GreylingAI(MonsterAI instance) : base(instance, State.Idle.ToString())
         {
@@ -428,12 +431,16 @@ namespace SlaveGreylings
             }
             float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? m_assignment.Peek().TypeOfAssignment.InteractDist : m_assignment.Peek().TypeOfAssignment.InteractDist + 1;
             return MoveAndAvoidFire(m_assignment.Peek().Position, dt, distance);
-            if (m_assignment.Peek().IsClose(Instance.transform.position))
-            {
+        }
 
-                return true;
-            }
-            return false;
+        public MobInfo GetMobInfo()
+        {
+            return new MobInfo
+            {
+                Name = "Greyling",
+                PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList()
+            };
         }
     }
 }

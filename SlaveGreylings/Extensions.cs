@@ -7,6 +7,19 @@ namespace SlaveGreylings
 {
     public static class Extensions
     {
+        public static IEnumerable<Type> GetLoadableTypes(this Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException("assembly");
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                return e.Types.Where(t => t != null);
+            }
+        }
+
         public static Tameable Tameable(this MonsterAI instance)
         {
             if (instance == null) throw new ArgumentException("Instance is missing");

@@ -68,8 +68,9 @@
   <ItemGroup>
     <Compile Include="Constants.cs" />
     <Compile Include="IBehaviour.cs" />
-    <Compile Include="MemberwiseClone.cs" />
+    <Compile Include="IControllableMob.cs" />
     <Compile Include="MobAIBase.cs" />
+    <Compile Include="MobInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

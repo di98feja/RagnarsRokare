@@ -34,8 +34,9 @@ namespace SlaveGreylings
 
             static void Postfix(Character __instance, ref ZNetView ___m_nview)
             {
-                if (__instance.name.Contains("Greyling"))
+                if (MobManager.IsControllableMob(__instance.name))
                 {
+                    var mobInfo = MobManager.GetMobInfo(__instance.name);
                     Debug.Log($"A {__instance.name} just spawned!");
                     var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
                     if (string.IsNullOrEmpty(uniqueId))
@@ -78,7 +79,7 @@ namespace SlaveGreylings
                     if (__instance.IsTamed())
                     {
                         ai.m_consumeItems.Clear();
-                        ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
+                        ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
                         ai.m_randomMoveRange = 5;
                         ai.m_consumeSearchRange = GreylingsConfig.ItemSearchRadius.Value;
                         string givenName = ___m_nview?.GetZDO()?.GetString(Constants.Z_GivenName);
@@ -90,11 +91,7 @@ namespace SlaveGreylings
                     else
                     {
                         ai.m_consumeItems.Clear();
-                        var tamingItemNames = GreylingsConfig.TamingItemList.Value.Split(',');
-                        foreach (string consumeItem in tamingItemNames)
-                        {
-                            ai.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, consumeItem).FirstOrDefault());
-                        }
+                        ai.m_consumeItems.AddRange(mobInfo.PreTameConsumables);
                     }
                 }
             }

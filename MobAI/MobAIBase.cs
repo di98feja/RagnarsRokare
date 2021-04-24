@@ -7,7 +7,15 @@ namespace RagnarsRokare.MobAI
 {
     public abstract class MobAIBase
     {
-        public BaseAI Instance { get; private set; }
+        private BaseAI m_instance = null;
+        public BaseAI Instance 
+        {
+            get
+            {
+                if (m_instance == null) throw new ArgumentException("Instance is missing");
+                return m_instance;
+            }
+        }
 
         public StateMachine<string, string> Brain;
 
@@ -15,7 +23,7 @@ namespace RagnarsRokare.MobAI
 
         public MobAIBase(BaseAI instance, string initState)
         {
-            Instance = instance;
+            m_instance = instance;
             Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentState = initState;
@@ -25,7 +33,6 @@ namespace RagnarsRokare.MobAI
         {
             get
             {
-                if (Instance == null) throw new ArgumentException("Instance is missing");
                 return Instance.GetType().GetField("m_character", BindingFlags.NonPublic|BindingFlags.Instance).GetValue(Instance) as Character;
             }
         }
@@ -34,7 +41,6 @@ namespace RagnarsRokare.MobAI
         {
             get
             {
-                if (Instance == null) throw new ArgumentException("Instance is missing");
                 return Instance.GetType().GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance) as ZNetView;
             }
         }
@@ -43,7 +49,6 @@ namespace RagnarsRokare.MobAI
         {
             get
             {
-                if (Instance == null) throw new ArgumentException("Instance is missing");
                 return (float)Instance.GetType().GetField("m_timeSinceHurt", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance);
             }
         }
@@ -59,7 +64,6 @@ namespace RagnarsRokare.MobAI
 
         public void StopMoving()
         {
-            if (Instance == null) throw new ArgumentException("Instance is missing");
             Invoke<BaseAI>(Instance, "StopMoving");
         }
 
