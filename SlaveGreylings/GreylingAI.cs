@@ -13,6 +13,7 @@ namespace SlaveGreylings
         public MaxStack<Container> m_containers;
         public ItemDrop.ItemData m_carrying;
         public float m_assignedTimer;
+        public float m_foodsearchtimer;
         public string[] m_acceptedContainerNames;
 
         public enum State
@@ -23,6 +24,7 @@ namespace SlaveGreylings
             Assigned,
             Hungry,
             SearchForItems,
+            SearchForFood,
             HaveFoodItem,
             HaveNoFoodItem,
             HaveAssignmentItem,
@@ -65,6 +67,7 @@ namespace SlaveGreylings
             m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
             m_carrying = null;
             m_assignedTimer = 0f;
+            m_foodsearchtimer = 0f;
             m_acceptedContainerNames = GreylingsConfig.IncludedContainersList.Value.Split();
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound.ToString());
@@ -120,10 +123,18 @@ namespace SlaveGreylings
             Brain.Configure(State.Hungry.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .Permit(LookForItemTrigger.Trigger, State.SearchForItems.ToString())
+                .PermitIf(UpdateTrigger, State.SearchForFood.ToString(), (arg) => (m_foodsearchtimer += arg.dt) > 10)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
+                    m_foodsearchtimer = 0f;
+                });
+
+            Brain.Configure(State.SearchForFood.ToString())
+                .SubstateOf(State.Hungry.ToString())
+                .Permit(LookForItemTrigger.Trigger, State.SearchForItems.ToString())
+                .OnEntry(t =>
+                {
                     Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem.ToString(), State.HaveNoFoodItem.ToString());
                 });
 
@@ -149,7 +160,7 @@ namespace SlaveGreylings
 
             Brain.Configure(State.HaveNoFoodItem.ToString())
                 .SubstateOf(State.Hungry.ToString())
-                .PermitIf(Trigger.ItemNotFound.ToString(), State.Idle.ToString())
+                .PermitIf(Trigger.ItemNotFound.ToString(), State.Hungry.ToString())
                 .OnEntry(t =>
                 {
                     Brain.Fire(Trigger.ItemNotFound.ToString());
