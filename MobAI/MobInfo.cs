@@ -7,5 +7,7 @@ namespace RagnarsRokare.MobAI
         public string Name { get; set; }
         public IEnumerable<ItemDrop> PreTameConsumables { get; set; }
         public IEnumerable<ItemDrop> PostTameConsumables { get; set; }
+        public float FeedDuration { get; set; }
+        public float TamingTime { get; set; }
     }
 }

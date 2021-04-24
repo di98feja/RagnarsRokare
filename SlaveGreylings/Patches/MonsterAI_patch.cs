@@ -43,10 +43,11 @@ namespace SlaveGreylings
         {
             static void Postfix(MonsterAI __instance)
             {
-                if (__instance.name.Contains("Greyling"))
+                if (MobManager.IsControllableMob(__instance.name))
                 {
+                    var mobInfo = MobManager.GetMobInfo(__instance.name);
                     __instance.m_consumeItems.Clear();
-                    __instance.m_consumeItems.Add(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").FirstOrDefault());
+                    __instance.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
                     __instance.m_consumeSearchRange = 50;
                 }
             }
@@ -60,9 +61,8 @@ namespace SlaveGreylings
             {
             }
 
-            static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_fleeIfLowHealth,
-                ref float ___m_timeSinceHurt, ref Vector3 ___arroundPointTarget, ref float ___m_jumpInterval, ref float ___m_jumpTimer,
-                ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted, ref Tameable ___m_tamable)
+            static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_timeSinceHurt, 
+                ref float ___m_jumpInterval, ref float ___m_jumpTimer, ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted)
             {
                 if (!___m_nview.IsOwner())
                 {
@@ -72,7 +72,7 @@ namespace SlaveGreylings
                 {
                     return true;
                 }
-                if (!__instance.name.Contains("Greyling"))
+                if (!MobManager.IsControllableMob(__instance.name))
                 {
                     return true;
                 }
@@ -98,8 +98,6 @@ namespace SlaveGreylings
             private static string InitInstanceIfNeeded(MonsterAI instance)
             {
                 var nview = typeof(BaseAI).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as ZNetView;
-                //Debug.Log($"Field exists:{Traverse.Create(typeof(BaseAI)).Field("m_character").FieldExists()}");
-                //var nview = Traverse.Create<BaseAI>().Field("m_nview").GetValue<ZNetView>(instance);
                 var uniqueId = nview.GetZDO().GetString(Constants.Z_CharacterId);
 
                 if (!MobManager.IsControlledMob(uniqueId))

@@ -32,7 +32,7 @@ namespace SlaveGreylings
 
         public static bool IsControlledMob(string id)
         {
-            return Mobs.ContainsKey(id);
+            return string.IsNullOrEmpty(id) ? false : Mobs.ContainsKey(id);
         }
 
         public static bool IsControllableMob(string mobName)

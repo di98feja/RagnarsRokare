@@ -9,17 +9,20 @@ namespace SlaveGreylings
 {
     public partial class SlaveGreylings
     {
-        private static Character m_attacker = null;
-
         [HarmonyPatch(typeof(Character), "Damage")]
         static class Character_Damaged_Patch
         {
-            static void Prefix(ref Character __instance, ref HitData hit)
+            static void Prefix(ref Character __instance, ref ZNetView ___m_nview, ref HitData hit)
             {
-                if (__instance.name.Contains("Greyling") && __instance.IsTamed())
+                if (MobManager.IsControllableMob(__instance.name) && __instance.IsTamed())
                 {
-                    m_attacker = hit.GetAttacker();
-                    if (m_attacker != null && m_attacker.IsPlayer())
+                    var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+                    var attacker = hit.GetAttacker();
+                    if (MobManager.IsControlledMob(uniqueId))
+                    {
+                        MobManager.Mobs[uniqueId].Attacker = attacker;
+                    }
+                    if (attacker != null && attacker.IsPlayer())
                     {
                         hit.m_damage.Modify(0.1f);
                     }
@@ -36,48 +39,28 @@ namespace SlaveGreylings
             {
                 if (MobManager.IsControllableMob(__instance.name))
                 {
+                    string uniqueId = GetOrCreateUniqueId(___m_nview);
                     var mobInfo = MobManager.GetMobInfo(__instance.name);
-                    Debug.Log($"A {__instance.name} just spawned!");
-                    var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
-                    if (string.IsNullOrEmpty(uniqueId))
-                    {
-                        uniqueId = System.Guid.NewGuid().ToString();
-                        ___m_nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
-                    }
-                    var tameable = __instance.gameObject.GetComponent<Tameable>();
-                    if (tameable == null)
-                    {
-                        tameable = __instance.gameObject.AddComponent<Tameable>();
-                    }
-
-                    tameable.m_fedDuration = (float)GreylingsConfig.FeedDuration.Value;
-                    tameable.m_tamingTime = (float)GreylingsConfig.TamingTime.Value;
-
+                    Tameable tameable = GetOrAddTameable(__instance);
+                    tameable.m_fedDuration = mobInfo.FeedDuration;
+                    tameable.m_tamingTime = mobInfo.TamingTime;
                     tameable.m_commandable = true;
 
-                    var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
-                    if (visEquipment == null)
-                    {
-                        __instance.gameObject.AddComponent<VisEquipment>();
-                        visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
-                        //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
-                        var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
-                        visEquipment.m_rightHand = rightHand;
-                    }
+                    AddVisualEquipmentCapability(__instance);
 
-                    if (m_allNamedMobs.ContainsKey(uniqueId))
-                    {
-                        m_allNamedMobs[uniqueId] = __instance.GetInstanceID();
-                    }
-                    else
-                    {
-                        m_allNamedMobs.Add(uniqueId, __instance.GetInstanceID());
-                    }
                     ___m_nview.Register<string, string>(Constants.Z_UpdateCharacterHUD, RPC_UpdateCharacterName);
-
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
                     {
+                        if (m_allNamedMobs.ContainsKey(uniqueId))
+                        {
+                            m_allNamedMobs[uniqueId] = __instance.GetInstanceID();
+                        }
+                        else
+                        {
+                            m_allNamedMobs.Add(uniqueId, __instance.GetInstanceID());
+                        }
+
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
                         ai.m_randomMoveRange = 5;
@@ -93,6 +76,41 @@ namespace SlaveGreylings
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PreTameConsumables);
                     }
+                }
+            }
+
+            private static Tameable GetOrAddTameable(Character __instance)
+            {
+                var tameable = __instance.gameObject.GetComponent<Tameable>();
+                if (tameable == null)
+                {
+                    tameable = __instance.gameObject.AddComponent<Tameable>();
+                }
+
+                return tameable;
+            }
+
+            private static string GetOrCreateUniqueId(ZNetView ___m_nview)
+            {
+                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+                if (string.IsNullOrEmpty(uniqueId))
+                {
+                    uniqueId = System.Guid.NewGuid().ToString();
+                    ___m_nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
+                }
+                return uniqueId;
+            }
+
+            private static void AddVisualEquipmentCapability(Character __instance)
+            {
+                var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+                if (visEquipment == null)
+                {
+                    __instance.gameObject.AddComponent<VisEquipment>();
+                    visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+                    //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
+                    var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
+                    visEquipment.m_rightHand = rightHand;
                 }
             }
 

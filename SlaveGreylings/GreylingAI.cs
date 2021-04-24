@@ -196,7 +196,7 @@ namespace SlaveGreylings
                 .OnExit(t =>
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
-                    //m_attacker = null;
+                    Attacker = null;
                 });
         }
 
@@ -389,8 +389,8 @@ namespace SlaveGreylings
             if (Brain.IsInState(State.Flee.ToString()))
             {
                 Brain.Fire(Trigger.CalmDown.ToString());
-                //var fleeFrom = m_attacker == null ? ___m_character.transform.position : m_attacker.transform.position;
-                Invoke<MonsterAI>(Instance, "Flee", dt, Character.transform.position);
+                var fleeFrom = Attacker == null ? Character.transform.position : Attacker.transform.position;
+                Invoke<MonsterAI>(Instance, "Flee", dt, fleeFrom);
                 return;
             }
 
@@ -439,7 +439,9 @@ namespace SlaveGreylings
             {
                 Name = "Greyling",
                 PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
-                PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList()
+                PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList(),
+                FeedDuration = GreylingsConfig.FeedDuration.Value,
+                TamingTime = GreylingsConfig.TamingTime.Value
             };
         }
     }

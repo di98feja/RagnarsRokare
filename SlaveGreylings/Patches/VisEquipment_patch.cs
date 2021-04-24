@@ -10,7 +10,7 @@ namespace SlaveGreylings
         {
             public static bool Prefix(VisEquipment __instance, int itemHash, int variant, Transform joint, ref GameObject __result, ref SkinnedMeshRenderer ___m_bodyModel, bool enableEquipEffects = true)
             {
-                if (!__instance.name.Contains("Greyling")) return true;
+                if (!MobManager.IsControllableMob(__instance.name)) return true;
 
                 GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(itemHash);
                 if (itemPrefab == null)

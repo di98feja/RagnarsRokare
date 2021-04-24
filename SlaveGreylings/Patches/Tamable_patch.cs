@@ -36,7 +36,7 @@ namespace SlaveGreylings
         {
             static bool Prefix(Tameable __instance, ref string __result, ZNetView ___m_nview, Character ___m_character)
             {
-                if (!__instance.name.Contains("Greyling")) return true;
+                if (!MobManager.IsControllableMob(__instance.name)) return true;
                 if (!___m_character.IsTamed()) return true;
                 if (!___m_nview.IsValid())
                 {
@@ -57,7 +57,7 @@ namespace SlaveGreylings
             static bool Prefix(Tameable __instance, ref bool __result, Humanoid user, bool hold, ZNetView ___m_nview, ref Character ___m_character,
                 ref float ___m_lastPetTime)
             {
-                if (!__instance.name.Contains("Greyling")) return true;
+                if (!MobManager.IsControllableMob(__instance.name)) return true;
 
                 if (!___m_nview.IsValid())
                 {
