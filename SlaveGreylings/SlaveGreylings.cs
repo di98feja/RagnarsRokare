@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using HarmonyLib;
+using RagnarsRokare.MobAI;
 using System.Collections;
 using System.IO;
 using System.Reflection;
@@ -14,7 +15,7 @@ namespace SlaveGreylings
     {
         public const string ModId = "RagnarsRokare.SlaveGreylings";
         public const string ModName = "RagnarsRökare SlaveGreylings";
-        public const string ModVersion = "0.4";
+        public const string ModVersion = "0.5";
 
         private static readonly bool isDebug = false;
         
@@ -24,7 +25,8 @@ namespace SlaveGreylings
         {
             GreylingsConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-            this.StartCoroutine(nameof(PreloadSFX));
+            StartCoroutine(nameof(PreloadSFX));
+            MobAIBase.PrintAIStateToDebug = GreylingsConfig.PrintAIStatusMessageToDebug.Value;
         }
 
         private IEnumerator PreloadSFX()

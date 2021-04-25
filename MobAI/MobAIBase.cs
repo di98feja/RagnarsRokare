@@ -89,19 +89,22 @@ namespace RagnarsRokare.MobAI
             return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, false);
         }
 
+        public static bool PrintAIStateToDebug { get; set; } = false;
+
         public static string UpdateAiStatus(ZNetView nview, string newStatus)
         {
             newStatus = Localization.instance.Localize(newStatus);
             string currentAiStatus = nview?.GetZDO()?.GetString(Constants.Z_AiStatus);
             if (currentAiStatus != newStatus)
             {
-                string name = nview?.GetZDO()?.GetString(Constants.Z_GivenName);
-                Debug.Log($"{name}: {newStatus}");
                 nview.GetZDO().Set(Constants.Z_AiStatus, newStatus);
+                if (PrintAIStateToDebug)
+                {
+                    string name = nview?.GetZDO()?.GetString(Constants.Z_GivenName);
+                    Debug.Log($"{name}: {newStatus}");
+                }
             }
             return newStatus;
         }
-
-
     }
 }
