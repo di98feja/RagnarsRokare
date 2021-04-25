@@ -44,6 +44,12 @@ We hope you find this little mod fun!
 // Barg and Morg
 
 0.5 patchnotes:
+##################################
+From the book of Barg:
+Today the day 62 in this paradise world of Odin we call Valheim, I managed to teach the Greylings to answer to a whistle call. 
+We soon realized that the greylings are spreading things we teach them between eachother, because Brynäs and Slagpåse both came wondering when we were training.
+Morg will move out into the forest and try the call tomorrow. Maby Berith and Jackass are still out there, If we did not kill them. All greylings and names are somewhat mixed in my memory.
+##################################
 * Rewritten the AI logic using a finite state machine
 * Refactored most of the app and split it into several files
 * Generalized the implementation to enable other types of creatues
@@ -59,7 +65,7 @@ We hope you find this little mod fun!
 0.3 patchnotes:
 ##################################
 From the book of Barg:
-Today the day of 45 in this paradise of a world of Odin we call Valheim. Today I realized that the Greylings are far more adaptable then expected. 
+Today the day 45 in this paradise world of Odin we call Valheim. Today I realized that the Greylings are far more adaptable then expected. 
 Already after a short period among us they tend to look in chests and houses for food rather then wondering of into the forest. By encouraging this behavior the need for fencing might be limited in the future.
 Another discovery of this adaptation was when Morg, enraged of Sig's overenthusiastic farting, throw his axe on Stig. To our surprise Stig looked a bit afraid from being hurt, but showed almost no sign of damage.
 We thought the rich amount of resin in their food made them harder, but pitching Stig against a skeleton killed him as easy as any other greyling. This must be an adaptation to the environment we did not count on.
@@ -72,7 +78,7 @@ More experiments might help us understand this behavior better, but now we will 
 0.2 patchnotes:
 ###############################
 From the book of Barg:
-Today the day of 42 in this paradise of a world of Odin we call Valheim, me and Morg gave the two greylings the names Berith and Dumbass. 
+Today the day 42 in this paradise world of Odin we call Valheim, me and Morg gave the two greylings the names Berith and Dumbass. 
 We think one is female but cannot really tell them apart, except from a sense of identity we can feel when moving up close to them. 
 The naming caused some misunderstanding when me and Morg was trying to use different names, but an improvement in our sense of identity sorted this problem just fine.
 Another improvement in the Greyling training is that we have trained them to not hast into a task without thinking it through. 
