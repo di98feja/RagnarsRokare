@@ -62,7 +62,7 @@ namespace SlaveGreylings
 
         public float CloseEnoughTimeout { get; private set; } = 30;
 
-        public GreylingAI() : base(null, string.Empty)
+        public GreylingAI() : base()
         { }
 
         public GreylingAI(MonsterAI instance) : base(instance, State.Idle.ToString())
