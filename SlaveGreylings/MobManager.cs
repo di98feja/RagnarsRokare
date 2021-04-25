@@ -10,6 +10,7 @@ namespace SlaveGreylings
     public static class MobManager
     {
         private static readonly Dictionary<string, MobInfo> m_mobControllers = new Dictionary<string, MobInfo>();
+
         static MobManager()
         {
             var it = typeof(IControllableMob);
@@ -29,10 +30,25 @@ namespace SlaveGreylings
             }
         }
         public static Dictionary<string, MobAIBase> Mobs = new Dictionary<string, MobAIBase>();
+        public static Dictionary<int, string> Instances = new Dictionary<int, string>();
+
 
         public static bool IsControlledMob(string id)
         {
             return string.IsNullOrEmpty(id) ? false : Mobs.ContainsKey(id);
+        }
+
+        public static bool IsControlledMob(int instanceId)
+        {
+            return Instances.ContainsKey(instanceId);
+        }
+
+        public static void RemoveStaleInstance(string mobUniqueId)
+        {
+            if (Instances.ContainsValue(mobUniqueId))
+            {
+                Instances.Remove(Instances.Single(i => i.Value == mobUniqueId).Key);
+            }
         }
 
         public static bool IsControllableMob(string mobName)
