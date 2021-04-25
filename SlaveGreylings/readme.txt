@@ -40,6 +40,8 @@ Please note that this is a work in progress, we will add new features/creatures 
 
 The code can be found at https://github.com/di98feja/RagnarsRokare
 
+In order to keep track on the Greyling Behaviour, we have been using Stateless state machine (found at https://github.com/dotnet-state-machine/stateless). Thank you stateless team!
+
 We hope you find this little mod fun!
 // Barg and Morg
 
