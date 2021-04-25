@@ -76,10 +76,6 @@
     <Reference Include="UnityEngine.PhysicsModule">
       <HintPath>..\Libs\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.SharedInternalsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Libs\UnityEngine.SharedInternalsModule.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.UI">
       <HintPath>..\Libs\UnityEngine.UI.dll</HintPath>
     </Reference>

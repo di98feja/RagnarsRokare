@@ -41,6 +41,7 @@ namespace SlaveGreylings.Patches
 
         private static void PlayClipAt(AudioClip clip, Vector3 pos)
         {
+            if (clip == null) return;
             GameObject tempGO = new GameObject("TempAudio"); 
             tempGO.transform.position = pos; // 
             AudioSource aSource = tempGO.AddComponent<AudioSource>(); 

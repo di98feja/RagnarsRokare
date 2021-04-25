@@ -146,7 +146,6 @@ namespace SlaveGreylings
                 .Permit(Trigger.ConsumeItem.ToString(), State.Idle.ToString())
                 .OnEntry(t =>
                 {
-                    Debug.LogWarning($"Prev state:{t.Source}, current state:{Brain.State}");
                     UpdateAiStatus(NView, "*burps*");
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
@@ -332,6 +331,7 @@ namespace SlaveGreylings
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                     }
                     (Character as Humanoid).UnequipItem(m_carrying, false);
+                    m_carrying = null;
 
                     Brain.Fire(Trigger.AssignmentFinished.ToString());
                 });
@@ -351,7 +351,7 @@ namespace SlaveGreylings
                         m_carrying = null;
                     }
                     UpdateAiStatus(NView, $"Done doin worksignment!");
-                    m_containers.Peek().SetInUse(inUse: false);
+                    m_containers.Peek()?.SetInUse(inUse: false);
                     Brain.Fire(Trigger.LeaveAssignment.ToString());
                 });
         }
