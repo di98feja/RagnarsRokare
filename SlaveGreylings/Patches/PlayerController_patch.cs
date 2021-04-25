@@ -5,6 +5,7 @@ using UnityEngine;
 
 namespace SlaveGreylings.Patches
 {
+    [RequireComponent(typeof(AudioSource))]
     [HarmonyPatch(typeof(PlayerController), "FixedUpdate")]
     static class PlayerController_FixedUpdate_Patch
     {
@@ -23,6 +24,7 @@ namespace SlaveGreylings.Patches
         private static void CallHome()
         {
             var player = Player.m_localPlayer;
+            PlayClipAt(SlaveGreylings.CallHomeSfx, player.transform.position);
             var charsInRange = new List<Character>();
             var m_nview = typeof(Character).GetField("m_nview", BindingFlags.Instance | BindingFlags.NonPublic);
             Character.GetCharactersInRange(player.transform.position, 1000, charsInRange);
@@ -35,6 +37,17 @@ namespace SlaveGreylings.Patches
                     MobManager.Mobs[uniqueId].Follow(player);
                 }
             }
+        }
+
+        private static void PlayClipAt(AudioClip clip, Vector3 pos)
+        {
+            GameObject tempGO = new GameObject("TempAudio"); 
+            tempGO.transform.position = pos; // 
+            AudioSource aSource = tempGO.AddComponent<AudioSource>(); 
+            aSource.clip = clip;
+            aSource.reverbZoneMix = 0.1f;
+            aSource.Play(); 
+            MonoBehaviour.Destroy(tempGO, clip.length); 
         }
     }
 }
