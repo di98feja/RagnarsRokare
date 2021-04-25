@@ -66,7 +66,7 @@ namespace SlaveGreylings.Patches
 
                 var charsInRange = new List<Character>();
                 var m_nview = typeof(Character).GetField("m_nview", BindingFlags.Instance | BindingFlags.NonPublic);
-                Character.GetCharactersInRange(Player.m_localPlayer.transform.position, 1000, charsInRange);
+                Character.GetCharactersInRange(Player.m_localPlayer.transform.position, 200, charsInRange);
                 foreach (var character in charsInRange)
                 {
                     var nview = m_nview.GetValue(character) as ZNetView;

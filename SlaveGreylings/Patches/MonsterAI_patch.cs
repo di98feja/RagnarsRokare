@@ -92,13 +92,25 @@ namespace SlaveGreylings
 
             private static string InitInstanceIfNeeded(MonsterAI instance)
             {
+                if (MobManager.IsControlledMob(instance.gameObject.GetInstanceID())) return MobManager.Instances[instance.gameObject.GetInstanceID()];
+
                 var nview = typeof(BaseAI).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as ZNetView;
                 var uniqueId = nview.GetZDO().GetString(Constants.Z_CharacterId);
 
-                if (!MobManager.IsControlledMob(uniqueId))
+                var mob = new GreylingAI(instance);
+
+                if (MobManager.IsControlledMob(uniqueId))
                 {
-                    var mob = new GreylingAI(instance);
+                    Debug.LogWarning($"Replacing old instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
+                    MobManager.Mobs[uniqueId] = mob;
+                    MobManager.RemoveStaleInstance(uniqueId);
+                    MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
+                }
+                else
+                {
+                    Debug.LogWarning($"Adding new instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
                     MobManager.Mobs.Add(uniqueId, mob);
+                    MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
                 }
                 return uniqueId;
             }
