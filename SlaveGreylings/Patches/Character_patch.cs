@@ -33,8 +33,6 @@ namespace SlaveGreylings
         [HarmonyPatch(typeof(Character), "Awake")]
         static class Character_Awake_Patch
         {
-            private static Dictionary<string, int> m_allNamedMobs = new Dictionary<string, int>();
-
             static void Postfix(Character __instance, ref ZNetView ___m_nview)
             {
                 if (MobManager.IsControllableMob(__instance.name))
@@ -52,15 +50,6 @@ namespace SlaveGreylings
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
                     {
-                        if (m_allNamedMobs.ContainsKey(uniqueId))
-                        {
-                            m_allNamedMobs[uniqueId] = __instance.GetInstanceID();
-                        }
-                        else
-                        {
-                            m_allNamedMobs.Add(uniqueId, __instance.GetInstanceID());
-                        }
-
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
                         ai.m_randomMoveRange = 5;
@@ -121,9 +110,9 @@ namespace SlaveGreylings
 
             public static void RPC_UpdateCharacterName(long sender, string uniqueId, string text)
             {
-                if (!m_allNamedMobs.ContainsKey(uniqueId)) return;
+                if (!MobManager.IsControlledMob(uniqueId)) return;
 
-                var greylingToUpdate = Character.GetAllCharacters().Where(c => c.GetInstanceID() == m_allNamedMobs[uniqueId]).FirstOrDefault();
+                var greylingToUpdate = Character.GetAllCharacters().Where(c => c.GetInstanceID() == MobManager.Mobs[uniqueId].Instance.gameObject.GetInstanceID()).FirstOrDefault();
                 if (null == greylingToUpdate) return;
                 greylingToUpdate.m_name = text;
                 var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
