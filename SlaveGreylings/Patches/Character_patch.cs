@@ -111,9 +111,16 @@ namespace SlaveGreylings
             public static void RPC_UpdateCharacterName(long sender, string uniqueId, string text)
             {
                 if (!MobManager.IsControlledMob(uniqueId)) return;
+                Character greylingToUpdate;
+                try
+                {
+                    greylingToUpdate = MobManager.Mobs[uniqueId].Character;
+                }
+                catch (System.Exception)
+                { 
+                    return; 
+                }
 
-                var greylingToUpdate = Character.GetAllCharacters().Where(c => c.GetInstanceID() == MobManager.Mobs[uniqueId].Instance.gameObject.GetInstanceID()).FirstOrDefault();
-                if (null == greylingToUpdate) return;
                 greylingToUpdate.m_name = text;
                 var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
                 var hudsDict = hudsDictObject as System.Collections.IDictionary;
