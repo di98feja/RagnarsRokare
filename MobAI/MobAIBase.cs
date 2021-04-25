@@ -27,6 +27,10 @@ namespace RagnarsRokare.MobAI
             Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentState = initState;
+            if (NView.IsValid())
+            {
+                NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
+            }
         }
 
         public Character Character
@@ -56,6 +60,8 @@ namespace RagnarsRokare.MobAI
         public Character Attacker { get; set; }
 
         public abstract void Follow(Player player);
+
+        protected abstract void RPC_MobCommand(long sender, ZDOID playerId, string command);
 
         public virtual void UpdateAI(float dt)
         {
@@ -87,6 +93,16 @@ namespace RagnarsRokare.MobAI
             if (AvoidFire(dt)) return false;
 
             return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, false);
+        }
+
+        protected Player GetPlayer(ZDOID characterID)
+        {
+            GameObject gameObject = ZNetScene.instance.FindInstance(characterID);
+            if ((bool)gameObject)
+            {
+                return gameObject.GetComponent<Player>();
+            }
+            return null;
         }
 
         public static bool PrintAIStateToDebug { get; set; } = false;

@@ -3,6 +3,7 @@ using RagnarsRokare.MobAI;
 using Stateless;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace SlaveGreylings
@@ -446,7 +447,19 @@ namespace SlaveGreylings
 
         public override void Follow(Player player)
         {
-            (Instance as MonsterAI).SetFollowTarget(player.gameObject);
+            NView.InvokeRPC(ZNetView.Everybody, Constants.Z_MobCommand, player.GetZDOID(), "Follow");
+        }
+
+        protected override void RPC_MobCommand(long sender, ZDOID playerId, string command)
+        {
+            Player player = GetPlayer(playerId);
+            if (!(player == null) && command == "Follow")
+            {
+                {
+                    (Instance as MonsterAI).ResetPatrolPoint();
+                    (Instance as MonsterAI).SetFollowTarget(player.gameObject);
+                }
+            }
         }
     }
 }
