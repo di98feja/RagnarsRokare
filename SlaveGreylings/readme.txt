@@ -49,8 +49,8 @@ We hope you find this little mod fun!
 ##################################
 From the book of Barg:
 Today the day 62 in this paradise world of Odin we call Valheim, I managed to teach the Greylings to answer to a whistle call. 
-We soon realized that the greylings are spreading things we teach them between eachother, because Brynäs and Slagpåse both came wondering when we were training.
-Morg will move out into the forest and try the call tomorrow. Maby Berith and Jackass are still out there, If we did not kill them. All greylings and names are somewhat mixed in my memory.
+We soon realized that the greylings are spreading things we teach them between each other, because Brynäs and Slagpåse both came wondering when we were training.
+Morg will move out into the forest and try the call tomorrow. Maybe Berith and Jackass are still out there, If we did not kill them. All greylings and names are somewhat mixed in my memory.
 ##################################
 * Rewritten the AI logic using a finite state machine
 * Refactored most of the app and split it into several files
