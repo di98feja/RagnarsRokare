@@ -59,10 +59,6 @@ namespace SlaveGreylings
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_timeSinceHurt, 
                 ref float ___m_jumpInterval, ref float ___m_jumpTimer, ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted)
             {
-                if (!___m_nview.IsOwner())
-                {
-                    return false;
-                }
                 if (!___m_character.IsTamed())
                 {
                     return true;
@@ -70,6 +66,11 @@ namespace SlaveGreylings
                 if (!MobManager.IsControllableMob(__instance.name))
                 {
                     return true;
+                }
+                string mobId = InitInstanceIfNeeded(__instance);
+                if (!___m_nview.IsOwner())
+                {
+                    return false;
                 }
                 if (__instance.IsSleeping())
                 {
@@ -79,7 +80,6 @@ namespace SlaveGreylings
                 }
 
                 BaseAI_UpdateAI_ReversePatch.UpdateAI(__instance, dt, ___m_nview, ref ___m_jumpInterval, ref ___m_jumpTimer, ref ___m_randomMoveUpdateTimer, ref ___m_timeSinceHurt, ref ___m_alerted);
-                string mobId = InitInstanceIfNeeded(__instance);
                 MobManager.Mobs[mobId].UpdateAI(dt);
 
                 return false;
