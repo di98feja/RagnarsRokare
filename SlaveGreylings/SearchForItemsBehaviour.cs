@@ -164,6 +164,7 @@ namespace SlaveGreylings
                 {
                     if (KnownContainers.Peek().IsInUse())
                     {
+                        KnownContainers.Pop();
                         brain.Fire(Failed_trigger);
                     }
                     else

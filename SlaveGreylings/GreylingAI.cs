@@ -351,6 +351,7 @@ namespace SlaveGreylings
                         m_carrying = null;
                     }
                     UpdateAiStatus(NView, $"Done doin worksignment!");
+                    m_containers.Peek().SetInUse(inUse: false);
                     Brain.Fire(Trigger.LeaveAssignment.ToString());
                 });
         }
@@ -366,7 +367,7 @@ namespace SlaveGreylings
 
             SlaveGreylings.Dbgl($"Greyling:{greylingPosition}, monsterAi:{monsterAi.transform.position}");
 
-
+            //Runtime triggers
             Brain.Fire(Trigger.TakeDamage.ToString());
             Brain.Fire(Trigger.Follow.ToString());
             Brain.Fire(Trigger.Hungry.ToString());
@@ -378,9 +379,7 @@ namespace SlaveGreylings
             {
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
-
             //Assignment timeout-function
-
             if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt))
             {
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
