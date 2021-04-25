@@ -21,6 +21,9 @@ namespace RagnarsRokare.MobAI
 
         public string CurrentState { get; protected set; }
 
+        public MobAIBase()
+        { }
+
         public MobAIBase(BaseAI instance, string initState)
         {
             m_instance = instance;
