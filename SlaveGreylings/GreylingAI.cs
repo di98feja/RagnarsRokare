@@ -395,7 +395,7 @@ namespace SlaveGreylings
 
             if (Brain.IsInState(State.Follow.ToString()))
             {
-                Invoke<MonsterAI>(Instance, "Follow", monsterAi.GetFollowTarget(), dt);
+                Follow(Player.m_localPlayer);
                 return;
             }
 
@@ -446,6 +446,7 @@ namespace SlaveGreylings
 
         public override void Follow(Player player)
         {
+            NView.ClaimOwnership();
             (Instance as MonsterAI).SetFollowTarget(player.gameObject);
         }
     }
