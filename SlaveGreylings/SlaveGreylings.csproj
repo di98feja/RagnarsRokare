@@ -87,6 +87,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Patches\Assignments_Patch.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
     <Compile Include="SearchForItemsBehaviour.cs" />
     <Compile Include="Common.cs" />
