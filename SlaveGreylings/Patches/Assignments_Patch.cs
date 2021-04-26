@@ -11,10 +11,10 @@ namespace SlaveGreylings
         {
             public static void Postfix(Switch __instance)
             {
-                foreach (MobAIBase mob in MobManager.Mobs)
-                {
+                //foreach (MobAIBase mob in MobManager.Mobs)
+                //{
 
-                }
+                //}
 
                 string name = Common.GetPrefabName(__instance.gameObject.name);
             }

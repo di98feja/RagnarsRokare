@@ -64,6 +64,10 @@ namespace SlaveGreylings
                 .OnEntry(t =>
                 {
                     Debug.Log("Entered SearchForItemsBehaviour");
+                })
+                .OnExit(t =>
+                {
+                    KnownContainers.Peek()?.SetInUse(inUse: false);
                 });
 
             brain.Configure(SearchItemsOnGround_state)
