@@ -31,6 +31,7 @@ namespace SlaveGreylings.Patches
             AudioSource aSource = tempGO.AddComponent<AudioSource>();
             aSource.clip = clip;
             aSource.reverbZoneMix = 0.1f;
+            aSource.rolloffMode = AudioRolloffMode.Linear;
             aSource.Play();
             MonoBehaviour.Destroy(tempGO, clip.length);
         }
