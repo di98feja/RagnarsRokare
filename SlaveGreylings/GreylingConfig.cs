@@ -26,9 +26,6 @@ namespace SlaveGreylings
         public static ConfigEntry<int> MaxContainersInMemory;
         public static ConfigEntry<int> TimeBeforeAssignmentCanBeRepeated;
         public static ConfigEntry<int> TimeLimitOnAssignment;
-        public static ConfigEntry<int> NexusID;
-        public static ConfigEntry<string> CallHomeCommandKey;
-        public static ConfigEntry<bool> PrintAIStatusMessageToDebug;
         public static void Init(ConfigFile Config)
         {
             TamingItemList = Config.Bind<string>("General", "Greyling_TamingItemList", "SilverNecklace", "Comma separated list if items used to tame Greylings");
@@ -53,9 +50,6 @@ namespace SlaveGreylings
             MaxContainersInMemory = Config.Bind<int>("General", "Greylings_MaxContainersInMemory", 3, "How many containers Greyling should remember contents from");
             TimeBeforeAssignmentCanBeRepeated = Config.Bind<int>("General", "Greylings_TimeBeforeAssignmentCanBeRepeated", 120, "How long before assignment can be done again");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Greylings_TimeLimitOnAssignment", 60, "How long before moving on to next assignment");
-            NexusID = Config.Bind<int>("General", "NexusID", 970, "Nexus mod ID for updates");
-            CallHomeCommandKey = Config.Bind<string>("General", "CallHomeCommandKey", "Home", "Call all enslaved mobs within earshot");
-            PrintAIStatusMessageToDebug = Config.Bind<bool>("General", "PrintAIStateToDebug", false, "Print all AI state changes for all mobs to debug. Can cause performance drop if there are many mobs.");
         }
     }
 }

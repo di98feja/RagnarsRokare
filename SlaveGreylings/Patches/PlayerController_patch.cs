@@ -45,7 +45,7 @@ namespace SlaveGreylings.Patches
 
         static PlayerController_FixedUpdate_Patch()
         {
-            var configValue = GreylingsConfig.CallHomeCommandKey.Value;
+            var configValue = CommonConfig.CallHomeCommandKey.Value;
             if (Enum.TryParse(configValue, out KeyCode key))
             {
                 m_callHomeKey = key;

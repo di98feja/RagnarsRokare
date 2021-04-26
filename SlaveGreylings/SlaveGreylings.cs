@@ -23,10 +23,12 @@ namespace SlaveGreylings
 
         private void Awake()
         {
+            CommonConfig.Init(Config);
             GreylingsConfig.Init(Config);
+            BruteConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             StartCoroutine(nameof(PreloadSFX));
-            MobAIBase.PrintAIStateToDebug = GreylingsConfig.PrintAIStatusMessageToDebug.Value;
+            MobAIBase.PrintAIStateToDebug = CommonConfig.PrintAIStatusMessageToDebug.Value;
         }
 
         private IEnumerator PreloadSFX()

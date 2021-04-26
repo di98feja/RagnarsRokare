@@ -87,13 +87,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BruteAI.cs" />
+    <Compile Include="BruteConfig.cs" />
+    <Compile Include="CommonConfig.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
     <Compile Include="SearchForItemsBehaviour.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Extensions.cs" />
     <Compile Include="GreylingAI.cs" />
     <Compile Include="Patches\Character_patch.cs" />
-    <Compile Include="Config.cs" />
+    <Compile Include="GreylingConfig.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Patches\Humanoid_patch.cs" />
     <Compile Include="MaxStack.cs" />
