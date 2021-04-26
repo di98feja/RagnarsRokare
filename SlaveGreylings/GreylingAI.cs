@@ -59,6 +59,7 @@ namespace SlaveGreylings
         private float m_triggerTimer;
         SearchForItemsBehaviour searchForItemsBehaviour;
         private float m_closeEnoughTimer;
+        private float m_searchForNewAssignmentTimer;
 
         public float CloseEnoughTimeout { get; private set; } = 30;
 
@@ -115,7 +116,12 @@ namespace SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
-                .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) => AddNewAssignment(arg.instance.transform.position, m_assignment))
+                .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) =>
+                {
+                    if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
+                    m_searchForNewAssignmentTimer = 0f;
+                    return AddNewAssignment(arg.instance.transform.position, m_assignment);
+                })
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Nothing to do, bored");

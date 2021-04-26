@@ -2,6 +2,8 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 
 namespace RagnarsRokare_DodgeOnDoubleTap
@@ -12,12 +14,17 @@ namespace RagnarsRokare_DodgeOnDoubleTap
     {
         public const string ModId = "RagnarsRokare.DodgeOnDoubleTap";
         public const string ModName = "RagnarsRökare DodgeOnDoubleTapMod";
-        public const string ModVersion = "0.5";
+        public const string ModVersion = "0.6";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> DodgeTapHoldMax;
         public static ConfigEntry<int> DodgeDoubleTapDelay;
         public static ConfigEntry<int> NexusID;
+        public static ConfigEntry<string> OnOffKey;
+        public static ConfigEntry<bool> IsEnabled;
+
+        private static KeyCode m_onOffKey;
+
 
         void Awake()
         {
@@ -26,6 +33,30 @@ namespace RagnarsRokare_DodgeOnDoubleTap
             DodgeTapHoldMax = Config.Bind("General", "DodgeTapHoldMax", 200);
             DodgeDoubleTapDelay = Config.Bind("General", "DodgeDoubleTapDelay", 300);
             NexusID = Config.Bind<int>("General", "NexusID", 871, "Nexus mod ID for updates");
+            OnOffKey = Config.Bind<string>("General", "OnOffKey", "End", "Key to toggle the mod on or off");
+            IsEnabled = Config.Bind<bool>("General", "IsEnabled", true, "Tells if the mod is currently on or off");
+            OnOffKey.SettingChanged += (s, a) => { SetOnOfKey(); };
+            SetOnOfKey();
+        }
+
+        private static void SetOnOfKey()
+        {
+            var configValue = OnOffKey.Value;
+            if (Enum.TryParse(configValue, out KeyCode key))
+            {
+                m_onOffKey = key;
+            }
+            else
+            {
+                m_onOffKey = KeyCode.End;
+            }
+            ZInput.Initialize();
+            var buttons = typeof(ZInput).GetField("m_buttons", BindingFlags.Instance|BindingFlags.NonPublic).GetValue(ZInput.instance) as Dictionary<string, ZInput.ButtonDef>;
+            if (buttons.ContainsKey("RR_DTDogdeOnOff"))
+            {
+                buttons.Remove("RR_DTDogdeOnOff");
+            }
+            ZInput.instance.AddButton("RR_DTDogdeOnOff", m_onOffKey);
         }
 
         public enum DodgeDirection { None, Forward, Backward, Left, Right };
@@ -38,10 +69,14 @@ namespace RagnarsRokare_DodgeOnDoubleTap
         {
             static void Postfix(ref float ___m_queuedDodgeTimer, ref Vector3 ___m_queuedDodgeDir, Vector3 ___m_lookDir)
             {
-                if (DodgeDir == DodgeDirection.None && GamepadDodgeDir.magnitude < 0.1f)
+                if (!IsEnabled.Value)
                 {
+                    DodgeDir = DodgeDirection.None;
+                    GamepadDodgeDir = Vector3.zero;
                     return;
                 }
+
+                if (DodgeDir == DodgeDirection.None && GamepadDodgeDir.magnitude < 0.1f) return;
 
                 ___m_queuedDodgeTimer = 0.5f;
 
@@ -65,8 +100,12 @@ namespace RagnarsRokare_DodgeOnDoubleTap
         }
 
         [HarmonyPatch(typeof(PlayerController), "FixedUpdate")]
-        class FixedUpdate_Patch
+        static class FixedUpdate_Patch
         {
+            private static float m_onOffKeyTimer = 0f;
+            private static float m_onOffKeyDelay = 1.0f;
+
+
             private static DateTime? m_forwardLastTapRegistered = DateTime.Now;
             private static DateTime? m_backwardLastTapRegistered = DateTime.Now;
             private static DateTime? m_leftLastTapRegistered = DateTime.Now;
@@ -102,6 +141,13 @@ namespace RagnarsRokare_DodgeOnDoubleTap
                 {
                     return true;
                 }
+
+                if (Time.time - m_onOffKeyTimer > m_onOffKeyDelay && ZInput.GetButton("RR_DTDogdeOnOff"))
+                {
+                    m_onOffKeyTimer = Time.time;
+                    IsEnabled.Value = !IsEnabled.Value;
+                }
+
                 if (ZInput.GetButton("Forward"))
                 {
                     DetectTap(true, (float)(DateTime.Now - m_forwardLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_forwardPressTimer);

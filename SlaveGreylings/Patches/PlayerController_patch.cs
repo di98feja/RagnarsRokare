@@ -27,10 +27,13 @@ namespace SlaveGreylings.Patches
         {
             if (clip == null) return;
             GameObject tempGO = new GameObject("TempAudio");
-            tempGO.transform.position = pos; // 
+            tempGO.transform.position = pos; 
             AudioSource aSource = tempGO.AddComponent<AudioSource>();
             aSource.clip = clip;
             aSource.reverbZoneMix = 0.1f;
+            aSource.maxDistance = 200f;
+            aSource.spatialBlend = 1.0f;
+            aSource.rolloffMode = AudioRolloffMode.Linear;
             aSource.Play();
             MonoBehaviour.Destroy(tempGO, clip.length);
         }
