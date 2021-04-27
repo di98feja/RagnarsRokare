@@ -42,5 +42,26 @@ namespace MabAI_Tests
             fsm.Fire(Trigger.Reset);
             Assert.AreEqual(State.First, fsm.State);
         }
+
+        [TestMethod]
+        public void TestParentOnExit()
+        {
+            bool parentOnExit = false;
+            bool childOnExit = false;
+            var fsm = new StateMachine<string, string>("child");
+            fsm.Configure("grandParent");
+            fsm.Configure("parent")
+                .SubstateOf("grandParent")
+                .OnExit(t => parentOnExit = true);
+            fsm.Configure("child")
+                .SubstateOf("parent")
+                .Permit("leave", "grandParent")
+                .OnExit(t => childOnExit = true);
+
+
+            fsm.Fire("leave");
+            Assert.IsTrue(parentOnExit);
+            Assert.IsTrue(childOnExit);
+        }
     }
 }
