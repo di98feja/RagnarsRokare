@@ -13,8 +13,11 @@ namespace SlaveGreylings
     {
         public MaxStack<Assignment> m_assignment = new MaxStack<Assignment>(20);
         public MaxStack<Container> m_containers;
+        
+        // Timers
         private float m_searchForNewAssignmentTimer;
-        public float m_foodsearchtimer;
+        private float m_foodsearchtimer;
+        private float m_triggerTimer;
 
         private class State
         {
@@ -38,7 +41,6 @@ namespace SlaveGreylings
             public const string ItemFound = "ItemFound";
             public const string ConsumeItem = "ConsumeItem";
             public const string ItemNotFound = "ItemNotFound";
-
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
@@ -55,6 +57,7 @@ namespace SlaveGreylings
 
             ConfigureIdle();
             ConfigureFollow();
+            ConfigureIsHungry();
         }
 
         private void ConfigureIdle()
@@ -137,7 +140,23 @@ namespace SlaveGreylings
 
         private bool AddNewAssignment(Vector3 position, MaxStack<Assignment> m_assignment)
         {
-            throw new NotImplementedException();
+            return false;
+        }
+
+        public override void UpdateAI(float dt)
+        {
+            base.UpdateAI(dt);
+            m_triggerTimer += dt;
+            if (m_triggerTimer < 0.1f) return;
+
+            m_triggerTimer = 0f;
+            var monsterAi = Instance as MonsterAI;
+
+            //Runtime triggers
+            Brain.Fire(Trigger.TakeDamage.ToString());
+            Brain.Fire(Trigger.Follow.ToString());
+            Brain.Fire(Trigger.Hungry.ToString());
+            Brain.Fire(UpdateTrigger, (monsterAi, dt));
         }
 
         public override void Follow(Player player)
@@ -151,7 +170,7 @@ namespace SlaveGreylings
             {
                 FeedDuration = 100,
                 TamingTime = 1000,
-                Name = "Brute",
+                Name = "Greydwarf_Elite",
                 PreTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() },
                 PostTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() }
             };
