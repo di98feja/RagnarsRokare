@@ -68,6 +68,7 @@ namespace SlaveGreylings
                     return true;
                 }
                 string mobId = InitInstanceIfNeeded(__instance);
+                if (string.IsNullOrEmpty(mobId)) return true;
                 if (!___m_nview.IsOwner())
                 {
                     return false;
@@ -97,7 +98,12 @@ namespace SlaveGreylings
                 var nview = typeof(BaseAI).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(instance) as ZNetView;
                 var uniqueId = nview.GetZDO().GetString(Constants.Z_CharacterId);
 
-                var mob = new GreylingAI(instance);
+                var mob = MobManager.CreateMob(Common.GetPrefabName(instance.gameObject.name), instance);
+                if (mob == null)
+                {
+                    Debug.LogWarning($"Failed to create mob of {Common.GetPrefabName(instance.gameObject.name)}");
+                    return null;
+                }
 
                 if (MobManager.IsControlledMob(uniqueId))
                 {

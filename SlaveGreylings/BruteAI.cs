@@ -13,7 +13,8 @@ namespace SlaveGreylings
     {
         public MaxStack<Assignment> m_assignment = new MaxStack<Assignment>(20);
         public MaxStack<Container> m_containers;
-        
+        public string[] m_acceptedContainerNames;
+
         // Timers
         private float m_searchForNewAssignmentTimer;
         private float m_foodsearchtimer;
@@ -41,10 +42,12 @@ namespace SlaveGreylings
             public const string ItemFound = "ItemFound";
             public const string ConsumeItem = "ConsumeItem";
             public const string ItemNotFound = "ItemNotFound";
+            public const string SearchForItems = "SearchForItems";
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
+        readonly SearchForItemsBehaviour searchForItemsBehaviour;
 
         public BruteAI() : base()
         { }
@@ -52,12 +55,17 @@ namespace SlaveGreylings
         public BruteAI(MonsterAI instance) : base(instance, State.Idle)
         {
             m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
+            m_acceptedContainerNames = BruteConfig.IncludedContainersList.Value.Split();
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
+
+            searchForItemsBehaviour = new SearchForItemsBehaviour();
+            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
 
             ConfigureIdle();
             ConfigureFollow();
             ConfigureIsHungry();
+            ConfigureSearchForItems();
         }
 
         private void ConfigureIdle()
@@ -138,6 +146,24 @@ namespace SlaveGreylings
                 });
         }
 
+        private void ConfigureSearchForItems()
+        {
+            Brain.Configure(State.SearchForItems.ToString())
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .Permit(Trigger.SearchForItems, searchForItemsBehaviour.InitState)
+                .OnEntry(t =>
+                {
+                    Debug.Log("ConfigureSearchContainers Initiated");
+                    searchForItemsBehaviour.KnownContainers = m_containers;
+                    searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
+                    searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
+                    searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
+                    searchForItemsBehaviour.FailState = t.Parameters[2] as string;
+                    Brain.Fire(Trigger.SearchForItems.ToString());
+                });
+        }
+
         private bool AddNewAssignment(Vector3 position, MaxStack<Assignment> m_assignment)
         {
             return false;
@@ -157,6 +183,18 @@ namespace SlaveGreylings
             Brain.Fire(Trigger.Follow.ToString());
             Brain.Fire(Trigger.Hungry.ToString());
             Brain.Fire(UpdateTrigger, (monsterAi, dt));
+
+            if (Brain.IsInState(State.Follow))
+            {
+                Invoke<MonsterAI>(Instance, "Follow", monsterAi.GetFollowTarget(), dt);
+                return;
+            }
+
+            if (Brain.IsInState(searchForItemsBehaviour.InitState))
+            {
+                searchForItemsBehaviour.Update(this, dt);
+                return;
+            }
         }
 
         public override void Follow(Player player)
@@ -172,7 +210,8 @@ namespace SlaveGreylings
                 TamingTime = 1000,
                 Name = "Greydwarf_Elite",
                 PreTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() },
-                PostTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() }
+                PostTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() },
+                AIType = this.GetType()
             };
         }
 

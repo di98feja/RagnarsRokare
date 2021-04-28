@@ -100,7 +100,6 @@ namespace SlaveGreylings
                 .Permit(Trigger.SearchForItems.ToString(), searchForItemsBehaviour.InitState)
                 .OnEntry(t =>
                 {
-                    Debug.Log("ConfigureSearchContainers Initiated");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
@@ -444,6 +443,7 @@ namespace SlaveGreylings
             return new MobInfo
             {
                 Name = "Greyling",
+                AIType = this.GetType(),
                 PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
                 PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList(),
                 FeedDuration = GreylingsConfig.FeedDuration.Value,

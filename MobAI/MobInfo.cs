@@ -1,10 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace RagnarsRokare.MobAI
 {
     public class MobInfo
     {
         public string Name { get; set; }
+        public Type AIType { get; set; }
         public IEnumerable<ItemDrop> PreTameConsumables { get; set; }
         public IEnumerable<ItemDrop> PostTameConsumables { get; set; }
         public float FeedDuration { get; set; }

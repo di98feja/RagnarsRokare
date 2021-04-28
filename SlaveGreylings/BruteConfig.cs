@@ -13,6 +13,7 @@ namespace SlaveGreylings
         public static ConfigEntry<int> MaxContainersInMemory;
         public static ConfigEntry<int> TimeBeforeAssignmentCanBeRepeated;
         public static ConfigEntry<int> TimeLimitOnAssignment;
+        public static ConfigEntry<string> IncludedContainersList;
 
         public static void Init(ConfigFile Config)
         {
@@ -22,9 +23,10 @@ namespace SlaveGreylings
             AssignmentSearchRadius = Config.Bind<int>("General", "Brute_AssignmentSearchRadius", 30, "Radius to search for new assignments within");
             ItemSearchRadius = Config.Bind<int>("General", "Brute_ItemSearchRadius", 10, "Radius to search for items on the ground");
             ContainerSearchRadius = Config.Bind<int>("General", "Brute_ContainerSearchRadius", 10, "Radius to search for containers");
-            MaxContainersInMemory = Config.Bind<int>("General", "Greylings_MaxContainersInMemory", 3, "How many containers Greyling should remember contents from");
-            TimeBeforeAssignmentCanBeRepeated = Config.Bind<int>("General", "Greylings_TimeBeforeAssignmentCanBeRepeated", 120, "How long before assignment can be done again");
-            TimeLimitOnAssignment = Config.Bind<int>("General", "Greylings_TimeLimitOnAssignment", 60, "How long before moving on to next assignment");
+            MaxContainersInMemory = Config.Bind<int>("General", "Brute_MaxContainersInMemory", 3, "How many containers the Brute should remember contents from");
+            TimeBeforeAssignmentCanBeRepeated = Config.Bind<int>("General", "Brute_TimeBeforeAssignmentCanBeRepeated", 120, "How long before assignment can be done again");
+            TimeLimitOnAssignment = Config.Bind<int>("General", "Brute_TimeLimitOnAssignment", 60, "How long before moving on to next assignment");
+            IncludedContainersList = Config.Bind<string>("General", "Brute_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
         }
     }
 }
