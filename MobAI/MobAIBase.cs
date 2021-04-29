@@ -1,5 +1,6 @@
 ﻿using Stateless;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
@@ -18,6 +19,10 @@ namespace RagnarsRokare.MobAI
         }
 
         public StateMachine<string, string> Brain;
+
+        public string learningTask;
+        public int learningRate = 0;
+        public List<string> trainedAssignments = new List<string>();
 
         public string CurrentState { get; protected set; }
 

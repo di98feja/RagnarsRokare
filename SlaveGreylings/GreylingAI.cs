@@ -16,6 +16,7 @@ namespace SlaveGreylings
         public float m_assignedTimer;
         public float m_foodsearchtimer;
         public string[] m_acceptedContainerNames;
+        
 
         public enum State
         {
@@ -60,6 +61,7 @@ namespace SlaveGreylings
         SearchForItemsBehaviour searchForItemsBehaviour;
         private float m_closeEnoughTimer;
         private float m_searchForNewAssignmentTimer;
+        
 
         public float CloseEnoughTimeout { get; private set; } = 30;
 

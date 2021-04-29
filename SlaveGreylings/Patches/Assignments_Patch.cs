@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using UnityEngine;
 using RagnarsRokare.MobAI;
+using System.Linq;
 
 namespace SlaveGreylings
 {
@@ -11,12 +12,28 @@ namespace SlaveGreylings
         {
             public static void Postfix(Switch __instance)
             {
-                foreach(MobAIBase mob in MobManager.Mobs.Where(s => s.))
+                foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
-                    
+                    string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
+                    if (mob.learningTask == interactName)
+                    {
+                        mob.learningRate += 1;
+                        Debug.Log($"Learning {interactName} increased to {mob.learningRate}/5.");
+                    }
+                    else
+                    {
+                        mob.learningTask = interactName;
+                        mob.learningRate = 0;
+                        Debug.Log($"Starting to learn {interactName}.");
+                    }
+                    if (mob.learningRate == 5 && !mob.trainedAssignments.Contains(interactName))
+                    {
+                        mob.trainedAssignments.Append(interactName);
+                        Debug.Log($"{interactName} learnt .");
+                        mob.learningTask = "";
+                        mob.learningRate = 0;
+                    }
                 }
-
-                string name = Common.GetPrefabName(__instance.gameObject.name);
             }
         }
     }

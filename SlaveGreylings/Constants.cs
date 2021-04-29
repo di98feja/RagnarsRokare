@@ -1,4 +1,6 @@
-﻿namespace SlaveGreylings
+﻿using System.Collections.Generic;
+
+namespace SlaveGreylings
 {
     public static class Constants
     {
