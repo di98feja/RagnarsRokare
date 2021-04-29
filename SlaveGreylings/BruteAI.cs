@@ -3,6 +3,7 @@ using Stateless;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -11,7 +12,7 @@ namespace SlaveGreylings
 {
     public class BruteAI : MobAIBase, IControllableMob
     {
-        public MaxStack<Assignment> m_assignment = new MaxStack<Assignment>(20);
+        public MaxStack<Piece> m_assignment = new MaxStack<Piece>(100);
         public MaxStack<Container> m_containers;
         public string[] m_acceptedContainerNames;
 
@@ -19,6 +20,12 @@ namespace SlaveGreylings
         private float m_searchForNewAssignmentTimer;
         private float m_foodsearchtimer;
         private float m_triggerTimer;
+        private float m_assignedTimer;
+        private float m_closeEnoughTimer;
+        private float m_repairTimer;
+
+        public float CloseEnoughTimeout { get; private set; } = 30;
+        public float RepairTimeout { get; private set; } = 5;
 
         private class State
         {
@@ -31,6 +38,9 @@ namespace SlaveGreylings
             public const string SearchForItems = "SearchForItems";
             public const string HaveFoodItem = "HaveFoodItem";
             public const string HaveNoFoodItem = "HaveNoFoodItem";
+            public const string MoveToAssignment = "MoveToAssignment";
+            public const string CheckRepairState = "CheckRepairState";
+            public const string RepairAssignment = "RepairAssignment";
         }
 
         private class Trigger
@@ -43,6 +53,9 @@ namespace SlaveGreylings
             public const string ConsumeItem = "ConsumeItem";
             public const string ItemNotFound = "ItemNotFound";
             public const string SearchForItems = "SearchForItems";
+            public const string AssignmentTimedOut = "AssignmentTimedOut";
+            public const string RepairNeeded = "RepairNeeded";
+            public const string RepairDone = "RepairDone";
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
@@ -66,6 +79,7 @@ namespace SlaveGreylings
             ConfigureFollow();
             ConfigureIsHungry();
             ConfigureSearchForItems();
+            ConfigureAssigned();
         }
 
         private void ConfigureIdle()
@@ -77,6 +91,7 @@ namespace SlaveGreylings
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
+                    Debug.LogWarning("Search for piece to fix");
                     m_searchForNewAssignmentTimer = 0f;
                     return AddNewAssignment(arg.instance.transform.position, m_assignment);
                 })
@@ -164,8 +179,103 @@ namespace SlaveGreylings
                 });
         }
 
-        private bool AddNewAssignment(Vector3 position, MaxStack<Assignment> m_assignment)
+        private void ConfigureAssigned()
         {
+            Brain.Configure(State.Assigned)
+                .InitialTransition(State.MoveToAssignment)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable().IsHungry())
+                .Permit(Trigger.AssignmentTimedOut, State.Idle)
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, $"uuhhhmm..  checkin' dis over 'ere");
+                    m_assignedTimer = 0;
+                });
+        
+            Brain.Configure(State.MoveToAssignment)
+                .SubstateOf(State.Assigned)
+                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => MoveToAssignment(arg.dt))
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, $"Moving to assignment {m_assignment.Peek().m_name}");
+                    m_closeEnoughTimer = 0;
+                });
+
+            Brain.Configure(State.CheckRepairState)
+                .SubstateOf(State.Assigned)
+                .Permit(Trigger.RepairDone, State.Idle)
+                .Permit(Trigger.RepairNeeded, State.RepairAssignment)
+                .OnEntry(t =>
+                {
+                    var wnt = m_assignment.Peek().GetComponent<WearNTear>();
+                    float health = wnt?.GetHealthPercentage() ?? 1.0f;
+                    if (health < 0.9f)
+                    {
+                        UpdateAiStatus(NView, $"Hum, no goood");
+                        Brain.Fire(Trigger.RepairNeeded);
+                    }
+                    else
+                    {
+                        UpdateAiStatus(NView, $"Naah dis {m_assignment.Peek().m_name} goood");
+                        Brain.Fire(Trigger.RepairDone);
+                    }
+                });
+
+            Brain.Configure(State.RepairAssignment)
+                .SubstateOf(State.Assigned)
+                .PermitIf(UpdateTrigger, State.Idle, (arg) => (m_repairTimer += arg.dt) > RepairTimeout)
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, $"Fixin Dis {m_assignment.Peek().m_name}");
+                    m_repairTimer = 0.0f;
+                })
+                .OnExit(t =>
+                {
+                    var pieceToRepair = m_assignment.Peek();
+                    UpdateAiStatus(NView, $"Dis {m_assignment.Peek().m_name} is goood as new!");
+                    WearNTear component = pieceToRepair.GetComponent<WearNTear>();
+                    if ((bool)component && component.Repair())
+                    {
+                        var zAnim = typeof(Character).GetField("m_zanim", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Character) as ZSyncAnimation;
+                        ItemDrop.ItemData currentWeapon = (Character as Humanoid).GetCurrentWeapon();
+                        var jaws = (Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault();
+                        Debug.LogWarning($"{jaws?.m_dropPrefab?.name} attack:{jaws?.m_shared?.m_attack?.m_attackAnimation}, currentWeapon:{currentWeapon?.m_shared?.m_attack?.m_attackAnimation}");
+                        zAnim.SetTrigger(currentWeapon.m_shared.m_attack.m_attackAnimation);
+                        pieceToRepair.m_placeEffect.Create(pieceToRepair.transform.position, pieceToRepair.transform.rotation);
+                    }
+                });
+        }
+
+        public bool MoveToAssignment(float dt)
+        {
+            bool assignmentIsInvalid = m_assignment.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
+            if (assignmentIsInvalid)
+            {
+                m_assignment.Pop();
+                return true;
+            }
+            float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? 1.0f : 2.0f;
+            return MoveAndAvoidFire(m_assignment.Peek().FindClosestPoint(Instance.transform.position), dt, distance);
+        }
+
+        private bool AddNewAssignment(Vector3 position, MaxStack<Piece> m_assignment)
+        {
+            SlaveGreylings.Dbgl($"Enter {nameof(AddNewAssignment)}");
+            var pieceList = new List<Piece>();
+            var start = DateTime.Now;
+            Piece.GetAllPiecesInRadius(position, BruteConfig.AssignmentSearchRadius.Value, pieceList);
+            var piece = pieceList
+                .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
+                .Where(p => !m_assignment.Contains(p))
+                .OrderBy(p => Vector3.Distance(p.GetCenter(), position))
+                .FirstOrDefault();
+            SlaveGreylings.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
+            if (piece != null)
+            {
+                m_assignment.Push(piece);
+                return true;
+            }
             return false;
         }
 
@@ -183,6 +293,13 @@ namespace SlaveGreylings
             Brain.Fire(Trigger.Follow.ToString());
             Brain.Fire(Trigger.Hungry.ToString());
             Brain.Fire(UpdateTrigger, (monsterAi, dt));
+
+            //Assigned timeout-function 
+            m_assignedTimer += dt;
+            if (m_assignedTimer > GreylingsConfig.TimeLimitOnAssignment.Value)
+            {
+                Brain.Fire(Trigger.AssignmentTimedOut.ToString());
+            }
 
             if (Brain.IsInState(State.Follow))
             {
@@ -206,7 +323,8 @@ namespace SlaveGreylings
         {
             return new MobInfo
             {
-                FeedDuration = 100,
+                PreTameFeedDuration = BruteConfig.FeedDuration.Value,
+                PostTameFeedDuration = 1000,
                 TamingTime = 1000,
                 Name = "Greydwarf_Elite",
                 PreTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() },

@@ -20,7 +20,7 @@ namespace SlaveGreylings
             TamingItemList = Config.Bind<string>("General", "Brute_TamingItemList", "Dandelion", "Comma separated list if items used to tame Brutes");
             FeedDuration = Config.Bind<int>("General", "Brute_FeedDuration", 100, "Time before getting hungry after consuming one item");
             TamingTime = Config.Bind<int>("General", "Brute_TamingTime", 1000, "Total time it takes to tame a greyling");
-            AssignmentSearchRadius = Config.Bind<int>("General", "Brute_AssignmentSearchRadius", 30, "Radius to search for new assignments within");
+            AssignmentSearchRadius = Config.Bind<int>("General", "Brute_AssignmentSearchRadius", 10, "Radius to search for new assignments within");
             ItemSearchRadius = Config.Bind<int>("General", "Brute_ItemSearchRadius", 10, "Radius to search for items on the ground");
             ContainerSearchRadius = Config.Bind<int>("General", "Brute_ContainerSearchRadius", 10, "Radius to search for containers");
             MaxContainersInMemory = Config.Bind<int>("General", "Brute_MaxContainersInMemory", 3, "How many containers the Brute should remember contents from");

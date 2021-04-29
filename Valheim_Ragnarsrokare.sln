@@ -17,6 +17,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		AutoPickupSelector\itemlist.txt = AutoPickupSelector\itemlist.txt
 		Mode architecture.txt = Mode architecture.txt
 		AutoPickupSelector\PieceList.txt = AutoPickupSelector\PieceList.txt
+		TextFile1.txt = TextFile1.txt
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CraftToStack", "CraftToStack\CraftToStack.csproj", "{6577D646-ABCF-4BFD-A11E-F23ACC434A8A}"

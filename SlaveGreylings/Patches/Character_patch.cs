@@ -40,7 +40,6 @@ namespace SlaveGreylings
                     string uniqueId = GetOrCreateUniqueId(___m_nview);
                     var mobInfo = MobManager.GetMobInfo(__instance.name);
                     Tameable tameable = GetOrAddTameable(__instance);
-                    tameable.m_fedDuration = mobInfo.FeedDuration;
                     tameable.m_tamingTime = mobInfo.TamingTime;
                     tameable.m_commandable = true;
 
@@ -50,6 +49,7 @@ namespace SlaveGreylings
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     if (__instance.IsTamed())
                     {
+                        tameable.m_fedDuration = mobInfo.PostTameFeedDuration;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
                         ai.m_randomMoveRange = 5;
@@ -62,6 +62,7 @@ namespace SlaveGreylings
                     }
                     else
                     {
+                        tameable.m_fedDuration = mobInfo.PreTameFeedDuration;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PreTameConsumables);
                     }

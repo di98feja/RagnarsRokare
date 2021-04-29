@@ -155,7 +155,7 @@ namespace SlaveGreylings
                     UpdateAiStatus(NView, "*burps*");
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
-                    var animator = Instance.GetType().GetField("m_animator", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
+                    var animator = Instance.GetType().GetField("m_animator", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
                     animator.SetTrigger("consume");
                     float ConsumeHeal = (Instance as MonsterAI).m_consumeHeal;
 
@@ -446,7 +446,8 @@ namespace SlaveGreylings
                 AIType = this.GetType(),
                 PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
                 PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList(),
-                FeedDuration = GreylingsConfig.FeedDuration.Value,
+                PreTameFeedDuration = GreylingsConfig.FeedDuration.Value,
+                PostTameFeedDuration = GreylingsConfig.FeedDuration.Value,
                 TamingTime = GreylingsConfig.TamingTime.Value
             };
         }
