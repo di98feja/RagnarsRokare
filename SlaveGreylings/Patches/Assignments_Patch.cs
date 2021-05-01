@@ -15,6 +15,11 @@ namespace SlaveGreylings
                 foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
+                    if (mob.m_trainedAssignments.Contains(interactName))
+                    {
+                        Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");
+                        return;
+                    }
                     if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.m_trainedAssignments.Contains(interactName))
                     { 
                         if (mob.learningTask == interactName)
@@ -66,6 +71,11 @@ namespace SlaveGreylings
                 foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.gameObject.name);
+                    if (mob.m_trainedAssignments.Contains(interactName))
+                    {
+                        Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");
+                        return;
+                    }
                     if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.m_trainedAssignments.Contains(interactName))
                     {
                         if (mob.learningTask == interactName)
