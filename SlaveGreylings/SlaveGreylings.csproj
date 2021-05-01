@@ -91,6 +91,7 @@
     <Compile Include="BruteConfig.cs" />
     <Compile Include="CommonConfig.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
+    <Compile Include="FightBehaviour.cs" />
     <Compile Include="SearchForItemsBehaviour.cs" />
     <Compile Include="Common.cs" />
     <Compile Include="Extensions.cs" />
