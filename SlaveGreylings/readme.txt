@@ -45,6 +45,14 @@ In order to keep track on the Greyling Behaviour, we have been using Stateless s
 We hope you find this little mod fun!
 // Barg and Morg
 
+0.6 patchnotes:
+##################################
+From the book of Barg:
+Today the day 62 in this paradise world of Odin we call Valheim, Me and Morg decided to stop the education of all tamed Greylings. 
+Any Wiking who want the greyling to perform a task will have to show the greyling the task itself. As you will notice they wont learn any task, but you can at least set them on separate tasks. 
+##################################
+Added the need to educate Greylings.  Have them in follow and interact with assignment.  After several interactions with Greyling nearby It will learn how to operate.
+
 0.5 patchnotes:
 ##################################
 From the book of Barg:
