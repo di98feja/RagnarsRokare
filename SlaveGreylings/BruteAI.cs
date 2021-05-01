@@ -60,6 +60,7 @@ namespace RagnarsRokare.SlaveGreylings
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         readonly SearchForItemsBehaviour searchForItemsBehaviour;
+        readonly FightBehaviour fightBehaviour;
 
         public BruteAI() : base()
         { }
@@ -103,6 +104,9 @@ namespace RagnarsRokare.SlaveGreylings
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
+            fightBehaviour = new FightBehaviour();
+            fightBehaviour.Configure(this, Brain, State.Fight.ToString());
+
 
             ConfigureIdle();
             ConfigureFollow();
@@ -224,6 +228,20 @@ namespace RagnarsRokare.SlaveGreylings
                     Brain.Fire(Trigger.SearchForItems.ToString());
                 });
         }
+
+        private void ConfigureFight()
+        {
+            Brain.Configure(State.Fight.ToString())
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .Permit(Trigger.TakeDamage, fightBehaviour.InitState)
+                .OnEntry(t =>
+                {
+                    Debug.Log("FightBehaviour Initiated");
+                    Brain.Fire(Trigger.TakeDamage.ToString());
+                });
+        }
+
+
 
         private void ConfigureAssigned()
         {
@@ -375,6 +393,13 @@ namespace RagnarsRokare.SlaveGreylings
                 searchForItemsBehaviour.Update(this, dt);
                 return;
             }
+
+            if (Brain.IsInState(fightBehaviour.InitState))
+            {
+                fightBehaviour.Update(this, dt);
+                return;
+            }
+
         }
 
         public override void Follow(Player player)
