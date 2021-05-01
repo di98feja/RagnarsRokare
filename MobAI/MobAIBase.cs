@@ -22,7 +22,7 @@ namespace RagnarsRokare.MobAI
 
         public string learningTask;
         public int learningRate = 0;
-        public List<string> trainedAssignments = new List<string>();
+        public List<string> m_trainedAssignments = new List<string>();
 
         public string CurrentState { get; protected set; }
 
@@ -54,6 +54,14 @@ namespace RagnarsRokare.MobAI
             get
             {
                 return Instance.GetType().GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance) as ZNetView;
+            }
+        }
+
+        public string UniqueID
+        {
+            get
+            {
+                return NView.GetZDO().GetString(Constants.Z_CharacterId);
             }
         }
 

@@ -15,7 +15,7 @@ namespace SlaveGreylings
                 foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
-                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.trainedAssignments.Contains(interactName))
+                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.m_trainedAssignments.Contains(interactName))
                     { 
                         if (mob.learningTask == interactName)
                         {
@@ -45,9 +45,11 @@ namespace SlaveGreylings
                         }
                         if (mob.learningRate == 5)
                         {
-                            mob.trainedAssignments.Add(interactName);
+                            mob.m_trainedAssignments.Add(interactName);
+                            mob.NView.GetZDO().Set(Constants.Z_trainedAssignments, mob.m_trainedAssignments.Join());
+                            mob.NView.InvokeRPC(Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
                             Debug.Log($"{interactName} learnt .");
-                            Debug.Log($"Accepted Assignments: {mob.trainedAssignments.Join()}.");
+                            Debug.Log($"Accepted Assignments: {mob.m_trainedAssignments.Join()}.");
                             mob.learningTask = "";
                             mob.learningRate = 0;
                         }
@@ -64,7 +66,7 @@ namespace SlaveGreylings
                 foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.gameObject.name);
-                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.trainedAssignments.Contains(interactName))
+                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.m_trainedAssignments.Contains(interactName))
                     {
                         if (mob.learningTask == interactName)
                         {
@@ -94,9 +96,11 @@ namespace SlaveGreylings
                         }
                         if (mob.learningRate == 5)
                         {
-                            mob.trainedAssignments.Add(interactName);
+                            mob.m_trainedAssignments.Add(interactName);
+                            mob.NView.GetZDO().Set(Constants.Z_trainedAssignments, mob.m_trainedAssignments.Join());
+                            mob.NView.InvokeRPC(Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
                             Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: The greyling have now learnt how to operate {interactName}.");
-                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: List of known assignments: {mob.trainedAssignments.Join()}.");
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: List of known assignments: {mob.m_trainedAssignments.Join()}.");
                             mob.learningTask = "";
                             mob.learningRate = 0;
                         }
