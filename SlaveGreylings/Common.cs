@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using RagnarsRokare.MobAI;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -43,13 +44,13 @@ namespace SlaveGreylings
             return ClosestObject;
         }
 
-        public static Assignment FindRandomNearbyAssignment(Vector3 centre, MaxStack<Assignment> knownassignments)
+        public static Assignment FindRandomNearbyAssignment(Vector3 centre, List<string> trainedAssignments, MaxStack<Assignment> knownassignments)
         {
             SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(centre, (float)GreylingsConfig.AssignmentSearchRadius.Value, pieceList);
-            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && a.Activated));
+            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name))));
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
             {

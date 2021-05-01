@@ -417,7 +417,7 @@ namespace SlaveGreylings
 
         public bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
         {
-            Assignment newassignment = Common.FindRandomNearbyAssignment(center, KnownAssignments);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(center, trainedAssignments, KnownAssignments);
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);

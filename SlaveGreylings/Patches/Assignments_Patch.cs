@@ -28,8 +28,9 @@ namespace SlaveGreylings
                     }
                     if (mob.learningRate == 5 && !mob.trainedAssignments.Contains(interactName))
                     {
-                        mob.trainedAssignments.Append(interactName);
+                        mob.trainedAssignments.Add(interactName);
                         Debug.Log($"{interactName} learnt .");
+                        Debug.Log($"Accepted Assignments: {mob.trainedAssignments.Join()}.");
                         mob.learningTask = "";
                         mob.learningRate = 0;
                     }
