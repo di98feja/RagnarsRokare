@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public class GreylingAI : MobAIBase, IControllableMob
     {
@@ -68,6 +68,7 @@ namespace SlaveGreylings
 
         public GreylingAI(MonsterAI instance) : base(instance, State.Idle.ToString())
         {
+            PrintAIStateToDebug = false;
             m_assignment = new MaxStack<Assignment>(20);
             m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
             m_carrying = null;
@@ -192,7 +193,7 @@ namespace SlaveGreylings
         {
             Brain.Configure(State.Flee.ToString())
                 .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => TimeSinceHurt >= 20f)
-                .Permit(Trigger.Follow.ToString(), State.Follow.ToString())
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Got hurt, flee!");
@@ -393,7 +394,6 @@ namespace SlaveGreylings
 
             if (Brain.IsInState(State.Flee.ToString()))
             {
-                Brain.Fire(Trigger.CalmDown.ToString());
                 var fleeFrom = Attacker == null ? Character.transform.position : Attacker.transform.position;
                 Invoke<MonsterAI>(Instance, "Flee", dt, fleeFrom);
                 return;

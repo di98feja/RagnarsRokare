@@ -5,7 +5,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public partial class SlaveGreylings
     {

@@ -1,7 +1,7 @@
 ﻿using HarmonyLib;
 using System.Reflection;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public partial class SlaveGreylings
     {

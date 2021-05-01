@@ -1,6 +1,6 @@
 ﻿using BepInEx.Configuration;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public static class GreylingsConfig
     {

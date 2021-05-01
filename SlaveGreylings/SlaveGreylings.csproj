@@ -7,7 +7,7 @@
     <ProjectGuid>{0439AE94-20B4-446C-A79B-685995C8606E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SlaveGreylings</RootNamespace>
+    <RootNamespace>RagnarsRokare.SlaveGreylings</RootNamespace>
     <AssemblyName>Ragnarsrokare_SlaveGreylings</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -90,6 +90,7 @@
     <Compile Include="BruteAI.cs" />
     <Compile Include="BruteConfig.cs" />
     <Compile Include="CommonConfig.cs" />
+    <Compile Include="Patches\Piece_patch.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
     <Compile Include="SearchForItemsBehaviour.cs" />
     <Compile Include="Common.cs" />
@@ -97,7 +98,6 @@
     <Compile Include="GreylingAI.cs" />
     <Compile Include="Patches\Character_patch.cs" />
     <Compile Include="GreylingConfig.cs" />
-    <Compile Include="Constants.cs" />
     <Compile Include="Patches\Humanoid_patch.cs" />
     <Compile Include="MaxStack.cs" />
     <Compile Include="MobManager.cs" />

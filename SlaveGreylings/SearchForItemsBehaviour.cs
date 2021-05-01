@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     class SearchForItemsBehaviour : IBehaviour
     {
@@ -63,7 +63,7 @@ namespace SlaveGreylings
                 .PermitDynamic(Timeout_trigger, () => FailState)
                 .OnEntry(t =>
                 {
-                    Debug.Log("Entered SearchForItemsBehaviour");
+                    //Debug.Log("Entered SearchForItemsBehaviour");
                 });
 
             brain.Configure(SearchItemsOnGround_state)

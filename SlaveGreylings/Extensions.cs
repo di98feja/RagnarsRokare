@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public static class Extensions
     {
@@ -42,6 +42,16 @@ namespace SlaveGreylings
 
             int index = new Random().Next(list.Count());
             return list.ElementAt(index);
+        }
+
+        public static ZNetView GetNView<T>(T obj)
+        {
+            return typeof(T).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(obj) as ZNetView;
+        }
+
+        public static string GetUniqueId(this Piece p)
+        {
+            return GetNView(p)?.GetZDO().GetString(RagnarsRokare.Constants.Z_UniqueId);
         }
     }
 }

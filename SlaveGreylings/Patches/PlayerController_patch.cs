@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace SlaveGreylings.Patches
+namespace RagnarsRokare.SlaveGreylings
 {
     [RequireComponent(typeof(AudioSource))]
     [HarmonyPatch(typeof(PlayerController), "Awake")]
