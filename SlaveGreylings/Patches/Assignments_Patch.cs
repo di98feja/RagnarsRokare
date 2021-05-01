@@ -15,24 +15,91 @@ namespace SlaveGreylings
                 foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
-                    if (mob.learningTask == interactName)
-                    {
-                        mob.learningRate += 1;
-                        Debug.Log($"Learning {interactName} increased to {mob.learningRate}/5.");
+                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.trainedAssignments.Contains(interactName))
+                    { 
+                        if (mob.learningTask == interactName)
+                        {
+                            mob.learningRate += 1;
+                        }
+                        else
+                        {
+                            mob.learningTask = interactName;
+                            mob.learningRate = 0;
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Introduced to operate the {interactName}.");
+                        }
+                        if (mob.learningRate == 1)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Greyling is shaking the head when looking at {interactName}.");
+                        }
+                        if (mob.learningRate == 2)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Increasing the understanding of {interactName}.");
+                        }
+                        if (mob.learningRate == 3)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Got the basic consept of {interactName}.");
+                        }
+                        if (mob.learningRate == 4)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: There is a shine in the greylings eyes when loocking at the {interactName}.");
+                        }
+                        if (mob.learningRate == 5)
+                        {
+                            mob.trainedAssignments.Add(interactName);
+                            Debug.Log($"{interactName} learnt .");
+                            Debug.Log($"Accepted Assignments: {mob.trainedAssignments.Join()}.");
+                            mob.learningTask = "";
+                            mob.learningRate = 0;
+                        }
                     }
-                    else
+                }
+            }
+        }
+
+        [HarmonyPatch(typeof(Fireplace), "Interact")]
+        static class Fireplace_Interact_Patch
+        {
+            public static void Postfix(Fireplace __instance)
+            {
+                foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
+                {
+                    string interactName = Common.GetPrefabName(__instance.gameObject.name);
+                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.trainedAssignments.Contains(interactName))
                     {
-                        mob.learningTask = interactName;
-                        mob.learningRate = 0;
-                        Debug.Log($"Starting to learn {interactName}.");
-                    }
-                    if (mob.learningRate == 5 && !mob.trainedAssignments.Contains(interactName))
-                    {
-                        mob.trainedAssignments.Add(interactName);
-                        Debug.Log($"{interactName} learnt .");
-                        Debug.Log($"Accepted Assignments: {mob.trainedAssignments.Join()}.");
-                        mob.learningTask = "";
-                        mob.learningRate = 0;
+                        if (mob.learningTask == interactName)
+                        {
+                            mob.learningRate += 1;
+                        }
+                        else
+                        {
+                            mob.learningTask = interactName;
+                            mob.learningRate = 0;
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Introduced to operate the {interactName}.");
+                        }
+                        if (mob.learningRate == 1)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Greyling is shaking the head when looking at {interactName}.");
+                        }
+                        if (mob.learningRate == 2)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Increasing the understanding of {interactName}.");
+                        }
+                        if (mob.learningRate == 3)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Got the basic consept of {interactName}.");
+                        }
+                        if (mob.learningRate == 4)
+                        {
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: There is a shine in the greylings eyes when loocking at the {interactName}.");
+                        }
+                        if (mob.learningRate == 5)
+                        {
+                            mob.trainedAssignments.Add(interactName);
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: The greyling have now learnt how to operate {interactName}.");
+                            Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: List of known assignments: {mob.trainedAssignments.Join()}.");
+                            mob.learningTask = "";
+                            mob.learningRate = 0;
+                        }
                     }
                 }
             }
