@@ -335,7 +335,7 @@ namespace RagnarsRokare.SlaveGreylings
             }
             if ((m_roarTimer += dt) > RoarTimeout)
             {
-                var nearbyMobs = MobManager.Mobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f).Where(m => m.UniqueId != this.UniqueId);
+                var nearbyMobs = MobManager.Mobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f).Where(m => m.UniqueID != this.UniqueID);
                 if (nearbyMobs.Any())
                 {
                     Instance.m_alertedEffects.Create(Instance.transform.position, Quaternion.identity);

@@ -3,7 +3,7 @@ using UnityEngine;
 using RagnarsRokare.MobAI;
 using System.Linq;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public partial class SlaveGreylings
     {

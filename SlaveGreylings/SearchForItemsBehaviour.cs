@@ -63,7 +63,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .PermitDynamic(Timeout_trigger, () => FailState)
                 .OnEntry(t =>
                 {
-                    Debug.Log("Entered SearchForItemsBehaviour");
+                    //Debug.Log("Entered SearchForItemsBehaviour");
                 })
                 .OnExit(t =>
                 {
