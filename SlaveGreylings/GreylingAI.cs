@@ -89,6 +89,7 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     m_trainedAssignments.Clear();
                     m_trainedAssignments.AddRange(trainedAssignments.Split());
+                    Debug.Log("Assignment added");
                 }
             });
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());

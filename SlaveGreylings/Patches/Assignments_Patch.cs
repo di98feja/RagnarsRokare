@@ -52,7 +52,7 @@ namespace RagnarsRokare.SlaveGreylings
                         {
                             mob.m_trainedAssignments.Add(interactName);
                             mob.NView.GetZDO().Set(Constants.Z_trainedAssignments, mob.m_trainedAssignments.Join());
-                            mob.NView.InvokeRPC(Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
+                            mob.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
                             Debug.Log($"{interactName} learnt .");
                             Debug.Log($"Accepted Assignments: {mob.m_trainedAssignments.Join()}.");
                             mob.learningTask = "";
@@ -108,7 +108,7 @@ namespace RagnarsRokare.SlaveGreylings
                         {
                             mob.m_trainedAssignments.Add(interactName);
                             mob.NView.GetZDO().Set(Constants.Z_trainedAssignments, mob.m_trainedAssignments.Join());
-                            mob.NView.InvokeRPC(Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
+                            mob.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
                             Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: The greyling have now learnt how to operate {interactName}.");
                             Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: List of known assignments: {mob.m_trainedAssignments.Join()}.");
                             mob.learningTask = "";
