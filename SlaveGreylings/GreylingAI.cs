@@ -89,7 +89,7 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     m_trainedAssignments.Clear();
                     m_trainedAssignments.AddRange(trainedAssignments.Split());
-                    Debug.Log("Assignment added");
+                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "A greyling learned a new skill.");
                 }
             });
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());
