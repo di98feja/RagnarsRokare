@@ -92,7 +92,7 @@ namespace RagnarsRokare.SlaveGreylings
 
             if (aiBase.Brain.IsInState(State.TrackingEnemy))
             {
-                aiBase.MoveAndAvoidFire(Common.Invoke<Character>(aiBase, "m_targetCreature").transform.position, dt, 0.5f);
+                //aiBase.MoveAndAvoidFire(Common.Invoke<Character>(aiBase, "m_targetCreature").transform.position, dt, 0.5f);
             }
         }
 
