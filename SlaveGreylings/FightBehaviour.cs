@@ -23,7 +23,8 @@ namespace RagnarsRokare.SlaveGreylings
         {
             public const string Failed = Prefix + "Failed";
             public const string Timeout = Prefix + "Timeout";
-            public const string FoundTarget = Prefix + "FoundTarget";
+            public const string FoundTarget = Prefix + "FoundTarget"; 
+            public const string ReachedTarget = Prefix + "ReachedTarget";
         }
         
         
@@ -38,11 +39,12 @@ namespace RagnarsRokare.SlaveGreylings
         public string InitState { get { return State.Main; } }
 
         private MobAIBase m_aiBase;
+        private ItemDrop.ItemData m_bestAttack;
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
-
+            
             brain.Configure(State.Main)
                 .InitialTransition(State.IdentifyEnemy)
                 .SubstateOf(parentState)
@@ -61,13 +63,16 @@ namespace RagnarsRokare.SlaveGreylings
 
             brain.Configure(State.TrackingEnemy)
                 .SubstateOf(State.Main)
+                .Permit(Trigger.ReachedTarget, State.EngaugingEnemy)
                 .OnEntry(t =>
                 {
-
+                    
                 });
 
             brain.Configure(State.EngaugingEnemy)
                 .SubstateOf(State.Main)
+                .Permit(Trigger.ReachedTarget, State.EngaugingEnemy)
+                .Permit(Trigger.ReachedTarget, State.EngaugingEnemy)
                 .OnEntry(t =>
                 {
 
@@ -92,7 +97,10 @@ namespace RagnarsRokare.SlaveGreylings
 
             if (aiBase.Brain.IsInState(State.TrackingEnemy))
             {
-                //aiBase.MoveAndAvoidFire(Common.Invoke<Character>(aiBase, "m_targetCreature").transform.position, dt, 0.5f);
+                //m_bestAttack = Common.Invoke<MonsterAI>(aiBase, "SelectBestAttack", (aiBase.Character as Humanoid), dt);
+                Vector3 targetPosition = Common.TargetCreature(aiBase.Character).transform.position;
+                aiBase.MoveAndAvoidFire(targetPosition, dt, 0.5f);
+                if(Vector3.Distance(targetPosition, aiBase.Character.transform.position) < 2f) aiBase.Brain.Fire(Trigger.ReachedTarget);
             }
         }
 

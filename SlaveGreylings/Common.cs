@@ -17,6 +17,11 @@ namespace RagnarsRokare.SlaveGreylings
             return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
         }
 
+        public static Character TargetCreature(Character mob)
+        {
+            return mob.GetType().GetField("m_targetCreature", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(mob) as Character;
+        }
+
         public static ItemDrop GetNearbyItem(Vector3 center, IEnumerable<ItemDrop.ItemData> acceptedNames, int range = 10)
         {
             ItemDrop ClosestObject = null;
