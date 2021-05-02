@@ -7,7 +7,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     [BepInProcess("valheim.exe")]
     [BepInPlugin(ModId, ModName, ModVersion)]

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public class MaxStack<T> : IEnumerable<T>
     {

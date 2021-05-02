@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     class FightBehaviour : IBehaviour
     {
