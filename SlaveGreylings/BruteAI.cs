@@ -92,6 +92,11 @@ namespace RagnarsRokare.SlaveGreylings
                 if (NView.IsOwner())
                 {
                     SlaveGreylings.Dbgl($"Saving {m_assignment.Count()} assignments");
+                    SlaveGreylings.Dbgl($"Removed {m_assignment.Where(p => !Extensions.GetNView(p).IsValid()).Count()} invalid assignments");
+                    foreach (var piece in m_assignment.Where(p => !Extensions.GetNView(p).IsValid()))
+                    {
+                        m_assignment.Remove(piece);
+                    }
                     NView.GetZDO().Set("RR_SavedAssignmentList", string.Join(",", m_assignment.Select(p => p.GetUniqueId())));
                 }
                 else
@@ -155,6 +160,7 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
+                    Character.SetMoveDir(Vector3.zero);
                 });
         }
 
@@ -180,6 +186,10 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
                     m_foodsearchtimer = 0f;
+                })
+                .OnExit(t => 
+                {
+                    Character.SetMoveDir(Vector3.zero);
                 });
 
             Brain.Configure(State.SearchForFood)
@@ -248,8 +258,6 @@ namespace RagnarsRokare.SlaveGreylings
                 });
         }
 
-
-
         private void ConfigureAssigned()
         {
             Brain.Configure(State.Assigned)
@@ -263,7 +271,7 @@ namespace RagnarsRokare.SlaveGreylings
                     UpdateAiStatus(NView, $"uuhhhmm..  checkin' dis over 'ere");
                     m_assignedTimer = 0;
                 });
-        
+
             Brain.Configure(State.MoveToAssignment)
                 .SubstateOf(State.Assigned)
                 .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => MoveToAssignment(arg.dt))
@@ -271,6 +279,10 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     UpdateAiStatus(NView, $"Moving to assignment {m_assignment.Peek().m_name}");
                     m_closeEnoughTimer = 0;
+                })
+                .OnExit(t =>
+                {
+                    Character.SetMoveDir(Vector3.zero);
                 });
 
             Brain.Configure(State.CheckRepairState)

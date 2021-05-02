@@ -218,6 +218,7 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
+                    Character.SetMoveDir(Vector3.zero);
                 });
         }
 
@@ -234,6 +235,7 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
+                    Character.SetMoveDir(Vector3.zero);
                 });
         }
 
