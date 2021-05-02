@@ -17,7 +17,7 @@ namespace RagnarsRokare.SlaveGreylings
         public const string ModName = "RagnarsRökare SlaveGreylings";
         public const string ModVersion = "0.6";
 
-        private static readonly bool isDebug = false;
+        private static readonly bool isDebug = true;
         
         public static AudioClip CallHomeSfx { get; private set; }
 

@@ -71,7 +71,6 @@ namespace RagnarsRokare.SlaveGreylings
 
         public GreylingAI(MonsterAI instance) : base(instance, State.Idle.ToString())
         {
-            PrintAIStateToDebug = false;
             m_assignment = new MaxStack<Assignment>(20);
             m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
             m_carrying = null;
@@ -404,8 +403,6 @@ namespace RagnarsRokare.SlaveGreylings
             m_triggerTimer = 0f;
             var monsterAi = Instance as MonsterAI;
             Vector3 greylingPosition = this.Character.transform.position;
-
-            SlaveGreylings.Dbgl($"Greyling:{greylingPosition}, monsterAi:{monsterAi.transform.position}");
 
             //Runtime triggers
             Brain.Fire(Trigger.TakeDamage.ToString());

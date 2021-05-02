@@ -98,20 +98,20 @@ namespace RagnarsRokare.SlaveGreylings
                 var mob = MobManager.CreateMob(Common.GetPrefabName(instance.gameObject.name), instance);
                 if (mob == null)
                 {
-                    Dbgl($"Failed to create mob of {Common.GetPrefabName(instance.gameObject.name)}");
+                    Dbgl($"Failed to create mob of {Common.GetPrefabName(instance.gameObject.name)}', IsOwner:{nview.IsOwner()}");
                     return null;
                 }
 
                 if (MobManager.IsControlledMob(uniqueId))
                 {
-                    Dbgl($"Replacing old instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
+                    Dbgl($"Replacing old instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}', IsOwner:{nview.IsOwner()}");
                     MobManager.Mobs[uniqueId] = mob;
                     MobManager.RemoveStaleInstance(uniqueId);
                     MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
                 }
                 else
                 {
-                    Dbgl($"Adding new instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
+                    Dbgl($"Adding new instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}', IsOwner:{nview.IsOwner()}");
                     MobManager.Mobs.Add(uniqueId, mob);
                     MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
                 }
