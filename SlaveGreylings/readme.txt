@@ -14,7 +14,7 @@ Soon the enslavement can be perfected.
 
 ###############################
 
-This mod is enabeling the taming (enslavement) of greylings, allowing the player to drag them home to the village and set them to perform simple tasks such as refilling kiln, fireplaces and smelters.
+This mod enables the taming (enslavement) of certain creatures, allowing the player to drag them home to the village and set them to perform chores around the settlement.
 
 Made and tested with Valheim v0.150.3
 
@@ -22,25 +22,28 @@ Installation:
 Copy the contents of the RagnarsRokare_SlaveGreyling.zip file to your BepInEx plugin folder under Valheim
 
 Usage:
-In order to tame a Greyling you need to "feed" (bribe) it with silver necklaces until it's tame (typically two is needed). Bribe and times are configurable.
-When tamed the greyling will need Resin to keep working (also this feedtime is configurable).
+In order to tame a creature you need to "feed" (bribe) it with the appropriate item until it's tame. Bribe and times are configurable.
+When tamed the creature will need to be fed to keep working.
 
 Tapping E will toggle between Follow and Performing tasks.
 Holding E will enable name change.
-Press CallHome key (Home by default) to call all slaves within earshot
+Press CallHome key (Home by default) to call all slaves within earshot.
 
-When in performing task mode the Greyling will search nearby radius for enabled tasks. It's possible to dissable tasks in the config.
+Some creatures will have to be shown and taught before beeing able to perform tasks, others have a more natural instinct.
+
+When in performing task mode the creeature will search nearby for fitting tasks.
 At the task it will identify what is missing and search ground and nearby chests for needed items.  After a certain time or when task is finished it will continue to next task.
 Many distanses and timers are configurable for better adjustments, some of them require restart for effect to take place.
 
 Tips:
 The Greyling is not very smart (this is intended) and easily gets confused. It might get stuck in tight corners or behind walls. Avoid tight multi level designs for where you deploy enslaved greylings.
+The Brute is tall! Don't expect it to pass through normal doors.
 
 Please note that this is a work in progress, we will add new features/creatures and take disciplinary action against unruly or misbehaving Greylings.
 
 The code can be found at https://github.com/di98feja/RagnarsRokare
 
-In order to keep track on the Greyling Behaviour, we have been using Stateless state machine (found at https://github.com/dotnet-state-machine/stateless). Thank you stateless team!
+In order to keep build the creatures behaviour, we have been using Stateless state machine (found at https://github.com/dotnet-state-machine/stateless). Thank you stateless team!
 
 We hope you find this little mod fun!
 // Barg and Morg
@@ -48,10 +51,21 @@ We hope you find this little mod fun!
 0.6 patchnotes:
 ##################################
 From the book of Barg:
-Today the day 62 in this paradise world of Odin we call Valheim, Me and Morg decided to stop the education of all tamed Greylings. 
-Any Wiking who want the greyling to perform a task will have to show the greyling the task itself. As you will notice they wont learn any task, but you can at least set them on separate tasks. 
+Today the day 63 in this paradise world of Odin we call Valheim, Me and Morg decided to stop the education of all tamed Greylings. 
+Any Viking who want the greyling to perform a task will have to show the greyling the task itself. As you will notice they wont learn any task, but you can at least set them on separate tasks. 
+
+From The book of Barg:
+Today the day 65 in this paradise world of Odin we call Valheim. Today Huginn must have whispered in his masters ear about my earlier thoughts.
+I was foraging in the dark forest when I came upon a tower ruin that was in pretty good condition. But what was inside was the greater supprise.
+An enourmous greydwarf was trapped inside the tower, to large to fit its arched doorway. It must have been in there since it was a mere sapling.
+This was the perfect opportunity to find a way to make the creature docile enough to use as labor around the settlement. 
+Many hours and many attempts later Morg brought what would be they key to success, Dandelions.
+This pretty little weed seemed to bring peace to the mind of the giant creature and soon enough it had settled down. I named it Brutus and we had to tear down a wall in the tower to get it out.
+Almost giddy with excitement we soon discovered what I had hoped to be true, it could use its rock-fist as a hammer and showed great skill when it came to repairing worn down structures.
+It is truly a remarkable world that Odin has put us upon!
 ##################################
 Added the need to educate Greylings.  Have them in follow and interact with assignment.  After several interactions with Greyling nearby It will learn how to operate.
+Added Greydwarf Brutes as tamable creatures. Start picking dandelions..
 
 0.5 patchnotes:
 ##################################

@@ -1,9 +1,6 @@
 ﻿using HarmonyLib;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace RagnarsRokare.SlaveGreylings
 {
@@ -101,20 +98,20 @@ namespace RagnarsRokare.SlaveGreylings
                 var mob = MobManager.CreateMob(Common.GetPrefabName(instance.gameObject.name), instance);
                 if (mob == null)
                 {
-                    Debug.LogWarning($"Failed to create mob of {Common.GetPrefabName(instance.gameObject.name)}");
+                    Dbgl($"Failed to create mob of {Common.GetPrefabName(instance.gameObject.name)}");
                     return null;
                 }
 
                 if (MobManager.IsControlledMob(uniqueId))
                 {
-                    Debug.LogWarning($"Replacing old instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
+                    Dbgl($"Replacing old instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
                     MobManager.Mobs[uniqueId] = mob;
                     MobManager.RemoveStaleInstance(uniqueId);
                     MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
                 }
                 else
                 {
-                    Debug.LogWarning($"Adding new instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
+                    Dbgl($"Adding new instance of mob '{nview.GetZDO().GetString(Constants.Z_GivenName)}'");
                     MobManager.Mobs.Add(uniqueId, mob);
                     MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
                 }
