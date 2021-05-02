@@ -21,9 +21,13 @@ namespace RagnarsRokare.SlaveGreylings
         private float m_assignedTimer;
         private float m_closeEnoughTimer;
         private float m_repairTimer;
+        private float m_roarTimer;
 
-        public float CloseEnoughTimeout { get; private set; } = 20;
+        // Settings
+        public float CloseEnoughTimeout { get; private set; } = 10;
         public float RepairTimeout { get; private set; } = 5;
+        public float RoarTimeout { get; private set; } = 10;
+        public float RepairMinDist { get; private set; } = 2.0f;
 
         private class State
         {
@@ -71,7 +75,7 @@ namespace RagnarsRokare.SlaveGreylings
             m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
             m_acceptedContainerNames = BruteConfig.IncludedContainersList.Value.Split();
 
-            var loadedAssignments = NView.GetZDO().GetString("RR_SavedAssignmentList").Split(',');
+            var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList).Split(',');
             var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
             var pieceDict = allPieces.ToDictionary(p => p.GetUniqueId());
             foreach (var p in loadedAssignments)
@@ -82,7 +86,7 @@ namespace RagnarsRokare.SlaveGreylings
                 }
             }
 
-            NView.Register("RR_AddAssignment", (long source, string assignment) =>
+            NView.Register(Constants.Z_AddAssignment, (long source, string assignment) =>
             {
                 if (NView.IsOwner())
                 {
@@ -272,7 +276,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .Permit(Trigger.RepairNeeded, State.RepairAssignment)
                 .OnEntry(t =>
                 {
-                    NView.InvokeRPC(ZNetView.Everybody, "RR_AddAssignment", m_assignment.Peek().GetUniqueId());
+                    NView.InvokeRPC(ZNetView.Everybody, Constants.Z_AddAssignment, m_assignment.Peek().GetUniqueId());
                     var wnt = m_assignment.Peek().GetComponent<WearNTear>();
                     float health = wnt?.GetHealthPercentage() ?? 1.0f;
                     if (health < 0.9f)
@@ -329,7 +333,20 @@ namespace RagnarsRokare.SlaveGreylings
                 m_assignment.Pop();
                 return true;
             }
-            float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? 1.0f : 2.0f;
+            if ((m_roarTimer += dt) > RoarTimeout)
+            {
+                var nearbyMobs = MobManager.Mobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f).Where(m => m.UniqueId != this.UniqueId);
+                if (nearbyMobs.Any())
+                {
+                    Instance.m_alertedEffects.Create(Instance.transform.position, Quaternion.identity);
+                    foreach (var mob in nearbyMobs)
+                    {
+                        mob.GotShoutedAtBy(this);
+                    }
+                    m_roarTimer = 0.0f;
+                }
+            }
+            float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? RepairMinDist : RepairMinDist + 1.0f;
             return MoveAndAvoidFire(m_assignment.Peek().FindClosestPoint(Instance.transform.position), dt, distance);
         }
 
@@ -370,7 +387,7 @@ namespace RagnarsRokare.SlaveGreylings
 
             //Assigned timeout-function 
             m_assignedTimer += dt;
-            if (m_assignedTimer > GreylingsConfig.TimeLimitOnAssignment.Value)
+            if (m_assignedTimer > BruteConfig.TimeLimitOnAssignment.Value)
             {
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
@@ -431,6 +448,11 @@ namespace RagnarsRokare.SlaveGreylings
                     (Instance as MonsterAI).SetFollowTarget(player.gameObject);
                 }
             }
+        }
+
+        public override void GotShoutedAtBy(MobAIBase mob)
+        {
+            Instance.m_alertedEffects.Create(Instance.transform.position, Quaternion.identity);
         }
     }
 }

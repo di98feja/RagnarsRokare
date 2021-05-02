@@ -33,7 +33,8 @@ namespace RagnarsRokare.SlaveGreylings
             MoveToAssignment,
             CheckingAssignment,
             DoneWithAssignment,
-            UnloadToAssignment
+            UnloadToAssignment,
+            MoveAwayFrom
         }
 
         public enum Trigger
@@ -51,7 +52,8 @@ namespace RagnarsRokare.SlaveGreylings
             IsCloseToAssignment,
             AssignmentTimedOut,
             AssignmentFinished,
-            LeaveAssignment
+            LeaveAssignment,
+            ShoutedAt
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
@@ -60,7 +62,7 @@ namespace RagnarsRokare.SlaveGreylings
         SearchForItemsBehaviour searchForItemsBehaviour;
         private float m_closeEnoughTimer;
         private float m_searchForNewAssignmentTimer;
-
+        private float m_shoutedAtTimer;
         public float CloseEnoughTimeout { get; private set; } = 30;
 
         public GreylingAI() : base()
@@ -91,6 +93,7 @@ namespace RagnarsRokare.SlaveGreylings
             ConfigureSearchContainers();
             ConfigureDoneWithAssignment();
             ConfigureUnloadToAssignment();
+            ConfigureShoutedAt();
         }
 
         private void ConfigureSearchContainers()
@@ -99,6 +102,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .Permit(Trigger.SearchForItems.ToString(), searchForItemsBehaviour.InitState)
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
                     searchForItemsBehaviour.KnownContainers = m_containers;
@@ -116,6 +120,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) =>
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
@@ -134,6 +139,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(UpdateTrigger, State.SearchForFood.ToString(), (arg) => (m_foodsearchtimer += arg.dt) > 10)
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
@@ -206,6 +212,22 @@ namespace RagnarsRokare.SlaveGreylings
                 });
         }
 
+        private void ConfigureShoutedAt()
+        {
+            Brain.Configure(State.MoveAwayFrom.ToString())
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => (m_shoutedAtTimer += args.dt) >= 1f)
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Ahhh Scary!");
+                    Instance.Alert();
+                })
+                .OnExit(t =>
+                {
+                    Invoke<MonsterAI>(Instance, "SetAlerted", false);
+                    Attacker = null;
+                });
+        }
+
         private void ConfigureAssigned()
         {
             Brain.Configure(State.Assigned.ToString())
@@ -214,6 +236,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
                 .Permit(Trigger.AssignmentTimedOut.ToString(), State.DoneWithAssignment.ToString())
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, $"I'm on it Boss");
@@ -392,7 +415,7 @@ namespace RagnarsRokare.SlaveGreylings
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
 
-            if (Brain.IsInState(State.Flee.ToString()))
+            if (Brain.IsInState(State.Flee.ToString()) || Brain.IsInState(State.MoveAwayFrom.ToString()))
             {
                 var fleeFrom = Attacker == null ? Character.transform.position : Attacker.transform.position;
                 Invoke<MonsterAI>(Instance, "Flee", dt, fleeFrom);
@@ -467,6 +490,13 @@ namespace RagnarsRokare.SlaveGreylings
                     (Instance as MonsterAI).SetFollowTarget(player.gameObject);
                 }
             }
+        }
+
+        public override void GotShoutedAtBy(MobAIBase mob)
+        {
+            Attacker = mob.Character;
+            m_shoutedAtTimer = 0.0f;
+            Brain.Fire(Trigger.ShoutedAt.ToString());
         }
     }
 }

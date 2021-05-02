@@ -25,7 +25,7 @@ namespace RagnarsRokare.SlaveGreylings
             ContainerSearchRadius = Config.Bind<int>("General", "Brute_ContainerSearchRadius", 10, "Radius to search for containers");
             MaxContainersInMemory = Config.Bind<int>("General", "Brute_MaxContainersInMemory", 3, "How many containers the Brute should remember contents from");
             TimeBeforeAssignmentCanBeRepeated = Config.Bind<int>("General", "Brute_TimeBeforeAssignmentCanBeRepeated", 120, "How long before assignment can be done again");
-            TimeLimitOnAssignment = Config.Bind<int>("General", "Brute_TimeLimitOnAssignment", 60, "How long before moving on to next assignment");
+            TimeLimitOnAssignment = Config.Bind<int>("General", "Brute_TimeLimitOnAssignment", 30, "How long before moving on to next assignment");
             IncludedContainersList = Config.Bind<string>("General", "Brute_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
         }
     }

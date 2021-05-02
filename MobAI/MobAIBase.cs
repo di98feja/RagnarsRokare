@@ -17,6 +17,11 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public bool HasInstance()
+        {
+            return m_instance != null;
+        }
+
         public StateMachine<string, string> Brain;
 
         public string CurrentState { get; protected set; }
@@ -52,6 +57,14 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public string UniqueId
+        {
+            get
+            {
+                return NView?.GetZDO()?.GetString(Constants.Z_CharacterId);
+            }
+        }
+
         public float TimeSinceHurt
         {
             get
@@ -65,6 +78,8 @@ namespace RagnarsRokare.MobAI
         public abstract void Follow(Player player);
 
         protected abstract void RPC_MobCommand(long sender, ZDOID playerId, string command);
+
+        public abstract void GotShoutedAtBy(MobAIBase mob);
 
         public virtual void UpdateAI(float dt)
         {
