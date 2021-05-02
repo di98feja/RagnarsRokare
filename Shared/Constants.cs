@@ -1,9 +1,8 @@
-﻿using System.Collections.Generic;
-
-namespace SlaveGreylings
+﻿namespace RagnarsRokare
 {
     public static class Constants
     {
+        public const string Z_UniqueId = "RR_UniqueId";
         public const string Z_GivenName = "RR_GivenName";
         public const string Z_AiStatus = "RR_AiStatus";
         public const string Z_CharacterId = "RR_CharId";
@@ -12,5 +11,7 @@ namespace SlaveGreylings
         public const string Z_MobCommand = "RR_MobCommand";
         public const string Z_trainedAssignments = "RR_trainedAssignments";
         public const string Z_updateTrainedAssignments = "RR_updateTrainedAssignments";
+        public const string Z_AddAssignment = "RR_AddAssignment";
+        public const string Z_SavedAssignmentList = "RR_SavedAssignmentList";
     }
 }

@@ -7,7 +7,7 @@ using System.Reflection;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     [BepInProcess("valheim.exe")]
     [BepInPlugin(ModId, ModName, ModVersion)]
@@ -23,10 +23,12 @@ namespace SlaveGreylings
 
         private void Awake()
         {
+            CommonConfig.Init(Config);
             GreylingsConfig.Init(Config);
+            BruteConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             StartCoroutine(nameof(PreloadSFX));
-            MobAIBase.PrintAIStateToDebug = GreylingsConfig.PrintAIStatusMessageToDebug.Value;
+            MobAIBase.PrintAIStateToDebug = CommonConfig.PrintAIStatusMessageToDebug.Value;
         }
 
         private IEnumerator PreloadSFX()

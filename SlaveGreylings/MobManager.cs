@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public static class MobManager
     {
@@ -13,9 +13,7 @@ namespace SlaveGreylings
 
         static MobManager()
         {
-            var it = typeof(IControllableMob);
-            var asm = Assembly.GetExecutingAssembly();
-            foreach (var mobController in asm.GetLoadableTypes().Where(it.IsAssignableFrom).Where(t => !(t.Equals(it))).ToList())
+            foreach (var mobController in GetAllControllableMobTypes())
             {
                 try
                 {
@@ -61,6 +59,21 @@ namespace SlaveGreylings
         {
             var name = Common.GetPrefabName(mobName);
             return m_mobControllers.ContainsKey(name) ? m_mobControllers[name] : null;
+        }
+
+        public static MobAIBase CreateMob(string mobName, BaseAI baseAI)
+        {
+            if (!m_mobControllers.ContainsKey(mobName)) return null;
+
+            var mobType = m_mobControllers[mobName].AIType;
+            return Activator.CreateInstance(mobType, new object[]{ baseAI }) as MobAIBase;
+        }
+
+        private static IEnumerable<Type> GetAllControllableMobTypes()
+        {
+            var it = typeof(IControllableMob);
+            var asm = Assembly.GetExecutingAssembly();
+            return asm.GetLoadableTypes().Where(it.IsAssignableFrom).Where(t => !(t.Equals(it))).ToList();
         }
     }
 }

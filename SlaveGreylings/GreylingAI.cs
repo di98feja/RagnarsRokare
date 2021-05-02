@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace SlaveGreylings
+namespace RagnarsRokare.SlaveGreylings
 {
     public class GreylingAI : MobAIBase, IControllableMob
     {
@@ -34,7 +34,8 @@ namespace SlaveGreylings
             MoveToAssignment,
             CheckingAssignment,
             DoneWithAssignment,
-            UnloadToAssignment
+            UnloadToAssignment,
+            MoveAwayFrom
         }
 
         public enum Trigger
@@ -52,7 +53,8 @@ namespace SlaveGreylings
             IsCloseToAssignment,
             AssignmentTimedOut,
             AssignmentFinished,
-            LeaveAssignment
+            LeaveAssignment,
+            ShoutedAt
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
@@ -61,8 +63,7 @@ namespace SlaveGreylings
         SearchForItemsBehaviour searchForItemsBehaviour;
         private float m_closeEnoughTimer;
         private float m_searchForNewAssignmentTimer;
-        
-
+        private float m_shoutedAtTimer;
         public float CloseEnoughTimeout { get; private set; } = 30;
 
         public GreylingAI() : base()
@@ -70,6 +71,7 @@ namespace SlaveGreylings
 
         public GreylingAI(MonsterAI instance) : base(instance, State.Idle.ToString())
         {
+            PrintAIStateToDebug = false;
             m_assignment = new MaxStack<Assignment>(20);
             m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
             m_carrying = null;
@@ -101,6 +103,7 @@ namespace SlaveGreylings
             ConfigureSearchContainers();
             ConfigureDoneWithAssignment();
             ConfigureUnloadToAssignment();
+            ConfigureShoutedAt();
         }
 
         private void ConfigureSearchContainers()
@@ -109,9 +112,9 @@ namespace SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .Permit(Trigger.SearchForItems.ToString(), searchForItemsBehaviour.InitState)
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
-                    Debug.Log("ConfigureSearchContainers Initiated");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
@@ -127,6 +130,7 @@ namespace SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) =>
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
@@ -145,6 +149,7 @@ namespace SlaveGreylings
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(UpdateTrigger, State.SearchForFood.ToString(), (arg) => (m_foodsearchtimer += arg.dt) > 10)
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Is hungry, no work a do");
@@ -167,7 +172,7 @@ namespace SlaveGreylings
                     UpdateAiStatus(NView, "*burps*");
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
-                    var animator = Instance.GetType().GetField("m_animator", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
+                    var animator = Instance.GetType().GetField("m_animator", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
                     animator.SetTrigger("consume");
                     float ConsumeHeal = (Instance as MonsterAI).m_consumeHeal;
 
@@ -204,10 +209,26 @@ namespace SlaveGreylings
         {
             Brain.Configure(State.Flee.ToString())
                 .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => TimeSinceHurt >= 20f)
-                .Permit(Trigger.Follow.ToString(), State.Follow.ToString())
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, "Got hurt, flee!");
+                    Instance.Alert();
+                })
+                .OnExit(t =>
+                {
+                    Invoke<MonsterAI>(Instance, "SetAlerted", false);
+                    Attacker = null;
+                });
+        }
+
+        private void ConfigureShoutedAt()
+        {
+            Brain.Configure(State.MoveAwayFrom.ToString())
+                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => (m_shoutedAtTimer += args.dt) >= 1f)
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus(NView, "Ahhh Scary!");
                     Instance.Alert();
                 })
                 .OnExit(t =>
@@ -225,6 +246,7 @@ namespace SlaveGreylings
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
                 .Permit(Trigger.AssignmentTimedOut.ToString(), State.DoneWithAssignment.ToString())
+                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, $"I'm on it Boss");
@@ -403,9 +425,8 @@ namespace SlaveGreylings
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
 
-            if (Brain.IsInState(State.Flee.ToString()))
+            if (Brain.IsInState(State.Flee.ToString()) || Brain.IsInState(State.MoveAwayFrom.ToString()))
             {
-                Brain.Fire(Trigger.CalmDown.ToString());
                 var fleeFrom = Attacker == null ? Character.transform.position : Attacker.transform.position;
                 Invoke<MonsterAI>(Instance, "Flee", dt, fleeFrom);
                 return;
@@ -455,9 +476,11 @@ namespace SlaveGreylings
             return new MobInfo
             {
                 Name = "Greyling",
+                AIType = this.GetType(),
                 PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
                 PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList(),
-                FeedDuration = GreylingsConfig.FeedDuration.Value,
+                PreTameFeedDuration = GreylingsConfig.FeedDuration.Value,
+                PostTameFeedDuration = GreylingsConfig.FeedDuration.Value,
                 TamingTime = GreylingsConfig.TamingTime.Value
             };
         }
@@ -477,6 +500,13 @@ namespace SlaveGreylings
                     (Instance as MonsterAI).SetFollowTarget(player.gameObject);
                 }
             }
+        }
+
+        public override void GotShoutedAtBy(MobAIBase mob)
+        {
+            Attacker = mob.Character;
+            m_shoutedAtTimer = 0.0f;
+            Brain.Fire(Trigger.ShoutedAt.ToString());
         }
 
 

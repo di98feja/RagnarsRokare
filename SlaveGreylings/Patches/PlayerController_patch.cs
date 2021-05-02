@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
 
-namespace SlaveGreylings.Patches
+namespace RagnarsRokare.SlaveGreylings
 {
     [RequireComponent(typeof(AudioSource))]
     [HarmonyPatch(typeof(PlayerController), "Awake")]
@@ -48,7 +48,7 @@ namespace SlaveGreylings.Patches
 
         static PlayerController_FixedUpdate_Patch()
         {
-            var configValue = GreylingsConfig.CallHomeCommandKey.Value;
+            var configValue = CommonConfig.CallHomeCommandKey.Value;
             if (Enum.TryParse(configValue, out KeyCode key))
             {
                 m_callHomeKey = key;

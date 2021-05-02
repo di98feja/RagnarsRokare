@@ -1,0 +1,378 @@
+$item_amber, Material, Horizontal
+$item_amberpearl, Material, Horizontal
+$item_ancientseed, Material, Horizontal
+$item_chest_bronze, Chest, Horizontal
+$item_legs_bronze, Legs, Horizontal
+$item_chest_iron, Chest, Horizontal
+$item_legs_iron, Legs, Horizontal
+$item_chest_leather, Chest, Horizontal
+$item_legs_leather, Legs, Horizontal
+$item_chest_pcuirass, Chest, Horizontal
+$item_legs_pgreaves, Legs, Horizontal
+$item_chest_rags, Chest, Horizontal
+$item_legs_rags, Legs, Horizontal
+$item_chest_trollleather, Chest, Horizontal
+$item_legs_trollleather, Legs, Horizontal
+$item_chest_wolf, Chest, Horizontal
+$item_legs_wolf, Legs, Horizontal
+$item_arrow_bronze, Ammo, Horizontal
+$item_arrow_fire, Ammo, Horizontal
+$item_arrow_flint, Ammo, Horizontal
+$item_arrow_frost, Ammo, Horizontal
+$item_arrow_iron, Ammo, Horizontal
+$item_arrow_needle, Ammo, Horizontal
+$item_arrow_obsidian, Ammo, Horizontal
+$item_arrow_poison, Ammo, Horizontal
+$item_arrow_silver, Ammo, Horizontal
+$item_arrow_wood, Ammo, Horizontal
+$item_atgeir_blackmetal, TwoHandedWeapon, Horizontal
+$item_atgeir_bronze, TwoHandedWeapon, Horizontal
+$item_atgeir_iron, TwoHandedWeapon, Horizontal
+$item_axe_blackmetal, OneHandedWeapon, Horizontal
+$item_axe_bronze, OneHandedWeapon, Horizontal
+$item_axe_flint, OneHandedWeapon, Horizontal
+$item_axe_iron, OneHandedWeapon, Horizontal
+$item_axe_stone, OneHandedWeapon, Horizontal
+$item_barley, Material, Horizontal
+$item_barleyflour, Material, Horizontal
+$item_barleywine, Consumable, Horizontal
+$item_barleywinebase, Material, Horizontal
+$item_battleaxe, TwoHandedWeapon, Horizontal
+$customization_beard01, Customization, Horizontal
+$customization_beard10, Customization, Horizontal
+$customization_beard02, Customization, Horizontal
+$customization_beard03, Customization, Horizontal
+$customization_beard04, Customization, Horizontal
+$customization_beard05, Customization, Horizontal
+$customization_beard06, Customization, Horizontal
+$customization_beard07, Customization, Horizontal
+$customization_beard08, Customization, Horizontal
+$customization_beard09, Customization, Horizontal
+$customization_nobeard, Customization, Horizontal
+$item_beechseeds, Material, Horizontal
+$item_beltstrength, Utility, Horizontal
+$item_blackmetal, Material, Horizontal
+$item_blackmetalscrap, Material, Horizontal
+fart, OneHandedWeapon, Area
+fart, OneHandedWeapon, Area
+$item_bloodbag, Material, Horizontal
+$item_bloodpudding, Consumable, Horizontal
+$item_blueberries, Consumable, Horizontal
+boar attack1, OneHandedWeapon, Horizontal
+$item_oozebomb, OneHandedWeapon, Projectile
+$item_bonefragments, Material, Horizontal
+heal, OneHandedWeapon, Projectile
+slap, OneHandedWeapon, Horizontal
+heal, OneHandedWeapon, Projectile
+slime throw, OneHandedWeapon, Projectile
+$item_bow, Bow, Projectile
+$item_bow_draugrfang, Bow, Projectile
+$item_bow_finewood, Bow, Projectile
+$item_bow_huntsman, Bow, Projectile
+$item_bread, Consumable, Horizontal
+$item_bronze, Material, Horizontal
+$item_bronzenails, Material, Horizontal
+$item_cape_deerhide, Shoulder, Horizontal
+$item_cape_linen, Shoulder, Horizontal
+$item_cape_lox, Shoulder, Horizontal
+$item_cape_odin, Shoulder, Horizontal
+CAPE TEST, Shoulder, Horizontal
+$item_cape_trollhide, Shoulder, Horizontal
+$item_cape_wolf, Shoulder, Horizontal
+$item_carrot, Consumable, Horizontal
+$item_carrotseeds, Material, Horizontal
+$item_carrotsoup, Consumable, Horizontal
+$item_chain, Material, Horizontal
+$item_chitin, Material, Horizontal
+$item_cloudberries, Consumable, Horizontal
+$item_club, OneHandedWeapon, Horizontal
+$item_coal, Material, Horizontal
+$item_coins, Material, Horizontal
+$item_loxmeat_cooked, Consumable, Horizontal
+$item_meat_cooked, Consumable, Horizontal
+$item_copper, Material, Horizontal
+$item_copperore, Material, Horizontal
+$item_cryptkey, Misc, Horizontal
+$item_crystal, Material, Horizontal
+$item_cultivator, Tool, Horizontal
+$item_dandelion, Material, Horizontal
+Wraith melee, OneHandedWeapon, Horizontal
+$item_deerhide, Material, Horizontal
+Dragon claw left, OneHandedWeapon, Horizontal
+Dragon claw left, OneHandedWeapon, Horizontal
+Dragon claw left, OneHandedWeapon, Horizontal
+dragon breath, OneHandedWeapon, Horizontal
+dragon breath, OneHandedWeapon, Projectile
+cold ball, OneHandedWeapon, Projectile
+scream, OneHandedWeapon, None
+$item_dragonegg, Misc, Horizontal
+$item_dragontear, Material, Horizontal
+Ironhead arrow, Ammo, Horizontal
+Dragur axe, OneHandedWeapon, Horizontal
+Bow, Bow, Projectile
+Dragur axe, OneHandedWeapon, Horizontal
+StagAttack1, OneHandedWeapon, Horizontal
+StagAttack2, OneHandedWeapon, Horizontal
+StagAttack1, OneHandedWeapon, Horizontal
+slap, OneHandedWeapon, Area
+$item_elderbark, Material, Horizontal
+$item_entrails, Material, Horizontal
+$item_feathers, Material, Horizontal
+claw, OneHandedWeapon, Horizontal
+claw, OneHandedWeapon, Horizontal
+scream, OneHandedWeapon, None
+$item_finewood, Material, Horizontal
+$item_fircone, Material, Horizontal
+$item_fish_cooked, Consumable, Horizontal
+$item_fishingbait, Ammo, Horizontal
+$item_fishingrod, TwoHandedWeapon, Projectile
+$item_fish_raw, Material, Horizontal
+$item_fishwraps, Consumable, Horizontal
+$item_flametal, Material, Horizontal
+$item_flametalore, Material, Horizontal
+$item_flax, Material, Horizontal
+$item_flint, Material, Horizontal
+$item_freezegland, Material, Horizontal
+jaws, OneHandedWeapon, Vertical
+spawn, OneHandedWeapon, Projectile
+scream, OneHandedWeapon, None
+shaman attack, OneHandedWeapon, Projectile
+jaws, OneHandedWeapon, Area
+jaws, OneHandedWeapon, Horizontal
+Iron plate armor, Chest, Horizontal
+Iron plate armor, Chest, Horizontal
+Brute sword, OneHandedWeapon, Horizontal
+Iron plate armor, Helmet, Horizontal
+Iron plate armor, Helmet, Horizontal
+Iron plate armor, Legs, Horizontal
+Iron plate armor, Utility, Horizontal
+Brute sword, OneHandedWeapon, Vertical
+Iron plate armor, Shoulder, Horizontal
+Brute taunt, OneHandedWeapon, None
+Club, OneHandedWeapon, Horizontal
+Iron plate armor, Chest, Horizontal
+dragon breath, OneHandedWeapon, Projectile
+spawn, OneHandedWeapon, Projectile
+slap, OneHandedWeapon, Area
+scream, OneHandedWeapon, None
+Iron plate armor, Chest, Horizontal
+Iron plate armor, Legs, Horizontal
+fireballattack, OneHandedWeapon, Projectile
+Club, OneHandedWeapon, Horizontal
+heal, OneHandedWeapon, Projectile
+Club, Helmet, None
+Club, Helmet, None
+Club, Utility, None
+Club, Utility, None
+Iron plate armor, Chest, Horizontal
+Flint spear, OneHandedWeapon, Projectile
+Bronze sword, OneHandedWeapon, Horizontal
+Torch, OneHandedWeapon, Horizontal
+$item_goblintotem, Misc, Horizontal
+jaws, OneHandedWeapon, Horizontal
+jaws, OneHandedWeapon, Vertical
+shaman attack, OneHandedWeapon, Horizontal
+heal, OneHandedWeapon, Projectile
+throw stone, OneHandedWeapon, Projectile
+$item_greydwarfeye, Material, Horizontal
+jaws, OneHandedWeapon, Horizontal
+$item_guck, Material, Horizontal
+$customization_hair01, Customization, Horizontal
+$customization_hair10, Customization, Horizontal
+$customization_hair11, Customization, Horizontal
+$customization_hair12, Customization, Horizontal
+$customization_hair13, Customization, Horizontal
+$customization_hair14, Customization, Horizontal
+$customization_hair02, Customization, Horizontal
+$customization_hair03, Customization, Horizontal
+$customization_hair04, Customization, Horizontal
+$customization_hair05, Customization, Horizontal
+$customization_hair06, Customization, Horizontal
+$customization_hair07, Customization, Horizontal
+$customization_hair08, Customization, Horizontal
+$customization_hair09, Customization, Horizontal
+$customization_nohair, Customization, Horizontal
+$item_hammer, Tool, Horizontal
+$item_hardantler, Material, Horizontal
+cold ball, OneHandedWeapon, Projectile
+Bonemass heart, Consumable, Horizontal
+Elder heart, Consumable, Horizontal
+$item_helmet_bronze, Helmet, Horizontal
+$item_helmet_drake, Helmet, Horizontal
+$item_helmet_dverger, Helmet, Horizontal
+$item_helmet_iron, Helmet, Horizontal
+$item_helmet_leather, Helmet, Horizontal
+$item_helmet_odin, Helmet, Horizontal
+$item_helmet_padded, Helmet, Horizontal
+$item_helmet_trollleather, Helmet, Horizontal
+$item_helmet_yule, Helmet, Horizontal
+$item_hoe, Tool, Horizontal
+$item_honey, Consumable, Horizontal
+fireballattack, OneHandedWeapon, Projectile
+$item_iron, Material, Horizontal
+$item_ironnails, Material, Horizontal
+$item_ironore, Material, Horizontal
+$item_ironscrap, Material, Horizontal
+$item_knife_blackmetal, OneHandedWeapon, Horizontal
+$item_knife_chitin, OneHandedWeapon, Horizontal
+$item_knife_copper, OneHandedWeapon, Horizontal
+$item_knife_flint, OneHandedWeapon, Horizontal
+$item_leatherscraps, Material, Horizontal
+jaws, OneHandedWeapon, Horizontal
+$item_linenthread, Material, Horizontal
+lox bite, OneHandedWeapon, Horizontal
+slap, OneHandedWeapon, Area
+$item_loxmeat, Material, Horizontal
+$item_loxpelt, Material, Horizontal
+$item_loxpie, Consumable, Horizontal
+$item_mace_bronze, OneHandedWeapon, Horizontal
+$item_mace_iron, OneHandedWeapon, Horizontal
+$item_mace_needle, OneHandedWeapon, Horizontal
+$item_mace_silver, OneHandedWeapon, Horizontal
+$item_meadbasefrostresist, Material, Horizontal
+$item_meadbasehealth_medium, Material, Horizontal
+$item_meadbasehealth, Material, Horizontal
+$item_meadbasepoisonresist, Material, Horizontal
+$item_meadbasestamina_medium, Material, Horizontal
+$item_meadbasestamina, Material, Horizontal
+$item_meadbasetasty, Material, Horizontal
+$item_mead_frostres, Consumable, Horizontal
+$item_mead_hp_medium, Consumable, Horizontal
+$item_mead_hp_minor, Consumable, Horizontal
+$item_mead_poisonres, Consumable, Horizontal
+$item_mead_stamina_medium, Consumable, Horizontal
+$item_mead_stamina_minor, Consumable, Horizontal
+$item_mead_tasty, Consumable, None
+$item_mushroomcommon, Consumable, Horizontal
+$item_mushroomblue, Consumable, Horizontal
+$item_mushroomyellow, Consumable, Horizontal
+jaws, OneHandedWeapon, Horizontal
+$item_necktail, Material, Horizontal
+$item_necktailgrilled, Consumable, Horizontal
+$item_needle, Material, Horizontal
+$item_obsidian, Material, Horizontal
+$item_ooze, Material, Horizontal
+$item_pickaxe_antler, TwoHandedWeapon, Vertical
+$item_pickaxe_bronze, TwoHandedWeapon, Vertical
+$item_pickaxe_iron, TwoHandedWeapon, Vertical
+$item_pickaxe_stone, TwoHandedWeapon, Vertical
+$item_pinecone, Material, Horizontal
+Unarmed, OneHandedWeapon, Horizontal
+$item_queenbee, Material, Horizontal
+$item_queensjam, Consumable, Horizontal
+$item_raspberries, Consumable, Horizontal
+$item_meat_raw, Material, Horizontal
+$item_resin, Material, Horizontal
+$item_roundlog, Material, Horizontal
+$item_ruby, Material, Horizontal
+$item_sausages, Consumable, Horizontal
+Serpent bite, OneHandedWeapon, Horizontal
+Serpent Taunt, OneHandedWeapon, None
+$item_serpentmeat, Material, Horizontal
+$item_serpentmeatcooked, Consumable, Horizontal
+$item_serpentscale, Material, Horizontal
+$item_serpentstew, Consumable, Horizontal
+$item_sharpeningstone, Material, Horizontal
+$item_shield_banded, Shield, Horizontal
+$item_shield_blackmetal, Shield, Horizontal
+$item_shield_blackmetal_tower, Shield, Horizontal
+$item_shield_bronzebuckler, Shield, Horizontal
+$item_shield_iron_square, Shield, Horizontal
+$item_shield_iron_tower, Shield, Horizontal
+Knight shield, Shield, Horizontal
+$item_shield_serpentscale, Shield, Horizontal
+$item_shield_silver, Shield, Horizontal
+$item_shield_wood, Shield, Horizontal
+$item_shield_woodtower, Shield, Horizontal
+$item_silver, Material, Horizontal
+$item_silvernecklace, Material, Horizontal
+$item_silverore, Material, Horizontal
+Bow, Bow, Projectile
+Dragur axe, OneHandedWeapon, Horizontal
+Dragur axe, OneHandedWeapon, Horizontal
+$item_sledge_iron, TwoHandedWeapon, Area
+$item_stagbreaker, TwoHandedWeapon, Area
+$item_spear_bronze, OneHandedWeapon, Horizontal
+$item_spear_chitin, OneHandedWeapon, Projectile
+$item_spear_ancientbark, OneHandedWeapon, Horizontal
+$item_spear_flint, OneHandedWeapon, Horizontal
+$item_spear_wolffang, OneHandedWeapon, Horizontal
+Stamina Greydwarf, Consumable, Horizontal
+Stamina Troll, Consumable, Horizontal
+Stamina Wraith, Consumable, Horizontal
+$item_stone, Material, Horizontal
+slap, OneHandedWeapon, Vertical
+slap, OneHandedWeapon, Horizontal
+Spike attack, OneHandedWeapon, Vertical
+One hand ground slam, OneHandedWeapon, Vertical
+Spike sweep, OneHandedWeapon, Horizontal
+, Chest, Horizontal
+, Helmet, Horizontal
+, Chest, Horizontal
+$item_surtlingcore, Material, Horizontal
+$item_sword_blackmetal, OneHandedWeapon, Horizontal
+$item_sword_bronze, OneHandedWeapon, Horizontal
+Cheat sword, OneHandedWeapon, Horizontal
+$item_sword_iron, OneHandedWeapon, Horizontal
+$item_sword_fire, OneHandedWeapon, Horizontal
+$item_sword_silver, OneHandedWeapon, Horizontal
+$item_tankard, OneHandedWeapon, None
+$item_tankard_odin, OneHandedWeapon, None
+Dragur axe, OneHandedWeapon, Vertical
+$item_thistle, Material, Horizontal
+$item_tin, Material, Horizontal
+$item_tinore, Material, Horizontal
+$item_torch, Torch, Horizontal
+slap, OneHandedWeapon, Vertical
+LOG, OneHandedWeapon, Horizontal
+LOG, OneHandedWeapon, Vertical
+slap, OneHandedWeapon, Horizontal
+fireballattack, OneHandedWeapon, Projectile
+$item_trollhide, Material, Horizontal
+$item_trophy_blob, Trophie, Horizontal
+$item_trophy_boar, Trophie, Horizontal
+$item_trophy_bonemass, Trophie, Horizontal
+$item_trophy_deathsquito, Trophie, Horizontal
+$item_trophy_deer, Trophie, Horizontal
+$item_trophy_dragonqueen, Trophie, Horizontal
+$item_trophy_draugr, Trophie, Horizontal
+$item_trophy_draugrelite, Trophie, Horizontal
+$item_trophy_draugr, Trophie, Horizontal
+$item_trophy_eikthyr, Trophie, Horizontal
+$item_trophy_fenring, Trophie, Horizontal
+$item_trophy_troll, Trophie, Horizontal
+$item_trophy_troll, Trophie, Horizontal
+$item_trophy_goblin, Trophie, Horizontal
+$item_trophy_goblinbrute, Trophie, Horizontal
+$item_trophy_goblinking, Trophie, Horizontal
+$item_trophy_goblinshaman, Trophie, Horizontal
+$item_trophy_greydwarf, Trophie, Horizontal
+$item_trophy_greydwarfbrute, Trophie, Horizontal
+$item_trophy_greydwarfshaman, Trophie, Horizontal
+$item_trophy_hatchling, Trophie, Horizontal
+$item_trophy_leech, Trophie, Horizontal
+$item_trophy_lox, Trophie, Horizontal
+$item_trophy_neck, Trophie, Horizontal
+$item_trophy_serpent, Trophie, Horizontal
+$item_trophy_sgolem, Trophie, Horizontal
+$item_trophy_skeleton, Trophie, Horizontal
+$item_trophy_skeletonpoison, Trophie, Horizontal
+$item_trophy_surtling, Trophie, Horizontal
+$item_trophy_elder, Trophie, Horizontal
+$item_trophy_wolf, Trophie, Horizontal
+$item_trophy_wraith, Trophie, Horizontal
+$item_turnip, Material, Horizontal
+$item_turnipseeds, Material, Horizontal
+$item_turnipstew, Consumable, Horizontal
+Yagluth thing, Material, Horizontal
+$item_wishbone, Utility, Horizontal
+$item_witheredbone, Material, Horizontal
+WolfAttack1, OneHandedWeapon, Horizontal
+WolfAttack2, OneHandedWeapon, Horizontal
+WolfAttack3, OneHandedWeapon, Horizontal
+$item_wolffang, Material, Horizontal
+$item_wolfpelt, Material, Horizontal
+$item_wood, Material, Horizontal
+Wraith melee, OneHandedWeapon, Vertical
+Yagluth thing, Material, Horizontal
+$item_ymirremains, Material, Horizontal

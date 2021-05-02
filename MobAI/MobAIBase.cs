@@ -18,6 +18,11 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public bool HasInstance()
+        {
+            return m_instance != null;
+        }
+
         public StateMachine<string, string> Brain;
 
         public string learningTask;
@@ -78,6 +83,8 @@ namespace RagnarsRokare.MobAI
         public abstract void Follow(Player player);
 
         protected abstract void RPC_MobCommand(long sender, ZDOID playerId, string command);
+
+        public abstract void GotShoutedAtBy(MobAIBase mob);
 
         public virtual void UpdateAI(float dt)
         {
