@@ -78,6 +78,7 @@ namespace RagnarsRokare.SlaveGreylings
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList).Split(',');
             var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
             var pieceDict = allPieces.ToDictionary(p => p.GetUniqueId());
+            SlaveGreylings.Dbgl($"Loading {loadedAssignments.Count()} assignments");
             foreach (var p in loadedAssignments)
             {
                 if (pieceDict.ContainsKey(p))
@@ -90,10 +91,12 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 if (NView.IsOwner())
                 {
+                    SlaveGreylings.Dbgl($"Saving {m_assignment.Count()} assignments");
                     NView.GetZDO().Set("RR_SavedAssignmentList", string.Join(",", m_assignment.Select(p => p.GetUniqueId())));
                 }
                 else
                 {
+                    SlaveGreylings.Dbgl($"Push new assignment");
                     allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
                     var addedPiece = allPieces.Where(p => p.GetUniqueId() == assignment).FirstOrDefault();
                     if (null != addedPiece && !m_assignment.Contains(addedPiece))
