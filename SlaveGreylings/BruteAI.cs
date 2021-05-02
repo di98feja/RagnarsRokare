@@ -301,12 +301,16 @@ namespace RagnarsRokare.SlaveGreylings
                     {
                         var zAnim = typeof(Character).GetField("m_zanim", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Character) as ZSyncAnimation;
                         ItemDrop.ItemData currentWeapon = (Character as Humanoid).GetCurrentWeapon();
+                        if (null == currentWeapon)
+                        {
+                            currentWeapon = (Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault();
+                            (Character as Humanoid).EquipItem(currentWeapon);
+                        }
                         zAnim.SetTrigger(currentWeapon.m_shared.m_attack.m_attackAnimation);
                         hammerAnimationStarted = true;
                     }
                     return m_repairTimer >= RepairTimeout;
                 })
-                .PermitIf(UpdateTrigger, State.Idle, (arg) => (m_repairTimer += arg.dt) > RepairTimeout)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(NView, $"Fixin Dis {m_assignment.Peek().m_name}");
