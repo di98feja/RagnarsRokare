@@ -98,7 +98,7 @@ namespace RagnarsRokare.SlaveGreylings
                     {
                         m_assignment.Remove(piece);
                     }
-                    NView.GetZDO().Set("RR_SavedAssignmentList", string.Join(",", m_assignment.Select(p => p.GetUniqueId())));
+                    NView.GetZDO().Set(Constants.Z_SavedAssignmentList, string.Join(",", m_assignment.Select(p => p.GetUniqueId())));
                 }
                 else
                 {
