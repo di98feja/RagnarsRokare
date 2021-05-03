@@ -48,6 +48,11 @@ In order to keep build the creatures behaviour, we have been using Stateless sta
 We hope you find this little mod fun!
 // Barg and Morg
 
+0.6.1 patch notes:
+Error on wakeup and by building/removing structures fixed.
+Error when moving to removed item/container fixed.
+
+
 0.6 patchnotes:
 ##################################
 From the book of Barg:
