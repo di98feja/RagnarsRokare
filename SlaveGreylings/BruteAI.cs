@@ -279,7 +279,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => MoveToAssignment(arg.dt))
                 .OnEntry(t =>
                 {
-                    if (Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
+                    if (Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
                     {
                         Brain.Fire(Trigger.Fail);
                         m_assignment.Pop();
@@ -300,7 +300,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .Permit(Trigger.RepairNeeded, State.RepairAssignment)
                 .OnEntry(t =>
                 {
-                    if (Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
+                    if (Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
                     {
                         Brain.Fire(Trigger.Fail);
                         m_assignment.Pop();
@@ -344,7 +344,7 @@ namespace RagnarsRokare.SlaveGreylings
                 })
                 .OnEntry(t =>
                 {
-                    if (Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
+                    if (Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
                     {
                         Brain.Fire(Trigger.Fail);
                         m_assignment.Pop();
@@ -356,7 +356,7 @@ namespace RagnarsRokare.SlaveGreylings
                 })
                 .OnExit(t =>
                 {
-                    if (t.Trigger == Trigger.Fail || Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false) return;
+                    if (t.Trigger == Trigger.Fail || Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false) return;
 
                     var pieceToRepair = m_assignment.Peek();
                     UpdateAiStatus(NView, $"Dis {m_assignment.Peek().m_name} is goood as new!");
