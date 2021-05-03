@@ -78,7 +78,7 @@ namespace RagnarsRokare.SlaveGreylings
 
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList).Split(',');
             var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
-            var pieceDict = allPieces.ToDictionary(p => p.GetUniqueId());
+            var pieceDict = allPieces.Where(p => Common.GetNView(p)?.IsValid() ?? false).ToDictionary(p => p.GetUniqueId());
             SlaveGreylings.Dbgl($"Loading {loadedAssignments.Count()} assignments");
             foreach (var p in loadedAssignments)
             {
