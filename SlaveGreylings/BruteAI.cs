@@ -59,6 +59,7 @@ namespace RagnarsRokare.SlaveGreylings
             public const string AssignmentTimedOut = "AssignmentTimedOut";
             public const string RepairNeeded = "RepairNeeded";
             public const string RepairDone = "RepairDone";
+            public const string Fail = "Fail";
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
@@ -274,9 +275,16 @@ namespace RagnarsRokare.SlaveGreylings
 
             Brain.Configure(State.MoveToAssignment)
                 .SubstateOf(State.Assigned)
+                .Permit(Trigger.Fail, State.Idle)
                 .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => MoveToAssignment(arg.dt))
                 .OnEntry(t =>
                 {
+                    if (Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
+                    {
+                        Brain.Fire(Trigger.Fail);
+                        m_assignment.Pop();
+                        return;
+                    }
                     UpdateAiStatus(NView, $"Moving to assignment {m_assignment.Peek().m_name}");
                     m_closeEnoughTimer = 0;
                 })
@@ -287,10 +295,17 @@ namespace RagnarsRokare.SlaveGreylings
 
             Brain.Configure(State.CheckRepairState)
                 .SubstateOf(State.Assigned)
+                .Permit(Trigger.Fail, State.Idle)
                 .Permit(Trigger.RepairDone, State.Idle)
                 .Permit(Trigger.RepairNeeded, State.RepairAssignment)
                 .OnEntry(t =>
                 {
+                    if (Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
+                    {
+                        Brain.Fire(Trigger.Fail);
+                        m_assignment.Pop();
+                        return;
+                    }
                     NView.InvokeRPC(ZNetView.Everybody, Constants.Z_AddAssignment, m_assignment.Peek().GetUniqueId());
                     var wnt = m_assignment.Peek().GetComponent<WearNTear>();
                     float health = wnt?.GetHealthPercentage() ?? 1.0f;
@@ -308,6 +323,7 @@ namespace RagnarsRokare.SlaveGreylings
             bool hammerAnimationStarted = false;
             Brain.Configure(State.RepairAssignment)
                 .SubstateOf(State.Assigned)
+                .Permit(Trigger.Fail, State.Idle)
                 .PermitIf(UpdateTrigger, State.Idle, (args) =>
                 {
                     m_repairTimer += args.dt;
@@ -328,12 +344,20 @@ namespace RagnarsRokare.SlaveGreylings
                 })
                 .OnEntry(t =>
                 {
+                    if (Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false)
+                    {
+                        Brain.Fire(Trigger.Fail);
+                        m_assignment.Pop();
+                        return;
+                    }
                     UpdateAiStatus(NView, $"Fixin Dis {m_assignment.Peek().m_name}");
                     m_repairTimer = 0.0f;
                     hammerAnimationStarted = false;
                 })
                 .OnExit(t =>
                 {
+                    if (t.Trigger == Trigger.Fail || Extensions.GetNView<Piece>(m_assignment.Peek())?.IsValid() == false) return;
+
                     var pieceToRepair = m_assignment.Peek();
                     UpdateAiStatus(NView, $"Dis {m_assignment.Peek().m_name} is goood as new!");
                     WearNTear component = pieceToRepair.GetComponent<WearNTear>();
