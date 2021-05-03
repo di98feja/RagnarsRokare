@@ -187,5 +187,22 @@ namespace RagnarsRokare.SlaveGreylings
             }
             return true;
         }
+
+        public static ZNetView GetNView<T>(T obj)
+        {
+            return typeof(T).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(obj) as ZNetView;
+        }
+
+        public static string GetOrCreateUniqueId(ZNetView nview)
+        {
+            var uniqueId = nview.GetZDO().GetString(Constants.Z_UniqueId);
+            if (string.IsNullOrEmpty(uniqueId))
+            {
+                uniqueId = System.Guid.NewGuid().ToString();
+                nview.GetZDO().Set(Constants.Z_UniqueId, uniqueId);
+            }
+            return uniqueId;
+        }
+
     }
 }

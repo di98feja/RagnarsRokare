@@ -92,8 +92,8 @@ namespace RagnarsRokare.SlaveGreylings
                 if (NView.IsOwner())
                 {
                     SlaveGreylings.Dbgl($"Saving {m_assignment.Count()} assignments");
-                    SlaveGreylings.Dbgl($"Removed {m_assignment.Where(p => !Extensions.GetNView(p).IsValid()).Count()} invalid assignments");
-                    foreach (var piece in m_assignment.Where(p => !Extensions.GetNView(p).IsValid()))
+                    SlaveGreylings.Dbgl($"Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
+                    foreach (var piece in m_assignment.Where(p => !Common.GetNView(p).IsValid()))
                     {
                         m_assignment.Remove(piece);
                     }
@@ -378,10 +378,11 @@ namespace RagnarsRokare.SlaveGreylings
             var piece = pieceList
                 .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
                 .Where(p => !m_assignment.Contains(p))
+                .Where(p => Common.GetNView(p)?.IsValid() ?? false)
                 .OrderBy(p => Vector3.Distance(p.GetCenter(), position))
                 .FirstOrDefault();
             SlaveGreylings.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
-            if (piece != null)
+            if (piece != null && !string.IsNullOrEmpty(Common.GetOrCreateUniqueId(Common.GetNView(piece))))
             {
                 m_assignment.Push(piece);
                 return true;
