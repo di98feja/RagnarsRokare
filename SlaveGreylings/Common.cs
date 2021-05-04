@@ -85,7 +85,7 @@ namespace RagnarsRokare.SlaveGreylings
             Piece.GetAllPiecesInRadius(center, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
             SlaveGreylings.Dbgl($"Found { allcontainerPieces.Count() } containers, filtering");
-            var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>() ?? p.gameObject.GetComponentInChildren<Container>()).Where(c => !knownContainers.Contains(c));
+            var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c));
             if (!containers.Any())
             {
                 SlaveGreylings.Dbgl("No containers found, returning null");
