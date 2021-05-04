@@ -476,6 +476,7 @@ namespace RagnarsRokare.SlaveGreylings
             return new MobInfo
             {
                 Name = "Greyling",
+                //Name = "RRR_Hostile_T1",
                 AIType = this.GetType(),
                 PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
                 PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList(),
