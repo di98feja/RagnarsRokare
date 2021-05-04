@@ -73,28 +73,32 @@ namespace RagnarsRokare.SlaveGreylings
         public BruteAI(MonsterAI instance) : base(instance, State.Idle)
         {
             PrintAIStateToDebug = true;
-            m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
+            m_containers = new MaxStack<Container>(BruteConfig.MaxContainersInMemory.Value);
             m_acceptedContainerNames = BruteConfig.IncludedContainersList.Value.Split();
 
-            var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList).Split(',');
-            var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
-            var pieceDict = allPieces.Where(p => Common.GetNView(p)?.IsValid() ?? false).ToDictionary(p => p.GetUniqueId());
-            SlaveGreylings.Dbgl($"Loading {loadedAssignments.Count()} assignments");
-            foreach (var p in loadedAssignments)
+            var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
+            if (!string.IsNullOrEmpty(loadedAssignments))
             {
-                if (pieceDict.ContainsKey(p))
+                var assignmentList = loadedAssignments.Split(',');
+                var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
+                var pieceDict = allPieces.Where(p => Common.GetNView(p)?.IsValid() ?? false).ToDictionary(p => Common.GetOrCreateUniqueId(Common.GetNView(p)));
+                SlaveGreylings.Dbgl($"Loading {assignmentList.Count()} assignments");
+                foreach (var p in assignmentList)
                 {
-                    m_assignment.Push(pieceDict[p]);
+                    if (pieceDict.ContainsKey(p))
+                    {
+                        m_assignment.Push(pieceDict[p]);
+                    }
                 }
             }
-
             NView.Register(Constants.Z_AddAssignment, (long source, string assignment) =>
             {
                 if (NView.IsOwner())
                 {
                     SlaveGreylings.Dbgl($"Saving {m_assignment.Count()} assignments");
                     SlaveGreylings.Dbgl($"Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
-                    foreach (var piece in m_assignment.Where(p => !Common.GetNView(p).IsValid()))
+                    var assignmentsToRemove = m_assignment.Where(p => !Common.GetNView(p).IsValid());
+                    foreach (var piece in assignmentsToRemove)
                     {
                         m_assignment.Remove(piece);
                     }
@@ -103,7 +107,7 @@ namespace RagnarsRokare.SlaveGreylings
                 else
                 {
                     SlaveGreylings.Dbgl($"Push new assignment");
-                    allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
+                    var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
                     var addedPiece = allPieces.Where(p => p.GetUniqueId() == assignment).FirstOrDefault();
                     if (null != addedPiece && !m_assignment.Contains(addedPiece))
                     {
@@ -111,7 +115,6 @@ namespace RagnarsRokare.SlaveGreylings
                     }
                 }
             });
-
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
@@ -119,7 +122,6 @@ namespace RagnarsRokare.SlaveGreylings
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
             fightBehaviour = new FightBehaviour();
             fightBehaviour.Configure(this, Brain, State.Fight.ToString());
-
 
             ConfigureIdle();
             ConfigureFollow();
@@ -472,11 +474,11 @@ namespace RagnarsRokare.SlaveGreylings
         {
             return new MobInfo
             {
-                PreTameFeedDuration = BruteConfig.FeedDuration.Value,
-                PostTameFeedDuration = 1000,
-                TamingTime = 1000,
+                PreTameFeedDuration = BruteConfig.PreTameFeedDuration.Value,
+                PostTameFeedDuration = BruteConfig.PostTameFeedDuration.Value,
+                TamingTime = BruteConfig.TamingTime.Value,
                 Name = "Greydwarf_Elite",
-                PreTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() },
+                PreTameConsumables = BruteConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
                 PostTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() },
                 AIType = this.GetType()
             };
