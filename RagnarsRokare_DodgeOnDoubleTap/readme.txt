@@ -9,6 +9,7 @@ Copy the RagnarsRokare_DodgeOnDoubleTap.dll-file into the BepInEx pluginfolder a
 
 Usage:
 Do a double tap of either movement button or left game pad stick to perform a dodge roll in that direction.
+Tap and Hold also works.
 
 Configuration:
 Open the file Valheim\BepInEx\config\RagnarsRokare.DodgeOnDoubleTap.cfg in a text editor or press F1 inside Valheim.

@@ -14,7 +14,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
     {
         public const string ModId = "RagnarsRokare.DodgeOnDoubleTap";
         public const string ModName = "RagnarsRökare DodgeOnDoubleTapMod";
-        public const string ModVersion = "0.6";
+        public const string ModVersion = "0.7";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> DodgeTapHoldMax;
@@ -152,6 +152,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
                 {
                     DetectTap(true, (float)(DateTime.Now - m_forwardLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_forwardPressTimer);
                     m_forwardLastTapCheck = DateTime.Now;
+                    CheckForDoubleTapDodge((DateTime.Now - m_forwardLastTapRegistered)?.TotalMilliseconds < DodgeDoubleTapDelay.Value, ref m_forwardLastTapRegistered, DodgeDirection.Forward);
                 }
                 else
                 {
@@ -163,6 +164,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
                 {
                     DetectTap(true, (float)(DateTime.Now - m_backwardLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_backwardPressTimer);
                     m_backwardLastTapCheck = DateTime.Now;
+                    CheckForDoubleTapDodge((DateTime.Now - m_backwardLastTapRegistered)?.TotalMilliseconds < DodgeDoubleTapDelay.Value, ref m_backwardLastTapRegistered, DodgeDirection.Backward);
                 }
                 else
                 {
@@ -174,6 +176,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
                 {
                     DetectTap(true, (float)(DateTime.Now - m_leftLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_leftPressTimer);
                     m_leftLastTapCheck = DateTime.Now;
+                    CheckForDoubleTapDodge((DateTime.Now - m_leftLastTapRegistered)?.TotalMilliseconds < DodgeDoubleTapDelay.Value, ref m_leftLastTapRegistered, DodgeDirection.Left);
                 }
                 else
                 {
@@ -185,6 +188,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
                 {
                     DetectTap(true, (float)(DateTime.Now - m_rightLastTapCheck).TotalMilliseconds, DodgeTapHoldMax.Value, ref m_rightPressTimer);
                     m_rightLastTapCheck = DateTime.Now;
+                    CheckForDoubleTapDodge((DateTime.Now - m_rightLastTapRegistered)?.TotalMilliseconds < DodgeDoubleTapDelay.Value, ref m_rightLastTapRegistered, DodgeDirection.Right);
                 }
                 else
                 {
@@ -203,6 +207,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
                     if (milliesSinceLastTap < DodgeDoubleTapDelay.Value)
                     {
                         m_GamepadSecondDir = v;
+                        CheckForDoubleTapDodge(true, ref m_GamepadLastTapRegistered);
                     }
                     else
                     {
