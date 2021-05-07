@@ -13,12 +13,12 @@ namespace RagnarsRokare.MobAI
                 var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
                 if (string.IsNullOrEmpty(uniqueId)) return;
 
-                if (MobManager.IsControlledMob(uniqueId))
+                if (MobManager.IsAliveMob(uniqueId))
                 {
                     var attacker = hit.GetAttacker();
-                    if (MobManager.IsControlledMob(uniqueId))
+                    if (MobManager.IsAliveMob(uniqueId))
                     {
-                        MobManager.Mobs[uniqueId].Attacker = attacker;
+                        MobManager.AliveMobs[uniqueId].Attacker = attacker;
                     }
                 }
             }

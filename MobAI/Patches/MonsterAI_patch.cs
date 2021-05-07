@@ -42,11 +42,9 @@ namespace RagnarsRokare.SlaveGreylings
             static bool Prefix(MonsterAI __instance, float dt, ref ZNetView ___m_nview, ref Character ___m_character, ref float ___m_timeSinceHurt, 
                 ref float ___m_jumpInterval, ref float ___m_jumpTimer, ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted)
             {
-                if (!___m_character.IsTamed())
-                {
-                    return true;
-                }
-                if (!MobManager.IsControllableMob(__instance.name))
+                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+                if (string.IsNullOrEmpty(uniqueId)) return true;
+                if (!MobManager.IsAliveMob(uniqueId))
                 {
                     return true;
                 }
@@ -64,7 +62,7 @@ namespace RagnarsRokare.SlaveGreylings
                 }
 
                 BaseAI_UpdateAI_ReversePatch.UpdateAI(__instance, dt, ___m_nview, ref ___m_jumpInterval, ref ___m_jumpTimer, ref ___m_randomMoveUpdateTimer, ref ___m_timeSinceHurt, ref ___m_alerted);
-                MobManager.Mobs[mobId].UpdateAI(dt);
+                MobManager.AliveMobs[mobId].UpdateAI(dt);
 
                 return false;
             }
@@ -88,17 +86,17 @@ namespace RagnarsRokare.SlaveGreylings
                     return null;
                 }
 
-                if (MobManager.IsControlledMob(uniqueId))
+                if (MobManager.IsAliveMob(uniqueId))
                 {
                     Common.Dbgl($"Replacing old instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");
-                    MobManager.Mobs[uniqueId] = mob;
+                    MobManager.AliveMobs[uniqueId] = mob;
                     MobManager.RemoveStaleInstance(uniqueId);
                     MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
                 }
                 else
                 {
                     Common.Dbgl($"Adding new instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");
-                    MobManager.Mobs.Add(uniqueId, mob);
+                    MobManager.AliveMobs.Add(uniqueId, mob);
                     MobManager.Instances.Add(instance.gameObject.GetInstanceID(), uniqueId);
                 }
                 return uniqueId;

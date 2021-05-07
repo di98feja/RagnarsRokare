@@ -1,6 +1,5 @@
 ﻿using HarmonyLib;
 using RagnarsRokare.MobAI;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -18,7 +17,7 @@ namespace RagnarsRokare.SlaveGreylings
                 var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
                 if (string.IsNullOrEmpty(uniqueId)) return;
 
-                if (MobManager.IsControlledMob(uniqueId))
+                if (MobManager.IsAliveMob(uniqueId))
                 {
                     var attacker = hit.GetAttacker();
                     if (attacker != null && attacker.IsPlayer())
@@ -34,10 +33,11 @@ namespace RagnarsRokare.SlaveGreylings
         {
             static void Postfix(Character __instance, ref ZNetView ___m_nview)
             {
-                if (MobManager.IsControllableMob(__instance.name))
+                if (MobConfigManager.IsControllableMob(__instance.name))
                 {
+
                     string uniqueId = GetOrCreateUniqueId(___m_nview);
-                    var mobInfo = MobManager.GetMobInfo(__instance.name);
+                    var mobInfo = MobConfigManager.GetMobConfig(__instance.name);
                     Tameable tameable = GetOrAddTameable(__instance);
                     tameable.m_tamingTime = mobInfo.TamingTime;
                     tameable.m_commandable = true;
@@ -110,11 +110,11 @@ namespace RagnarsRokare.SlaveGreylings
 
             public static void RPC_UpdateCharacterName(long sender, string uniqueId, string text)
             {
-                if (!MobManager.IsControlledMob(uniqueId)) return;
+                if (!MobManager.IsAliveMob(uniqueId)) return;
                 Character greylingToUpdate;
                 try
                 {
-                    greylingToUpdate = MobManager.Mobs[uniqueId].Character;
+                    greylingToUpdate = MobManager.AliveMobs[uniqueId].Character;
                 }
                 catch (System.Exception)
                 { 

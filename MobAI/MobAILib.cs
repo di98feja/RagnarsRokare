@@ -18,7 +18,6 @@ namespace RagnarsRokare.MobAI
             GreylingsConfig.Init(Config);
             BruteConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-            MobAIBase.PrintAIStateToDebug = CommonConfig.PrintAIStatusMessageToDebug.Value;
         }
     }
 }

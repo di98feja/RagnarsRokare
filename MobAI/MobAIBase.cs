@@ -129,7 +129,7 @@ namespace RagnarsRokare.MobAI
             return null;
         }
 
-        public static bool PrintAIStateToDebug { get; set; } = false;
+        public static bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
 
         public static string UpdateAiStatus(ZNetView nview, string newStatus)
         {

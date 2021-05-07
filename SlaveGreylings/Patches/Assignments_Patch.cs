@@ -12,7 +12,7 @@ namespace RagnarsRokare.SlaveGreylings
         {
             public static void Postfix(Switch __instance)
             {
-                foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
+                foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
                     if (mob.m_trainedAssignments.Contains(interactName))
@@ -68,7 +68,7 @@ namespace RagnarsRokare.SlaveGreylings
         {
             public static void Postfix(Fireplace __instance)
             {
-                foreach (MobAIBase mob in MobManager.Mobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
+                foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.gameObject.name);
                     if (mob.m_trainedAssignments.Contains(interactName))

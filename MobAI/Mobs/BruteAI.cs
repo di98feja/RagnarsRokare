@@ -378,7 +378,7 @@ namespace RagnarsRokare.MobAI
             }
             if ((m_roarTimer += dt) > RoarTimeout)
             {
-                var nearbyMobs = MobManager.Mobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f).Where(m => m.UniqueID != this.UniqueID);
+                var nearbyMobs = MobManager.AliveMobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f).Where(m => m.UniqueID != this.UniqueID);
                 if (nearbyMobs.Any())
                 {
                     Instance.m_alertedEffects.Create(Instance.transform.position, Quaternion.identity);
@@ -472,12 +472,7 @@ namespace RagnarsRokare.MobAI
         {
             return new MobInfo
             {
-                PreTameFeedDuration = BruteConfig.PreTameFeedDuration.Value,
-                PostTameFeedDuration = BruteConfig.PostTameFeedDuration.Value,
-                TamingTime = BruteConfig.TamingTime.Value,
                 Name = "Greydwarf_Elite",
-                PreTameConsumables = BruteConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
-                PostTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() },
                 AIType = this.GetType()
             };
         }

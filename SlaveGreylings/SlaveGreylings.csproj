@@ -87,7 +87,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BruteConfig.cs" />
     <Compile Include="CommonConfig.cs" />
+    <Compile Include="GreylingConfig.cs" />
+    <Compile Include="MobConfigManager.cs" />
     <Compile Include="MobInfoTest.cs" />
     <Compile Include="Patches\Assignments_Patch.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
