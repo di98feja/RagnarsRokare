@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public static class MobManager
     {

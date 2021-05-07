@@ -1,15 +1,11 @@
 ﻿using HarmonyLib;
 using RagnarsRokare.MobAI;
-using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public class Common
     {
@@ -46,7 +42,7 @@ namespace RagnarsRokare.SlaveGreylings
 
         public static Assignment FindRandomNearbyAssignment(Vector3 centre, List<string> trainedAssignments, MaxStack<Assignment> knownassignments)
         {
-            SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
+            Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(centre, (float)GreylingsConfig.AssignmentSearchRadius.Value, pieceList);
@@ -56,10 +52,10 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 return null;
             }
-            SlaveGreylings.Dbgl($"Assignments found: {allAssignablePieces.Select(n => n.name).Join()}");
+            Common.Dbgl($"Assignments found: {allAssignablePieces.Select(n => n.name).Join()}");
             // filter out assignments already in list
             var newAssignments = allAssignablePieces.Where(p => !knownassignments.Any(a => a.AssignmentObject == p.gameObject));
-            SlaveGreylings.Dbgl($"Assignments after filter: {newAssignments.Select(n => n.name).Join()}");
+            Common.Dbgl($"Assignments after filter: {newAssignments.Select(n => n.name).Join()}");
 
             // filter out inaccessible assignments
             //newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, true, true));
@@ -73,22 +69,22 @@ namespace RagnarsRokare.SlaveGreylings
             //var random = new System.Random();
             //int index = random.Next(newAssignments.Count());
             var selekted = newAssignments.RandomOrDefault();
-            SlaveGreylings.Dbgl($"Returning assignment: {selekted.name}");
+            Common.Dbgl($"Returning assignment: {selekted.name}");
             Assignment randomAssignment = new Assignment(selekted);
             return randomAssignment;
         }
 
         public static Container FindRandomNearbyContainer(Vector3 center, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames)
         {
-            SlaveGreylings.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
+            Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(center, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
-            SlaveGreylings.Dbgl($"Found { allcontainerPieces.Count() } containers, filtering");
+            Common.Dbgl($"Found { allcontainerPieces.Count() } containers, filtering");
             var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c));
             if (!containers.Any())
             {
-                SlaveGreylings.Dbgl("No containers found, returning null");
+                Common.Dbgl("No containers found, returning null");
                 return null;
             }
 
@@ -176,7 +172,7 @@ namespace RagnarsRokare.SlaveGreylings
                 }
                 if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value * multiplicator)
                 {
-                    SlaveGreylings.Dbgl($"GreAssignment: {assignment} forgotten");
+                    Common.Dbgl($"GreAssignment: {assignment} forgotten");
                     assignments.Remove(assignment);
                     if (!assignments.Any())
                     {
@@ -204,5 +200,10 @@ namespace RagnarsRokare.SlaveGreylings
             return uniqueId;
         }
 
+        public static void Dbgl(string str = "", bool pref = true)
+        {
+            if (CommonConfig.PrintDebugLog.Value)
+                Debug.Log((pref ? typeof(CommonConfig).Namespace + " " : "") + str);
+        }
     }
 }

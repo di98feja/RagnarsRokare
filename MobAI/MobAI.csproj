@@ -64,13 +64,29 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\Libs\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Libs\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\Assignment.cs" />
+    <Compile Include="Mobs\BruteAI.cs" />
+    <Compile Include="Config\BruteConfig.cs" />
+    <Compile Include="Helpers\Common.cs" />
+    <Compile Include="Config\CommonConfig.cs" />
+    <Compile Include="Helpers\Extensions.cs" />
+    <Compile Include="Behaviours\FightBehaviour.cs" />
+    <Compile Include="Mobs\GreylingAI.cs" />
+    <Compile Include="Config\GreylingConfig.cs" />
     <Compile Include="IBehaviour.cs" />
     <Compile Include="IControllableMob.cs" />
+    <Compile Include="Helpers\MaxStack.cs" />
     <Compile Include="MobAIBase.cs" />
     <Compile Include="MobInfo.cs" />
+    <Compile Include="MobManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Behaviours\SearchForItemsBehaviour.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

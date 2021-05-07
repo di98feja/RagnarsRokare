@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public class AssignmentType
     {

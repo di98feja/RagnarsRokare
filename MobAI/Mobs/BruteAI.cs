@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public class BruteAI : MobAIBase, IControllableMob
     {
@@ -82,7 +82,7 @@ namespace RagnarsRokare.SlaveGreylings
                 var assignmentList = loadedAssignments.Split(',');
                 var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
                 var pieceDict = allPieces.Where(p => Common.GetNView(p)?.IsValid() ?? false).ToDictionary(p => Common.GetOrCreateUniqueId(Common.GetNView(p)));
-                SlaveGreylings.Dbgl($"Loading {assignmentList.Count()} assignments");
+                Common.Dbgl($"Loading {assignmentList.Count()} assignments");
                 foreach (var p in assignmentList)
                 {
                     if (pieceDict.ContainsKey(p))
@@ -95,8 +95,8 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 if (NView.IsOwner())
                 {
-                    SlaveGreylings.Dbgl($"Saving {m_assignment.Count()} assignments");
-                    SlaveGreylings.Dbgl($"Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
+                    Common.Dbgl($"Saving {m_assignment.Count()} assignments");
+                    Common.Dbgl($"Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
                     var assignmentsToRemove = m_assignment.Where(p => !Common.GetNView(p).IsValid());
                     foreach (var piece in assignmentsToRemove)
                     {
@@ -106,7 +106,7 @@ namespace RagnarsRokare.SlaveGreylings
                 }
                 else
                 {
-                    SlaveGreylings.Dbgl($"Push new assignment");
+                    Common.Dbgl($"Push new assignment");
                     var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
                     var addedPiece = allPieces.Where(p => p.GetUniqueId() == assignment).FirstOrDefault();
                     if (null != addedPiece && !m_assignment.Contains(addedPiece))
@@ -397,7 +397,7 @@ namespace RagnarsRokare.SlaveGreylings
 
         private bool AddNewAssignment(Vector3 position, MaxStack<Piece> m_assignment)
         {
-            SlaveGreylings.Dbgl($"Enter {nameof(AddNewAssignment)}");
+            Common.Dbgl($"Enter {nameof(AddNewAssignment)}");
             var pieceList = new List<Piece>();
             var start = DateTime.Now;
             Piece.GetAllPiecesInRadius(position, BruteConfig.AssignmentSearchRadius.Value, pieceList);
@@ -407,7 +407,7 @@ namespace RagnarsRokare.SlaveGreylings
                 .Where(p => Common.GetNView(p)?.IsValid() ?? false)
                 .OrderBy(p => Vector3.Distance(p.GetCenter(), position))
                 .FirstOrDefault();
-            SlaveGreylings.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
+            Common.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
             if (piece != null && !string.IsNullOrEmpty(Common.GetOrCreateUniqueId(Common.GetNView(piece))))
             {
                 m_assignment.Push(piece);

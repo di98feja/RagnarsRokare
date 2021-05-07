@@ -6,7 +6,7 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public class GreylingAI : MobAIBase, IControllableMob
     {
@@ -319,7 +319,7 @@ namespace RagnarsRokare.SlaveGreylings
                     var needFuel = m_assignment.Peek().NeedFuel;
                     var needOre = m_assignment.Peek().NeedOre;
                     var fetchItems = new List<ItemDrop.ItemData>();
-                    SlaveGreylings.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
+                    Common.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
                     if (needFuel != null)
                     {
                         fetchItems.Add(needFuel);

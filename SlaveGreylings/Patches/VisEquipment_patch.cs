@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using RagnarsRokare.MobAI;
 using UnityEngine;
 
 namespace RagnarsRokare.SlaveGreylings

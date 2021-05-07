@@ -36,6 +36,7 @@ namespace RagnarsRokare.MobAI
 
         public MobAIBase(BaseAI instance, string initState)
         {
+            
             m_instance = instance;
             Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });

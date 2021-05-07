@@ -1,9 +1,10 @@
 ﻿using BepInEx.Configuration;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public static class BruteConfig
     {
+        public static ConfigEntry<string> BrutePrefabName;
         public static ConfigEntry<string> TamingItemList;
         public static ConfigEntry<int> PreTameFeedDuration;
         public static ConfigEntry<int> PostTameFeedDuration;
@@ -17,6 +18,7 @@ namespace RagnarsRokare.SlaveGreylings
 
         public static void Init(ConfigFile Config)
         {
+            BrutePrefabName = Config.Bind<string>("General", "Brute_PrefabName", "Greydwarf_Elite", "The prefab to use the Brute ai with (repair structures)");
             TamingItemList = Config.Bind<string>("General", "Brute_TamingItemList", "Dandelion", "Comma separated list if items used to tame Brutes");
             PreTameFeedDuration = Config.Bind<int>("General", "Brute_PreTameFeedDuration", 100, "Time before getting hungry after consuming one item during taming");
             PostTameFeedDuration = Config.Bind<int>("General", "Brute_PostTameFeedDuration", 1000, "Time before getting hungry after consuming one item when tame");

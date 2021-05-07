@@ -1,9 +1,10 @@
 ﻿using BepInEx.Configuration;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public static class GreylingsConfig
     {
+        public static ConfigEntry<string> GreylingPrefabName;
         public static ConfigEntry<string> TamingItemList;
         public static ConfigEntry<int> FeedDuration;
         public static ConfigEntry<int> TamingTime;
@@ -28,6 +29,7 @@ namespace RagnarsRokare.SlaveGreylings
         public static ConfigEntry<int> TimeLimitOnAssignment;
         public static void Init(ConfigFile Config)
         {
+            GreylingPrefabName = Config.Bind<string>("General", "Greyling_PrefabName", "Greyling", "The prefab to use the Greyling ai with (refilling smelters and fireplaces)");
             TamingItemList = Config.Bind<string>("General", "Greyling_TamingItemList", "SilverNecklace", "Comma separated list if items used to tame Greylings");
             FeedDuration = Config.Bind<int>("General", "Greyling_FeedDuration", 500, "Time before getting hungry after consuming one item");
             TamingTime = Config.Bind<int>("General", "Greyling_TamingTime", 1000, "Total time it takes to tame a greyling");
