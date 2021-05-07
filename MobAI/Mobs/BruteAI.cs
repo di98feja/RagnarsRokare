@@ -1,5 +1,4 @@
-﻿using RagnarsRokare.MobAI;
-using Stateless;
+﻿using Stateless;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -72,7 +71,6 @@ namespace RagnarsRokare.MobAI
 
         public BruteAI(MonsterAI instance) : base(instance, State.Idle)
         {
-            PrintAIStateToDebug = true;
             m_containers = new MaxStack<Container>(BruteConfig.MaxContainersInMemory.Value);
             m_acceptedContainerNames = BruteConfig.IncludedContainersList.Value.Split();
 

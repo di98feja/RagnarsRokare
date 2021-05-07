@@ -1,10 +1,9 @@
 ﻿using HarmonyLib;
-using RagnarsRokare.MobAI;
 using System.Reflection;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
-    public partial class SlaveGreylings
+    public partial class MobAILib
     {
         [HarmonyPatch(typeof(Humanoid), "EquipItem")]
         static class Humanoid_EquipItem_Patch

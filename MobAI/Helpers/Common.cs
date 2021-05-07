@@ -203,7 +203,9 @@ namespace RagnarsRokare.MobAI
         public static void Dbgl(string str = "", bool pref = true)
         {
             if (CommonConfig.PrintDebugLog.Value)
-                Debug.Log((pref ? typeof(CommonConfig).Namespace + " " : "") + str);
+            {
+                Debug.Log((pref ? typeof(MobAILib).Assembly + " " : "") + str);
+            }
         }
     }
 }

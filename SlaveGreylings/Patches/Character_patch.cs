@@ -15,14 +15,12 @@ namespace RagnarsRokare.SlaveGreylings
         {
             static void Prefix(ref Character __instance, ref ZNetView ___m_nview, ref HitData hit)
             {
-                if (MobManager.IsControllableMob(__instance.name) && __instance.IsTamed())
+                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+                if (string.IsNullOrEmpty(uniqueId)) return;
+
+                if (MobManager.IsControlledMob(uniqueId))
                 {
-                    var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
                     var attacker = hit.GetAttacker();
-                    if (MobManager.IsControlledMob(uniqueId))
-                    {
-                        MobManager.Mobs[uniqueId].Attacker = attacker;
-                    }
                     if (attacker != null && attacker.IsPlayer())
                     {
                         hit.m_damage.Modify(0.1f);

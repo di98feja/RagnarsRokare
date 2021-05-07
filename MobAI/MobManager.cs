@@ -20,6 +20,7 @@ namespace RagnarsRokare.MobAI
                     var instance = Activator.CreateInstance(mobController) as IControllableMob;
                     var mobInfo = instance.GetMobInfo();
                     m_mobControllers.Add(mobInfo.Name, mobInfo);
+                    Common.Dbgl($"Found MobController {mobInfo.Name}");
                 }
                 catch (Exception e)
                 {

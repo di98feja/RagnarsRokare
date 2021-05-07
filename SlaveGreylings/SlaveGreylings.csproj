@@ -88,10 +88,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommonConfig.cs" />
+    <Compile Include="MobInfoTest.cs" />
     <Compile Include="Patches\Assignments_Patch.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
     <Compile Include="Patches\Character_patch.cs" />
-    <Compile Include="Patches\Humanoid_patch.cs" />
     <Compile Include="Patches\MonsterAI_patch.cs" />
     <Compile Include="SlaveGreylings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
