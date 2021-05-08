@@ -47,7 +47,7 @@ namespace RagnarsRokare.MobAI
         #endregion
 
         #region Mobs
-        internal static Dictionary<string, MobAIBase> AliveMobs = new Dictionary<string, MobAIBase>();
+        public static Dictionary<string, MobAIBase> AliveMobs = new Dictionary<string, MobAIBase>();
         private static Dictionary<string, string> MobsRegister = new Dictionary<string, string>();
 
         public static void RegisterMob(Character character, string uniqueId, string mobController)
