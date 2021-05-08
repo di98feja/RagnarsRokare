@@ -82,7 +82,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Failed, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance.transform.position, Items, GreylingsConfig.ItemSearchRadius.Value);
+                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, GreylingsConfig.ItemSearchRadius.Value);
                     if (groundItem != null)
                     {
                         MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
@@ -113,7 +113,7 @@ namespace RagnarsRokare.MobAI
                         }
                     }
                     
-                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance.transform.position, KnownContainers, AcceptedContainerNames);
+                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames);
                     if (nearbyChest != null)
                     {
                         KnownContainers.Push(nearbyChest);
@@ -182,7 +182,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Failed, State.SearchItemsOnGround)
                 .OnEntry(t =>
                 {
-                    if (KnownContainers.Peek() == null || Common.GetNView(KnownContainers.Peek())?.IsValid() != true || KnownContainers.Peek().IsInUse())
+                    if (KnownContainers.Peek() == null || KnownContainers.Peek().IsInUse())
                     {
                         KnownContainers.Pop();
                         brain.Fire(Trigger.Failed);
@@ -200,7 +200,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Failed, State.SearchItemsOnGround)
                 .OnEntry(t =>
                 {
-                    if (KnownContainers.Peek() == null || Common.GetNView(KnownContainers.Peek())?.IsValid() != true)
+                    if (KnownContainers.Peek() == null)
                     {
                         brain.Fire(Trigger.Failed);
                         return;
@@ -237,7 +237,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.MoveToContainer))
             {
-                if (KnownContainers.Peek() == null || KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() != true)
+                if (KnownContainers.Peek() == null)
                 {
                     aiBase.StopMoving();
                     KnownContainers.Pop();
@@ -245,7 +245,7 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
                 aiBase.MoveAndAvoidFire(KnownContainers.Peek().transform.position, dt, 0.5f);
-                if (Vector3.Distance(aiBase.Instance.transform.position, KnownContainers.Peek().transform.position) < 1.5)
+                if (Vector3.Distance(aiBase.Instance.transform.position, KnownContainers.Peek().transform.position) < 2)
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.ContainerIsClose);

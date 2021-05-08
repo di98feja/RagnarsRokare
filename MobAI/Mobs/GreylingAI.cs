@@ -135,7 +135,7 @@ namespace RagnarsRokare.MobAI
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    return AddNewAssignment(arg.instance.transform.position, m_assignment);
+                    return AddNewAssignment(arg.instance, m_assignment);
                 })
                 .OnEntry(t =>
                 {
@@ -445,9 +445,9 @@ namespace RagnarsRokare.MobAI
             }
         }
 
-        public bool AddNewAssignment(Vector3 center, MaxStack<Assignment> KnownAssignments)
+        public bool AddNewAssignment(BaseAI instance, MaxStack<Assignment> KnownAssignments)
         {
-            Assignment newassignment = Common.FindRandomNearbyAssignment(center, m_trainedAssignments, KnownAssignments);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments);
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);
