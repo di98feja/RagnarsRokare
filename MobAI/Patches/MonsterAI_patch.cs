@@ -74,10 +74,10 @@ namespace RagnarsRokare.SlaveGreylings
                 if (MobManager.IsAliveMob(uniqueId))
                 {
                     mob = MobManager.AliveMobs[uniqueId];
-                    if (mob.Instance?.gameObject.GetInstanceID() != instance.gameObject.GetInstanceID())
+                    if (!mob.HasInstance()/* && mob.Instance.gameObject.GetInstanceID() != instance.gameObject.GetInstanceID()*/)
                     {
-                        Common.Dbgl($"Replacing old instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");
                         mob.Instance = instance;
+                        Common.Dbgl($"Replacing old instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");
                     }
                     return mob;
                 }
@@ -92,7 +92,7 @@ namespace RagnarsRokare.SlaveGreylings
                     return null;
                 }
 
-                Common.Dbgl($"Adding new instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");
+                Common.Dbgl($"Adding new instance of mob '{mob.Character.GetHoverName()}', IsOwner:{nview.IsOwner()}");
                 MobManager.AliveMobs.Add(uniqueId, mob);
                 return mob;
             }

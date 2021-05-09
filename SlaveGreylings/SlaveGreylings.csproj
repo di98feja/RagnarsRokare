@@ -117,9 +117,9 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MobAI\MobAI.csproj">
+    <ProjectReference Include="..\MobAI\MobAILib.csproj">
       <Project>{17e57b00-6d93-4a15-b127-11749921623c}</Project>
-      <Name>MobAI</Name>
+      <Name>MobAILib</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
