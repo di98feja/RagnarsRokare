@@ -1,7 +1,12 @@
 ﻿using HarmonyLib;
+using RagnarsRokare.MobAI;
+using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
 
 namespace RagnarsRokare.MobAI
@@ -107,7 +112,7 @@ namespace RagnarsRokare.MobAI
                 {
                     multiplicator = 3;
                 }
-                if (assignment.AssignmentTime > timeBeforeAssignmentCanBeRepeated * multiplicator && assignments.Count() > 1)
+                if (assignment.AssignmentTime > timeBeforeAssignmentCanBeRepeated * multiplicator)
                 {
                     Common.Dbgl($"GreAssignment: {assignment} forgotten");
                     assignments.Remove(assignment);

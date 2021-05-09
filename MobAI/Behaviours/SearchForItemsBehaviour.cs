@@ -1,4 +1,5 @@
-﻿using Stateless;
+﻿using RagnarsRokare.MobAI;
+using Stateless;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -71,6 +72,9 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     //Debug.Log("Entered SearchForItemsBehaviour");
+                    Debug.Log($"Search ItemSearchRadius: {ItemSearchRadius}");
+                    Debug.Log($"Search ContainerSearchRadius: {ContainerSearchRadius}");
+                    Debug.Log($"Search MaxSearchTime: {MaxSearchTime}"); 
                 })
                 .OnExit(t =>
                 {

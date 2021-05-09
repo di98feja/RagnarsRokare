@@ -141,9 +141,12 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Help, State.MoveToHome)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
-                    if (m_beenHungryTimer > 60) Brain.Fire(Trigger.Help);
+                    if (m_beenHungryTimer > 60)
+                    {
+                        Brain.Fire(Trigger.Help);
+                        return false;
+                    }
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
-                    if (m_searchForNewAssignmentTimer > 10 && Vector3.Distance(m_assignment.Peek().Position, Instance.transform.position) < 100) return true;
                     m_searchForNewAssignmentTimer = 0f;
                     return AddNewAssignment(arg.instance, m_assignment);
                 })
@@ -158,7 +161,7 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.Hungry)
                 .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10 && (m_beenHungryTimer += arg.dt) > 0)
+                .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10)
                 .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .OnEntry(t =>
                 {
