@@ -1,5 +1,6 @@
 ﻿## RagnarsRökare MobAILib ##
-MobAILib is a library that mods can use to replace the built in AI of Characters inside Valheim.
+MobAILib is a library that can used to replace the built in AI of Characters inside Valheim.
+The goal is to provide a range of AI types and behaviours that can be used by modders to create a more living world.
 
 ### Usage ###
 Start by adding a reference to MobAILib inside your mod-project.
@@ -22,7 +23,7 @@ Does not fight, only flee when getting damaged. The FeedDuration setting only ap
     public int TimeLimitOnAssignment = 60;  
 
 - **FixerAI**  
-Makes the character go and repair any damaged structures it finds. Does not fight, only flee when taking damage.  
+Makes the character go and repair any damaged structures it finds. It will equip the item from position 0 in inventory and use its attack animation when reapairing. Does not fight, only flee when taking damage.  
 The FeedDuration setting only applies if there is a Tameable component attached to the gameObject.  
 **FixerAIConfig**  
 These are the default values  
@@ -59,8 +60,14 @@ Value is the baseclass of its MobAI that give access to its CurrentAIState
 The code can be found at [GitHub](https://github.com/di98feja/RagnarsRokare)  
 In that repository is also the SlaveGreylings mod which uses this library.
 
-This is a work in progress and as all hobby projects there is limit to how much time we have to spend on this project, no matter how fun we think it is.
-So even if we love feedback we will not be able to suit everybodys wishes.  
+Under the hood we use (or perhaps misuse) the Stateless state machine (also found at [GitHub](https://github.com/dotnet-state-machine/stateless)).   
+Thank you stateless team!
+
+
+The MobAILib is a work in progress and as all hobby endeavors there is limit to how much time we have to spend on this project, no matter how fun we think it is.
+So even if we love feedback we will not be able to suit everybodys wishes, atleast not right away...  
+
+// Barg and Morg
 
 ### Future plans ###
 - Ability to register custom MobAI-classes
