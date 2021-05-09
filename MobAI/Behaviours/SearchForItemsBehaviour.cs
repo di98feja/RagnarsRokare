@@ -87,11 +87,11 @@ namespace RagnarsRokare.MobAI
                     ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, ItemSearchRadius);
                     if (groundItem != null)
                     {
-                        MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
+                        m_aiBase.UpdateAiStatus( $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
                         brain.Fire(FoundGroundItemTrigger, groundItem);
                         return;
                     }
-                    MobAIBase.UpdateAiStatus(m_aiBase.NView, $"I seen nottin on da ground.");
+                    m_aiBase.UpdateAiStatus( $"I seen nottin on da ground.");
                     brain.Fire(Trigger.Failed);
                 });
 
@@ -109,7 +109,7 @@ namespace RagnarsRokare.MobAI
                         {
                             KnownContainers.Remove(matchingContainer);
                             KnownContainers.Push(matchingContainer);
-                            MobAIBase.UpdateAiStatus(m_aiBase.NView, $"I seen this in that a bin");
+                            m_aiBase.UpdateAiStatus( $"I seen this in that a bin");
                             brain.Fire(Trigger.ContainerFound);
                             return;
                         }
@@ -119,12 +119,12 @@ namespace RagnarsRokare.MobAI
                     if (nearbyChest != null)
                     {
                         KnownContainers.Push(nearbyChest);
-                        MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Look a bin!");
+                        m_aiBase.UpdateAiStatus( $"Look a bin!");
                         m_aiBase.Brain.Fire(Trigger.ContainerFound);
                     }
                     else
                     {
-                        MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Me give up, nottin found!");
+                        m_aiBase.UpdateAiStatus( $"Me give up, nottin found!");
                         KnownContainers.Clear();
                         m_aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     }
@@ -142,7 +142,7 @@ namespace RagnarsRokare.MobAI
                         brain.Fire(Trigger.Failed);
                         return;
                     }
-                    MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Heading to {m_groundItem.m_itemData.m_shared.m_name}");
+                    m_aiBase.UpdateAiStatus( $"Heading to {m_groundItem.m_itemData.m_shared.m_name}");
                 });
 
             brain.Configure(State.PickUpItemFromGround)
@@ -157,7 +157,7 @@ namespace RagnarsRokare.MobAI
                         brain.Fire(Trigger.Failed);
                         return;
                     }
-                    MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Got a {FoundItem.m_shared.m_name} from the ground");
+                    m_aiBase.UpdateAiStatus( $"Got a {FoundItem.m_shared.m_name} from the ground");
                     if (m_groundItem.RemoveOne())
                     {
                         brain.Fire(Trigger.ItemFound);
@@ -175,7 +175,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.ContainerNotFound, () => FailState)
                 .OnEntry(t =>
                 {
-                    MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Heading to that a bin");
+                    m_aiBase.UpdateAiStatus( $"Heading to that a bin");
                 });
 
             brain.Configure(State.OpenContainer)
@@ -210,7 +210,7 @@ namespace RagnarsRokare.MobAI
                     FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name)).RandomOrDefault();
                     if (FoundItem != null)
                     {
-                        MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Found {FoundItem.m_shared.m_name} in this a bin!");
+                        m_aiBase.UpdateAiStatus( $"Found {FoundItem.m_shared.m_name} in this a bin!");
                         KnownContainers.Peek().GetInventory().RemoveItem(FoundItem, 1);
                         Common.Invoke<Container>(KnownContainers.Peek(), "Save");
                         Common.Invoke<Inventory>(KnownContainers.Peek().GetInventory(), "Changed");
@@ -219,7 +219,7 @@ namespace RagnarsRokare.MobAI
                     }
                     else
                     {
-                        MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Nottin in this a bin..");
+                        m_aiBase.UpdateAiStatus( $"Nottin in this a bin..");
                         brain.Fire(Trigger.Failed);
                     }
                 })

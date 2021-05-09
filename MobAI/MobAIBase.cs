@@ -27,6 +27,7 @@ namespace RagnarsRokare.MobAI
             return m_instance != null;
         }
 
+        public string CurrentAIState { get { return Brain.State; } }
         public StateMachine<string, string> Brain;
 
         public string learningTask;
@@ -135,16 +136,16 @@ namespace RagnarsRokare.MobAI
 
         public static bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
 
-        public static string UpdateAiStatus(ZNetView nview, string newStatus)
+        public string UpdateAiStatus(string newStatus)
         {
             newStatus = Localization.instance.Localize(newStatus);
-            string currentAiStatus = nview?.GetZDO()?.GetString(Constants.Z_AiStatus);
+            string currentAiStatus = NView?.GetZDO()?.GetString(Constants.Z_AiStatus);
             if (currentAiStatus != newStatus)
             {
-                nview.GetZDO().Set(Constants.Z_AiStatus, newStatus);
+                NView.GetZDO().Set(Constants.Z_AiStatus, newStatus);
                 if (PrintAIStateToDebug)
                 {
-                    string name = nview?.GetZDO()?.GetString(Constants.Z_GivenName);
+                    string name = Character.GetHoverName();
                     Debug.Log($"{name}: {newStatus}");
                 }
             }

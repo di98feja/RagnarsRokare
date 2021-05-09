@@ -140,7 +140,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, "Nothing to do, bored");
+                    UpdateAiStatus("Nothing to do, bored");
                 });
         }
 
@@ -153,7 +153,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, "Is hungry, no work a do");
+                    UpdateAiStatus("Is hungry, no work a do");
                     m_foodsearchtimer = 0f;
                 });
 
@@ -170,7 +170,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ConsumeItem.ToString(), State.Idle.ToString())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, "*burps*");
+                    UpdateAiStatus("*burps*");
                     (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
                     var animator = Instance.GetType().GetField("m_animator", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
@@ -199,7 +199,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => !(bool)args.instance.GetFollowTarget())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, "Follow");
+                    UpdateAiStatus("Follow");
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     m_assignment.Clear();
                     m_containers.Clear();
@@ -213,7 +213,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, "Got hurt, flee!");
+                    UpdateAiStatus("Got hurt, flee!");
                     Instance.Alert();
                 })
                 .OnExit(t =>
@@ -230,7 +230,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => (m_shoutedAtTimer += args.dt) >= 1f)
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, "Ahhh Scary!");
+                    UpdateAiStatus("Ahhh Scary!");
                     Instance.Alert();
                 })
                 .OnExit(t =>
@@ -252,7 +252,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, $"I'm on it Boss");
+                    UpdateAiStatus($"I'm on it Boss");
                     m_assignedTimer = 0;
                 })
                 .OnExit(t =>
@@ -269,7 +269,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ItemFound.ToString(), State.MoveToAssignment.ToString())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, $"Trying to Pickup {searchForItemsBehaviour.FoundItem.m_shared.m_name}");
+                    UpdateAiStatus($"Trying to Pickup {searchForItemsBehaviour.FoundItem.m_shared.m_name}");
                     var pickedUpInstance = (Character as Humanoid).PickupPrefab(searchForItemsBehaviour.FoundItem.m_dropPrefab);
                     (Character as Humanoid).GetInventory().Print();
                     (Character as Humanoid).EquipItem(pickedUpInstance);
@@ -294,7 +294,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamicIf(UpdateTrigger, (args) => true ? nextState.ToString() : State.Idle.ToString(), (arg) => MoveToAssignment(arg.dt))
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(NView, $"Moving to assignment {m_assignment.Peek().TypeOfAssignment.Name}");
+                    UpdateAiStatus($"Moving to assignment {m_assignment.Peek().TypeOfAssignment.Name}");
                     m_closeEnoughTimer = 0;
                     if (t.Source == State.HaveAssignmentItem.ToString())
                     {
@@ -316,7 +316,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     StopMoving();
-                    UpdateAiStatus(NView, "Checking assignment for task");
+                    UpdateAiStatus("Checking assignment for task");
                     var needFuel = m_assignment.Peek().NeedFuel;
                     var needOre = m_assignment.Peek().NeedOre;
                     var fetchItems = new List<ItemDrop.ItemData>();
@@ -324,12 +324,12 @@ namespace RagnarsRokare.MobAI
                     if (needFuel != null)
                     {
                         fetchItems.Add(needFuel);
-                        UpdateAiStatus(NView, $"Adding {needFuel.m_shared.m_name} to search list");
+                        UpdateAiStatus($"Adding {needFuel.m_shared.m_name} to search list");
                     }
                     if (needOre.Any())
                     {
                         fetchItems.AddRange(needOre);
-                        UpdateAiStatus(NView, $"Adding {needOre.Join(o => o.m_shared.m_name)} to search list");
+                        UpdateAiStatus($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list");
                     }
                     if (!fetchItems.Any())
                     {
@@ -357,20 +357,20 @@ namespace RagnarsRokare.MobAI
 
                     if (isCarryingFuel)
                     {
-                        UpdateAiStatus(NView, $"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Fuel");
+                        UpdateAiStatus($"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Fuel");
                         m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else if (isCarryingMatchingOre)
                     {
-                        UpdateAiStatus(NView, $"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Ore");
+                        UpdateAiStatus($"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Ore");
 
                         m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else
                     {
-                        UpdateAiStatus(NView, $"Dropping {m_carrying.m_shared.m_name} on the ground");
+                        UpdateAiStatus($"Dropping {m_carrying.m_shared.m_name} on the ground");
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                     }
                     (Character as Humanoid).UnequipItem(m_carrying, false);
@@ -389,11 +389,11 @@ namespace RagnarsRokare.MobAI
                 {
                     if (m_carrying != null)
                     {
-                        UpdateAiStatus(NView, $"Dropping {m_carrying.m_shared.m_name} on the ground");
+                        UpdateAiStatus($"Dropping {m_carrying.m_shared.m_name} on the ground");
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                         m_carrying = null;
                     }
-                    UpdateAiStatus(NView, $"Done doin worksignment!");
+                    UpdateAiStatus($"Done doin worksignment!");
                     m_containers.Peek()?.SetInUse(inUse: false);
                     Brain.Fire(Trigger.LeaveAssignment.ToString());
                 });

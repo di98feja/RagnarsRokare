@@ -57,16 +57,6 @@ namespace RagnarsRokare.SlaveGreylings
                     }
                 case "Greydwarf_Elite":
                     {
-                        string config = JsonUtility.ToJson(new FixerAIConfig
-                        {
-                            AssignmentSearchRadius = BruteConfig.AssignmentSearchRadius.Value,
-                            ContainerSearchRadius = BruteConfig.ContainerSearchRadius.Value,
-                            PostTameFeedDuration = BruteConfig.PostTameFeedDuration.Value,
-                            IncludedContainers = BruteConfig.IncludedContainersList.Value.Split(','),
-                            ItemSearchRadius = BruteConfig.ItemSearchRadius.Value,
-                            MaxContainersInMemory = BruteConfig.MaxContainersInMemory.Value,
-                            TimeLimitOnAssignment = BruteConfig.TimeLimitOnAssignment.Value
-                        });
                         return new MobConfig
                         {
                             PostTameConsumables = BruteConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
@@ -75,8 +65,17 @@ namespace RagnarsRokare.SlaveGreylings
                             PreTameFeedDuration = BruteConfig.PreTameFeedDuration.Value,
                             TamingTime = BruteConfig.TamingTime.Value,
                             AIType = "Fixer",
-                            AIConfig = config
-                        };
+                            AIConfig = JsonUtility.ToJson(new FixerAIConfig
+                            {
+                                AssignmentSearchRadius = BruteConfig.AssignmentSearchRadius.Value,
+                                ContainerSearchRadius = BruteConfig.ContainerSearchRadius.Value,
+                                PostTameFeedDuration = BruteConfig.PostTameFeedDuration.Value,
+                                IncludedContainers = BruteConfig.IncludedContainersList.Value.Split(','),
+                                ItemSearchRadius = BruteConfig.ItemSearchRadius.Value,
+                                MaxContainersInMemory = BruteConfig.MaxContainersInMemory.Value,
+                                TimeLimitOnAssignment = BruteConfig.TimeLimitOnAssignment.Value
+                            })
+                    };
                     }
                 default:
                     return null;
