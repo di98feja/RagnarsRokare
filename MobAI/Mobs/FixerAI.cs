@@ -173,7 +173,6 @@ namespace RagnarsRokare.MobAI
                 {
                     UpdateAiStatus("Follow");
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
-                    m_assignment.Clear();
                 });
         }
 
