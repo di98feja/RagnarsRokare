@@ -135,7 +135,7 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.Idle.ToString())
                 .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20.0f)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
@@ -267,7 +267,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(State.MoveToAssignment)
                 .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .Permit(Trigger.AssignmentTimedOut, State.Idle)
                 .OnEntry(t =>
                 {

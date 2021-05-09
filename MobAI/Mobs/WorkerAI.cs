@@ -130,7 +130,7 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.Idle.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) =>
                 {
@@ -247,7 +247,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(State.MoveToAssignment.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .Permit(Trigger.AssignmentTimedOut.ToString(), State.DoneWithAssignment.ToString())
                 .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
@@ -406,7 +406,6 @@ namespace RagnarsRokare.MobAI
             if (m_triggerTimer < 0.1f) return;
             m_triggerTimer = 0f;
             var monsterAi = Instance as MonsterAI;
-            Vector3 greylingPosition = this.Character.transform.position;
 
             //Runtime triggers
             Brain.Fire(Trigger.TakeDamage.ToString());
@@ -491,10 +490,8 @@ namespace RagnarsRokare.MobAI
             Player player = GetPlayer(playerId);
             if (!(player == null) && command == "Follow")
             {
-                {
-                    (Instance as MonsterAI).ResetPatrolPoint();
-                    (Instance as MonsterAI).SetFollowTarget(player.gameObject);
-                }
+                (Instance as MonsterAI).ResetPatrolPoint();
+                (Instance as MonsterAI).SetFollowTarget(player.gameObject);
             }
         }
 
