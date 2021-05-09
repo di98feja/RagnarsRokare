@@ -95,7 +95,7 @@ namespace RagnarsRokare.MobAI
                 {
                     Common.Dbgl($"Saving {m_assignment.Count()} assignments");
                     Common.Dbgl($"Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
-                    var assignmentsToRemove = m_assignment.Where(p => !Common.GetNView(p).IsValid());
+                    var assignmentsToRemove = m_assignment.Where(p => !Common.GetNView(p).IsValid()).ToList();
                     foreach (var piece in assignmentsToRemove)
                     {
                         m_assignment.Remove(piece);
@@ -237,7 +237,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.SearchForItems, searchForItemsBehaviour.InitState)
                 .OnEntry(t =>
                 {
-                    Debug.Log("ConfigureSearchContainers Initiated");
+                    Common.Dbgl("ConfigureSearchContainers Initiated");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;

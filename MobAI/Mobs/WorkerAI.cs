@@ -271,7 +271,6 @@ namespace RagnarsRokare.MobAI
                 {
                     UpdateAiStatus($"Trying to Pickup {searchForItemsBehaviour.FoundItem.m_shared.m_name}");
                     var pickedUpInstance = (Character as Humanoid).PickupPrefab(searchForItemsBehaviour.FoundItem.m_dropPrefab);
-                    (Character as Humanoid).GetInventory().Print();
                     (Character as Humanoid).EquipItem(pickedUpInstance);
                     m_carrying = pickedUpInstance;
                     Brain.Fire(Trigger.ItemFound.ToString());
