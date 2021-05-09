@@ -479,7 +479,7 @@ namespace RagnarsRokare.MobAI
                 //Name = "RRR_Hostile_T1",
                 AIType = this.GetType(),
                 PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
-                PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList(),
+                PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Coal").ToList(),
                 PreTameFeedDuration = GreylingsConfig.FeedDuration.Value,
                 PostTameFeedDuration = GreylingsConfig.FeedDuration.Value,
                 TamingTime = GreylingsConfig.TamingTime.Value
