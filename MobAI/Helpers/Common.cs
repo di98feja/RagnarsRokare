@@ -39,7 +39,7 @@ namespace RagnarsRokare.MobAI
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, assignmentSearchRadius, pieceList);
-            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject)));
+            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)) )); //&& CanSeeTarget(instance, p.gameObject)
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
             {
@@ -73,7 +73,7 @@ namespace RagnarsRokare.MobAI
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
-            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject));
+            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) ); //&& CanSeeTarget(instance, p.gameObject)
             var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponentInChildren<Container>()).Where(c => !knownContainers.Contains(c)).ToList(); 
             containers.AddRange(allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c)));
             if (!containers.Any())
@@ -107,7 +107,7 @@ namespace RagnarsRokare.MobAI
                 {
                     multiplicator = 3;
                 }
-                if (assignment.AssignmentTime > timeBeforeAssignmentCanBeRepeated * multiplicator && assignments.Count() > 1)
+                if (assignment.AssignmentTime > timeBeforeAssignmentCanBeRepeated * multiplicator)
                 {
                     Common.Dbgl($"GreAssignment: {assignment} forgotten");
                     assignments.Remove(assignment);
