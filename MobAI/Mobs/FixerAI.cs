@@ -390,7 +390,7 @@ namespace RagnarsRokare.MobAI
                     m_roarTimer = 0.0f;
                 }
             }
-            float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? RepairMinDist : RepairMinDist + 1.0f;
+            float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? RepairMinDist : RepairMinDist + 2.0f;
             return MoveAndAvoidFire(m_assignment.Peek().FindClosestPoint(Instance.transform.position), dt, distance);
         }
 
@@ -404,6 +404,7 @@ namespace RagnarsRokare.MobAI
                 .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
                 .Where(p => !m_assignment.Contains(p))
                 .Where(p => Common.GetNView(p)?.IsValid() ?? false)
+                .Where(p => Common.CanSeeTarget(Instance, p.gameObject))
                 .OrderBy(p => Vector3.Distance(p.GetCenter(), position))
                 .FirstOrDefault();
             Common.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
