@@ -75,9 +75,9 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     var nview = m_nview.GetValue(character) as ZNetView;
                     var uniqueId = nview.GetZDO().GetString(Constants.Z_CharacterId);
-                    if (MobManager.IsControlledMob(uniqueId))
+                    if (MobManager.IsAliveMob(uniqueId))
                     {
-                        MobManager.Mobs[uniqueId].Follow(Player.m_localPlayer);
+                        MobManager.AliveMobs[uniqueId].Follow(Player.m_localPlayer);
                     }
                 }
             }

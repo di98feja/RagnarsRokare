@@ -11,7 +11,7 @@ namespace RagnarsRokare.SlaveGreylings
         {
             public static bool Prefix(VisEquipment __instance, int itemHash, int variant, Transform joint, ref GameObject __result, ref SkinnedMeshRenderer ___m_bodyModel, bool enableEquipEffects = true)
             {
-                if (!MobManager.IsControllableMob(__instance.name)) return true;
+                if (!MobConfigManager.IsControllableMob(__instance.name)) return true;
 
                 GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(itemHash);
                 if (itemPrefab == null)

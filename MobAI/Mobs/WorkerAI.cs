@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using RagnarsRokare.MobAI;
 using Stateless;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,75 +7,75 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    public class GreylingAI : MobAIBase, IControllableMob
+    public class WorkerAI : MobAIBase, IControllableMob
     {
         public MaxStack<Assignment> m_assignment;
         public MaxStack<Container> m_containers;
         public ItemDrop.ItemData m_carrying;
         public float m_assignedTimer;
         public float m_foodsearchtimer;
-        public string[] m_acceptedContainerNames;
         
-
-        public enum State
+        private class State
         {
-            Idle,
-            Flee,
-            Follow,
-            Assigned,
-            Hungry,
-            SearchForItems,
-            SearchForFood,
-            HaveFoodItem,
-            HaveNoFoodItem,
-            HaveAssignmentItem,
-            HaveNoAssignmentItem,
-            MoveToAssignment,
-            CheckingAssignment,
-            DoneWithAssignment,
-            UnloadToAssignment,
-            MoveAwayFrom
+            public const string Idle = "Idle";
+            public const string Flee = "Flee";
+            public const string Follow = "Follow";
+            public const string Assigned = "Assigned";
+            public const string Hungry = "Hungry";
+            public const string SearchForItems = "SearchForItems";
+            public const string SearchForFood = "SearchForFood";
+            public const string HaveFoodItem = "HaveFoodItem";
+            public const string HaveNoFoodItem = "HaveNoFoodItem";
+            public const string HaveAssignmentItem = "HaveAssignmentItem";
+            public const string HaveNoAssignmentItem = "HaveNoAssignmentItem";
+            public const string MoveToAssignment = "MoveToAssignment";
+            public const string CheckingAssignment = "CheckingAssignment";
+            public const string DoneWithAssignment = "DoneWithAssignment";
+            public const string UnloadToAssignment = "UnloadToAssignment";
+            public const string MoveAwayFrom = "MoveAwayFrom";
         }
 
-        public enum Trigger
+        private class Trigger
         {
-            TakeDamage,
-            Follow,
-            UnFollow,
-            CalmDown,
-            Hungry,
-            ConsumeItem,
-            ItemFound,
-            Update,
-            ItemNotFound,
-            SearchForItems,
-            IsCloseToAssignment,
-            AssignmentTimedOut,
-            AssignmentFinished,
-            LeaveAssignment,
-            ShoutedAt
+            public const string TakeDamage = "TakeDamage";
+            public const string Follow = "Follow";
+            public const string UnFollow = "UnFollow";
+            public const string CalmDown = "CalmDown";
+            public const string Hungry = "Hungry";
+            public const string ConsumeItem = "ConsumeItem";
+            public const string ItemFound = "ItemFound";
+            public const string Update = "Update";
+            public const string ItemNotFound = "ItemNotFound";
+            public const string SearchForItems = "SearchForItems";
+            public const string IsCloseToAssignment = "IsCloseToAssignment";
+            public const string AssignmentTimedOut = "AssignmentTimedOut";
+            public const string AssignmentFinished = "AssignmentFinished";
+            public const string LeaveAssignment = "LeaveAssignment";
+            public const string ShoutedAt = "ShoutedAt";
         }
 
-        readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
-        readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
+        private readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
+        private readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         private float m_triggerTimer;
-        SearchForItemsBehaviour searchForItemsBehaviour;
+        private readonly SearchForItemsBehaviour searchForItemsBehaviour;
         private float m_closeEnoughTimer;
         private float m_searchForNewAssignmentTimer;
         private float m_shoutedAtTimer;
+        private readonly WorkerAIConfig m_config;
         public float CloseEnoughTimeout { get; private set; } = 30;
 
-        public GreylingAI() : base()
+        public WorkerAI() : base()
         { }
 
-        public GreylingAI(MonsterAI instance) : base(instance, State.Idle.ToString())
+        public WorkerAI(MonsterAI instance, string configString) : base(instance, State.Idle.ToString())
         {
+            m_config = JsonUtility.FromJson<WorkerAIConfig>(configString);
             m_assignment = new MaxStack<Assignment>(20);
-            m_containers = new MaxStack<Container>(GreylingsConfig.MaxContainersInMemory.Value);
+            m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
             m_carrying = null;
             m_assignedTimer = 0f;
             m_foodsearchtimer = 0f;
-            m_acceptedContainerNames = GreylingsConfig.IncludedContainersList.Value.Split();
+
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound.ToString());
 
@@ -89,7 +88,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_trainedAssignments.Clear();
                     m_trainedAssignments.AddRange(trainedAssignments.Split());
-                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "A greyling learned a new skill.");
+                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "A worker learned a new skill.");
                 }
             });
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());
@@ -117,7 +116,9 @@ namespace RagnarsRokare.MobAI
                 {
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
-                    searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
+                    searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
+                    searchForItemsBehaviour.ItemSearchRadius = m_config.ItemSearchRadius;
+                    searchForItemsBehaviour.ContainerSearchRadius = m_config.ContainerSearchRadius;
                     searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
                     searchForItemsBehaviour.FailState = t.Parameters[2] as string;
                     Brain.Fire(Trigger.SearchForItems.ToString());
@@ -287,7 +288,7 @@ namespace RagnarsRokare.MobAI
 
         private void ConfigureMoveToAssignment()
         {
-            State nextState = State.Idle;
+            string nextState = State.Idle;
             Brain.Configure(State.MoveToAssignment.ToString())
                 .SubstateOf(State.Assigned.ToString())
                 .PermitDynamicIf(UpdateTrigger, (args) => true ? nextState.ToString() : State.Idle.ToString(), (arg) => MoveToAssignment(arg.dt))
@@ -415,12 +416,12 @@ namespace RagnarsRokare.MobAI
 
             //Assigned timeout-function 
             m_assignedTimer += dt;
-            if (m_assignedTimer > GreylingsConfig.TimeLimitOnAssignment.Value)
+            if (m_assignedTimer > m_config.TimeLimitOnAssignment)
             {
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
             //Assignment timeout-function
-            if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt))
+            if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt, m_config.TimeBeforeAssignmentCanBeRepeated))
             {
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
@@ -447,7 +448,7 @@ namespace RagnarsRokare.MobAI
 
         public bool AddNewAssignment(BaseAI instance, MaxStack<Assignment> KnownAssignments)
         {
-            Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, m_config.AssignmentSearchRadius);
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);
@@ -471,18 +472,12 @@ namespace RagnarsRokare.MobAI
             return MoveAndAvoidFire(m_assignment.Peek().Position, dt, distance);
         }
 
-        public MobInfo GetMobInfo()
+        public MobAIInfo GetMobAIInfo()
         {
-            return new MobInfo
+            return new MobAIInfo
             {
-                Name = "Greyling",
-                //Name = "RRR_Hostile_T1",
-                AIType = this.GetType(),
-                PreTameConsumables = GreylingsConfig.TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
-                PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Coal").ToList(),
-                PreTameFeedDuration = GreylingsConfig.FeedDuration.Value,
-                PostTameFeedDuration = GreylingsConfig.FeedDuration.Value,
-                TamingTime = GreylingsConfig.TamingTime.Value
+                Name = "Worker",
+                AIType = this.GetType()
             };
         }
 
@@ -509,7 +504,5 @@ namespace RagnarsRokare.MobAI
             m_shoutedAtTimer = 0.0f;
             Brain.Fire(Trigger.ShoutedAt.ToString());
         }
-
-
     }
 }

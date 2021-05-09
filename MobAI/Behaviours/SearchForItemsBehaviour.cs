@@ -52,6 +52,8 @@ namespace RagnarsRokare.MobAI
         public string InitState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
+        public int ItemSearchRadius { get; set; }
+        public float ContainerSearchRadius { get; set; }
 
         private ItemDrop m_groundItem;
         private MobAIBase m_aiBase;
@@ -82,7 +84,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Failed, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, GreylingsConfig.ItemSearchRadius.Value);
+                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, ItemSearchRadius);
                     if (groundItem != null)
                     {
                         MobAIBase.UpdateAiStatus(m_aiBase.NView, $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");

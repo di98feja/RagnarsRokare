@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -52,6 +53,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -64,6 +66,9 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\Libs\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule">
+      <HintPath>..\Libs\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Libs\UnityEngine.PhysicsModule.dll</HintPath>
@@ -72,19 +77,19 @@
   <ItemGroup>
     <Compile Include="Helpers\Assignment.cs" />
     <Compile Include="MobAILib.cs" />
-    <Compile Include="Mobs\BruteAI.cs" />
-    <Compile Include="Config\BruteConfig.cs" />
+    <Compile Include="Mobs\FixerAI.cs" />
+    <Compile Include="Config\FixerAIConfig.cs" />
     <Compile Include="Helpers\Common.cs" />
     <Compile Include="Config\CommonConfig.cs" />
     <Compile Include="Helpers\Extensions.cs" />
     <Compile Include="Behaviours\FightBehaviour.cs" />
-    <Compile Include="Mobs\GreylingAI.cs" />
-    <Compile Include="Config\GreylingConfig.cs" />
+    <Compile Include="Mobs\WorkerAI.cs" />
+    <Compile Include="Config\WorkerAIConfig.cs" />
     <Compile Include="IBehaviour.cs" />
     <Compile Include="IControllableMob.cs" />
     <Compile Include="Helpers\MaxStack.cs" />
     <Compile Include="MobAIBase.cs" />
-    <Compile Include="MobInfo.cs" />
+    <Compile Include="MobAIInfo.cs" />
     <Compile Include="MobManager.cs" />
     <Compile Include="Patches\Assignments_Patch.cs" />
     <Compile Include="Patches\Character_patch.cs" />
@@ -94,12 +99,15 @@
     <Compile Include="Behaviours\SearchForItemsBehaviour.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
-xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y</PostBuildEvent>
+xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y
+
+</PostBuildEvent>
   </PropertyGroup>
 </Project>

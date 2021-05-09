@@ -1,6 +1,8 @@
 ﻿using BepInEx.Configuration;
+using System.Collections.Generic;
+using System.Linq;
 
-namespace RagnarsRokare.MobAI
+namespace RagnarsRokare.SlaveGreylings
 {
     public static class BruteConfig
     {
@@ -16,6 +18,9 @@ namespace RagnarsRokare.MobAI
         public static ConfigEntry<int> TimeLimitOnAssignment;
         public static ConfigEntry<string> IncludedContainersList;
 
+        public static IEnumerable<string> PreTameConsumables;
+        public static IEnumerable<string> PostTameConsumables;
+
         public static void Init(ConfigFile Config)
         {
             BrutePrefabName = Config.Bind<string>("General", "Brute_PrefabName", "Greydwarf_Elite", "The prefab to use the Brute ai with (repair structures)");
@@ -29,6 +34,8 @@ namespace RagnarsRokare.MobAI
             MaxContainersInMemory = Config.Bind<int>("General", "Brute_MaxContainersInMemory", 3, "How many containers the Brute should remember contents from");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Brute_TimeLimitOnAssignment", 30, "How long before moving on to next assignment");
             IncludedContainersList = Config.Bind<string>("General", "Brute_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
+            PreTameConsumables = TamingItemList.Value.Split(',');
+            PostTameConsumables = "Dandelion".Split(',');
         }
     }
 }

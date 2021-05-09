@@ -4,9 +4,9 @@ namespace RagnarsRokare.SlaveGreylings
 {
     class MobInfoTest : IControllableMob
     {
-        public MobInfo GetMobInfo()
+        public MobAIInfo GetMobAIInfo()
         {
-            return new MobInfo
+            return new MobAIInfo
             {
                 AIType = this.GetType(),
                 Name = "MobInfoTest"
