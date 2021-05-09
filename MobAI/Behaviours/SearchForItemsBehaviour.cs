@@ -115,7 +115,7 @@ namespace RagnarsRokare.MobAI
                         }
                     }
                     
-                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames);
+                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames, ContainerSearchRadius);
                     if (nearbyChest != null)
                     {
                         KnownContainers.Push(nearbyChest);
