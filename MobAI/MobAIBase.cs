@@ -27,25 +27,23 @@ namespace RagnarsRokare.MobAI
             return m_instance != null;
         }
 
-        public string CurrentAIState { get { return Brain.State; } }
         public StateMachine<string, string> Brain;
 
         public string learningTask;
         public int learningRate = 0;
         public List<string> m_trainedAssignments = new List<string>();
 
-        public string CurrentState { get; protected set; }
+        public string CurrentAIState { get; protected set; }
 
         public MobAIBase()
         { }
 
         public MobAIBase(BaseAI instance, string initState)
         {
-            
             m_instance = instance;
-            Brain = new StateMachine<string,string>(() => CurrentState, s => CurrentState = s);
+            Brain = new StateMachine<string,string>(() => CurrentAIState, s => CurrentAIState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
-            CurrentState = initState;
+            CurrentAIState = initState;
             if (NView.IsValid())
             {
                 NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);

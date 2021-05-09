@@ -136,7 +136,7 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.Idle)
                 .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .Permit(Trigger.Help, State.MoveToHome)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
@@ -267,7 +267,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(State.MoveToAssignment)
                 .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable().IsHungry())
+                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .Permit(Trigger.AssignmentTimedOut, State.DoneWithAssignment)
                 .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .OnEntry(t =>
@@ -426,7 +426,6 @@ namespace RagnarsRokare.MobAI
             if (m_triggerTimer < 0.1f) return;
             m_triggerTimer = 0f;
             var monsterAi = Instance as MonsterAI;
-            Vector3 greylingPosition = this.Character.transform.position;
 
             //Runtime triggers
             Brain.Fire(Trigger.TakeDamage);
@@ -511,10 +510,8 @@ namespace RagnarsRokare.MobAI
             Player player = GetPlayer(playerId);
             if (!(player == null) && command == "Follow")
             {
-                {
-                    (Instance as MonsterAI).ResetPatrolPoint();
-                    (Instance as MonsterAI).SetFollowTarget(player.gameObject);
-                }
+                (Instance as MonsterAI).ResetPatrolPoint();
+                (Instance as MonsterAI).SetFollowTarget(player.gameObject);
             }
         }
 

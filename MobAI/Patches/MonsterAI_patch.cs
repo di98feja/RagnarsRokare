@@ -74,7 +74,7 @@ namespace RagnarsRokare.SlaveGreylings
                 if (MobManager.IsAliveMob(uniqueId))
                 {
                     mob = MobManager.AliveMobs[uniqueId];
-                    if (!mob.HasInstance()/* && mob.Instance.gameObject.GetInstanceID() != instance.gameObject.GetInstanceID()*/)
+                    if (!mob.HasInstance())
                     {
                         mob.Instance = instance;
                         Common.Dbgl($"Replacing old instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");

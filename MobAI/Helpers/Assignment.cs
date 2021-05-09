@@ -1,10 +1,7 @@
 ﻿using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace RagnarsRokare.MobAI
@@ -38,9 +35,6 @@ namespace RagnarsRokare.MobAI
 
     public class Assignment 
     {
-        private Vector3 m_position;
-
-        //public int BelongsTo { get; set; }
         public GameObject AssignmentObject { get; set; }
         public AssignmentType TypeOfAssignment { get; set; }
         public float AssignmentTime { get; set; }
@@ -56,10 +50,6 @@ namespace RagnarsRokare.MobAI
                 {
                     return AssignmentObject.transform.position;
                 }
-            }
-            set
-            {
-                m_position = value;
             }
         } 
 
