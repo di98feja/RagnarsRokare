@@ -111,6 +111,8 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Misc\SlaveGreylings.png" />
+    <Content Include="Misc\SlaveGreylingsBanner.png" />
     <Content Include="readme.txt" />
     <Content Include="sfx\CallHome.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -123,6 +125,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Misc\SlaveGreylings.pdn" />
+    <None Include="Misc\SlaveGreylingsBanner.pdn" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />

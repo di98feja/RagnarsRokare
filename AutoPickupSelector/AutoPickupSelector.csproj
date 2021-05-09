@@ -67,6 +67,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="itemlist.txt" />
+    <Content Include="Misc\AutoPickupSelectorBanner.png" />
+    <Content Include="Misc\AutoPickupSelector_Screenshot.png" />
     <Content Include="readme.txt" />
     <Content Include="PieceList.txt" />
   </ItemGroup>

@@ -71,7 +71,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Misc\CraftToStack.png" />
+    <Content Include="Misc\CraftToStackBanner.png" />
     <Content Include="readme.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Misc\CraftToStack.pdn" />
+    <None Include="Misc\CraftToStackBanner.pdn" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

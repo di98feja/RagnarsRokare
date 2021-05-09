@@ -99,10 +99,16 @@
     <Compile Include="Behaviours\SearchForItemsBehaviour.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Misc\MobAILib.pdn" />
+    <None Include="Misc\MobAILibBanner.pdn" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="readme.md" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Misc\MobAILib.png" />
+    <Content Include="Misc\MobAILibBanner.png" />
   </ItemGroup>
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
