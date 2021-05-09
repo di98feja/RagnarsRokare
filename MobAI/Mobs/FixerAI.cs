@@ -74,8 +74,6 @@ namespace RagnarsRokare.MobAI
             m_config = JsonUtility.FromJson<FixerAIConfig>(configString);
             m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
 
-            //Debug.Log($"{m_config.AssignmentSearchRadius}, {m_config.IncludedContainers}, {m_config.PostTameFeedDuration}");
-
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
             if (!string.IsNullOrEmpty(loadedAssignments))
             {

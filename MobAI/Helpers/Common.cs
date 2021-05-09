@@ -205,7 +205,7 @@ namespace RagnarsRokare.MobAI
         {
             if (CommonConfig.PrintDebugLog.Value)
             {
-                Debug.Log((pref ? typeof(MobAILib).Assembly + " " : "") + str);
+                Debug.Log((pref ? typeof(MobAILib).Namespace + " " : "") + str);
             }
         }
     }
