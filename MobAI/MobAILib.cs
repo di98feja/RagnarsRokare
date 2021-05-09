@@ -15,8 +15,6 @@ namespace RagnarsRokare.MobAI
         private void Awake()
         {
             CommonConfig.Init(Config);
-            GreylingsConfig.Init(Config);
-            BruteConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
     }

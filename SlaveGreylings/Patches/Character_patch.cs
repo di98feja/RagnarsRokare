@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RagnarsRokare.MobAI;
+using System;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -35,9 +36,17 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 if (MobConfigManager.IsControllableMob(__instance.name))
                 {
-
                     string uniqueId = GetOrCreateUniqueId(___m_nview);
                     var mobInfo = MobConfigManager.GetMobConfig(__instance.name);
+                    try
+                    {
+                        MobManager.RegisterMob(__instance, uniqueId, mobInfo.AIType, mobInfo.AIConfig);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        Debug.LogError($"Failed to register Mob AI ({mobInfo.AIType}). {e.Message}");
+                        return;
+                    }
                     Tameable tameable = GetOrAddTameable(__instance);
                     tameable.m_tamingTime = mobInfo.TamingTime;
                     tameable.m_commandable = true;

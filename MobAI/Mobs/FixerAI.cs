@@ -4,14 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-
 namespace RagnarsRokare.MobAI
 {
-    public class BruteAI : MobAIBase, IControllableMob
+    public class FixerAI : MobAIBase, IControllableMob
     {
         public MaxStack<Piece> m_assignment = new MaxStack<Piece>(100);
         public MaxStack<Container> m_containers;
-        public string[] m_acceptedContainerNames;
 
         // Timers
         private float m_searchForNewAssignmentTimer;
@@ -66,13 +64,17 @@ namespace RagnarsRokare.MobAI
         readonly SearchForItemsBehaviour searchForItemsBehaviour;
         readonly FightBehaviour fightBehaviour;
 
-        public BruteAI() : base()
+        FixerAIConfig m_config;
+
+        public FixerAI() : base()
         { }
 
-        public BruteAI(MonsterAI instance) : base(instance, State.Idle)
+        public FixerAI(MonsterAI instance, string configString) : base(instance, State.Idle)
         {
-            m_containers = new MaxStack<Container>(BruteConfig.MaxContainersInMemory.Value);
-            m_acceptedContainerNames = BruteConfig.IncludedContainersList.Value.Split();
+            m_config = JsonUtility.FromJson<FixerAIConfig>(configString);
+            m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
+
+            //Debug.Log($"{m_config.AssignmentSearchRadius}, {m_config.IncludedContainers}, {m_config.PostTameFeedDuration}");
 
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
             if (!string.IsNullOrEmpty(loadedAssignments))
@@ -240,7 +242,9 @@ namespace RagnarsRokare.MobAI
                     Debug.Log("ConfigureSearchContainers Initiated");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
-                    searchForItemsBehaviour.AcceptedContainerNames = m_acceptedContainerNames;
+                    searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
+                    searchForItemsBehaviour.ItemSearchRadius = m_config.ItemSearchRadius;
+                    searchForItemsBehaviour.ContainerSearchRadius = m_config.ContainerSearchRadius;
                     searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
                     searchForItemsBehaviour.FailState = t.Parameters[2] as string;
                     Brain.Fire(Trigger.SearchForItems.ToString());
@@ -398,7 +402,7 @@ namespace RagnarsRokare.MobAI
             Common.Dbgl($"Enter {nameof(AddNewAssignment)}");
             var pieceList = new List<Piece>();
             var start = DateTime.Now;
-            Piece.GetAllPiecesInRadius(position, BruteConfig.AssignmentSearchRadius.Value, pieceList);
+            Piece.GetAllPiecesInRadius(position, m_config.AssignmentSearchRadius, pieceList);
             var piece = pieceList
                 .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
                 .Where(p => !m_assignment.Contains(p))
@@ -431,7 +435,7 @@ namespace RagnarsRokare.MobAI
 
             //Assigned timeout-function 
             m_assignedTimer += dt;
-            if (m_assignedTimer > BruteConfig.TimeLimitOnAssignment.Value)
+            if (m_assignedTimer > m_config.TimeLimitOnAssignment)
             {
                 Brain.Fire(Trigger.AssignmentTimedOut.ToString());
             }
@@ -468,11 +472,11 @@ namespace RagnarsRokare.MobAI
             NView.InvokeRPC(ZNetView.Everybody, Constants.Z_MobCommand, player.GetZDOID(), "Follow");
         }
 
-        public MobInfo GetMobInfo()
+        public MobAIInfo GetMobAIInfo()
         {
-            return new MobInfo
+            return new MobAIInfo
             {
-                Name = "Greydwarf_Elite",
+                Name = "Fixer",
                 AIType = this.GetType()
             };
         }

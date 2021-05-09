@@ -26,16 +26,6 @@ namespace RagnarsRokare.MobAI
             return instance.GetType().GetField("m_tamable", BindingFlags.Instance|BindingFlags.NonPublic).GetValue(instance) as Tameable;
         }
 
-        public static GreylingAI.State ToStateEnum(this string s)
-        {
-            GreylingAI.State state;
-            if (Enum.TryParse(s, out state))
-            {
-                return state;
-            }
-            throw new ArgumentException($"Unknown State string:{s}");
-        }
-
         public static T RandomOrDefault<T>(this IEnumerable<T> list)
         {
             if (list == null || !list.Any()) return list.FirstOrDefault();

@@ -2,6 +2,6 @@
 {
     public interface IControllableMob
     {
-        MobInfo GetMobInfo();
+        MobAIInfo GetMobAIInfo();
     }
 }

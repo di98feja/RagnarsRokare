@@ -1,12 +1,10 @@
 ﻿using BepInEx.Configuration;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace RagnarsRokare.SlaveGreylings
 {
     public static class GreylingsConfig
     {
-        public static ConfigEntry<string> GreylingPrefabName;
         public static ConfigEntry<string> TamingItemList;
         public static ConfigEntry<int> FeedDuration;
         public static ConfigEntry<int> TamingTime;
@@ -17,11 +15,10 @@ namespace RagnarsRokare.SlaveGreylings
         public static ConfigEntry<int> MaxContainersInMemory;
         public static ConfigEntry<int> TimeBeforeAssignmentCanBeRepeated;
         public static ConfigEntry<int> TimeLimitOnAssignment;
-        public static IEnumerable<ItemDrop> PreTameConsumables;
-        public static IEnumerable<ItemDrop> PostTameConsumables;
+        public static IEnumerable<string> PreTameConsumables;
+        public static IEnumerable<string> PostTameConsumables;
         public static void Init(ConfigFile Config)
         {
-            GreylingPrefabName = Config.Bind<string>("General", "Greyling_PrefabName", "Greyling", "The prefab to use the Greyling ai with (refilling smelters and fireplaces)");
             TamingItemList = Config.Bind<string>("General", "Greyling_TamingItemList", "SilverNecklace", "Comma separated list if items used to tame Greylings");
             FeedDuration = Config.Bind<int>("General", "Greyling_FeedDuration", 500, "Time before getting hungry after consuming one item");
             TamingTime = Config.Bind<int>("General", "Greyling_TamingTime", 1000, "Total time it takes to tame a greyling");
@@ -32,8 +29,8 @@ namespace RagnarsRokare.SlaveGreylings
             MaxContainersInMemory = Config.Bind<int>("General", "Greylings_MaxContainersInMemory", 3, "How many containers Greyling should remember contents from");
             TimeBeforeAssignmentCanBeRepeated = Config.Bind<int>("General", "Greylings_TimeBeforeAssignmentCanBeRepeated", 120, "How long before assignment can be done again");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Greylings_TimeLimitOnAssignment", 60, "How long before moving on to next assignment");
-            PreTameConsumables = TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault());
-            PostTameConsumables = ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Resin").ToList();
+            PreTameConsumables = TamingItemList.Value.Split(',');
+            PostTameConsumables = "Resin".Split(',');
         }
     }
 }

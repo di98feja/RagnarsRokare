@@ -18,8 +18,8 @@ namespace RagnarsRokare.SlaveGreylings
         public static ConfigEntry<int> TimeLimitOnAssignment;
         public static ConfigEntry<string> IncludedContainersList;
 
-        public static IEnumerable<ItemDrop> PreTameConsumables;
-        public static IEnumerable<ItemDrop> PostTameConsumables;
+        public static IEnumerable<string> PreTameConsumables;
+        public static IEnumerable<string> PostTameConsumables;
 
         public static void Init(ConfigFile Config)
         {
@@ -34,8 +34,8 @@ namespace RagnarsRokare.SlaveGreylings
             MaxContainersInMemory = Config.Bind<int>("General", "Brute_MaxContainersInMemory", 3, "How many containers the Brute should remember contents from");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Brute_TimeLimitOnAssignment", 30, "How long before moving on to next assignment");
             IncludedContainersList = Config.Bind<string>("General", "Brute_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
-            PreTameConsumables = TamingItemList.Value.Split(',').Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault());
-            PostTameConsumables = new List<ItemDrop> { ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "Dandelion").Single() };
+            PreTameConsumables = TamingItemList.Value.Split(',');
+            PostTameConsumables = "Dandelion".Split(',');
         }
     }
 }

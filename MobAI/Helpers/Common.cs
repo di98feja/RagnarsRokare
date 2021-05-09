@@ -40,12 +40,12 @@ namespace RagnarsRokare.MobAI
             return ClosestObject;
         }
 
-        public static Assignment FindRandomNearbyAssignment(Vector3 centre, List<string> trainedAssignments, MaxStack<Assignment> knownassignments)
+        public static Assignment FindRandomNearbyAssignment(Vector3 centre, List<string> trainedAssignments, MaxStack<Assignment> knownassignments, float assignmentSearchRadius)
         {
             Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
-            Piece.GetAllPiecesInRadius(centre, (float)GreylingsConfig.AssignmentSearchRadius.Value, pieceList);
+            Piece.GetAllPiecesInRadius(centre, (float)assignmentSearchRadius, pieceList);
             var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name))));
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
@@ -74,11 +74,11 @@ namespace RagnarsRokare.MobAI
             return randomAssignment;
         }
 
-        public static Container FindRandomNearbyContainer(Vector3 center, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames)
+        public static Container FindRandomNearbyContainer(Vector3 center, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
         {
             Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
             var pieceList = new List<Piece>();
-            Piece.GetAllPiecesInRadius(center, (float)GreylingsConfig.ContainerSearchRadius.Value, pieceList);
+            Piece.GetAllPiecesInRadius(center, (float)containerSearchRadius, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)));
             Common.Dbgl($"Found { allcontainerPieces.Count() } containers, filtering");
             var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c));
@@ -104,63 +104,64 @@ namespace RagnarsRokare.MobAI
             return result;
         }
 
-        public static (string, ItemDrop.ItemData) SearchContainersforItems(MonsterAI instance, IEnumerable<ItemDrop> Items, ref MaxStack<Container> KnownContainers, string[] AcceptedContainerNames, float dt)
+        public static (string, ItemDrop.ItemData) SearchContainersforItems(MonsterAI instance, IEnumerable<ItemDrop> items, 
+            ref MaxStack<Container> knownContainers, string[] acceptedContainerNames, float dt, float containerSearchRadius)
         {
-            bool containerIsInvalid = KnownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
+            bool containerIsInvalid = knownContainers.Peek()?.GetComponent<ZNetView>()?.IsValid() == false;
             if (containerIsInvalid)
             {
-                KnownContainers.Pop();
+                knownContainers.Pop();
                 return ("ContainerLost", null);
             }
 
             ItemDrop.ItemData foundItem = null;
             bool isCloseToContainer = false;
-            if (KnownContainers.Any())
+            if (knownContainers.Any())
             {
-                isCloseToContainer = Vector3.Distance(instance.transform.position, KnownContainers.Peek().transform.position) < 1.5;
-                foundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
+                isCloseToContainer = Vector3.Distance(instance.transform.position, knownContainers.Peek().transform.position) < 1.5;
+                foundItem = knownContainers.Peek().GetInventory().GetAllItems().Where(i => items.Any(it => i.m_shared.m_name == it.m_itemData.m_shared.m_name)).RandomOrDefault();
             }
-            if (!KnownContainers.Any() || (isCloseToContainer && foundItem == null))
+            if (!knownContainers.Any() || (isCloseToContainer && foundItem == null))
             {
-                Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, KnownContainers, AcceptedContainerNames);
+                Container nearbyChest = FindRandomNearbyContainer(instance.transform.position, knownContainers, acceptedContainerNames, containerSearchRadius);
                 if (nearbyChest != null)
                 {
-                    KnownContainers.Push(nearbyChest);
+                    knownContainers.Push(nearbyChest);
                     //return ("FoundContainer", null);
                 }
                 else
                 {
-                    KnownContainers.Clear();
+                    knownContainers.Clear();
                     return ("CannotFindContainers", null);
                 }
             }
             if (!isCloseToContainer)
             {
-                Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, KnownContainers.Peek().transform.position, 0.5f, false);
+                Invoke<MonsterAI>(instance, "MoveAndAvoid", dt, knownContainers.Peek().transform.position, 0.5f, false);
                 return ("MovingtoContainer", null);
             }
-            else if (!KnownContainers.Peek()?.IsInUse() ?? false)
+            else if (!knownContainers.Peek()?.IsInUse() ?? false)
             {
-                KnownContainers.Peek().SetInUse(inUse: true);
+                knownContainers.Peek().SetInUse(inUse: true);
                 return ("OpenContainer", null);
             }
             else if (foundItem != null)
             {
-                KnownContainers.Peek().SetInUse(inUse: false);
+                knownContainers.Peek().SetInUse(inUse: false);
 
-                KnownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
-                Invoke<Container>(KnownContainers.Peek(), "Save");
-                Invoke<Inventory>(KnownContainers.Peek(), "Changed");
+                knownContainers.Peek().GetInventory().RemoveItem(foundItem, 1);
+                Invoke<Container>(knownContainers.Peek(), "Save");
+                Invoke<Inventory>(knownContainers.Peek(), "Changed");
                 return ("ItemFound", foundItem);
             }
             else
             {
-                KnownContainers.Peek().SetInUse(inUse: false);
+                knownContainers.Peek().SetInUse(inUse: false);
             }
             return ("", null);
         }
 
-        public static bool AssignmentTimeoutCheck(ref MaxStack<Assignment> assignments, float dt)
+        public static bool AssignmentTimeoutCheck(ref MaxStack<Assignment> assignments, float dt, float timeBeforeAssignmentCanBeRepeated)
         {
             foreach (Assignment assignment in assignments)
             {
@@ -170,7 +171,7 @@ namespace RagnarsRokare.MobAI
                 {
                     multiplicator = 3;
                 }
-                if (assignment.AssignmentTime > GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value * multiplicator)
+                if (assignment.AssignmentTime > timeBeforeAssignmentCanBeRepeated * multiplicator)
                 {
                     Common.Dbgl($"GreAssignment: {assignment} forgotten");
                     assignments.Remove(assignment);

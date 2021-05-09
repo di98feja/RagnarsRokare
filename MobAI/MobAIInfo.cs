@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RagnarsRokare.MobAI
 {
-    public class MobInfo
+    public class MobAIInfo
     {
         public string Name { get; set; }
         public Type AIType { get; set; }

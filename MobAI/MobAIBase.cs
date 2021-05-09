@@ -16,6 +16,10 @@ namespace RagnarsRokare.MobAI
                 if (m_instance == null) throw new ArgumentException("Instance is missing");
                 return m_instance;
             }
+            set
+            {
+                m_instance = value;
+            }
         }
 
         public bool HasInstance()
