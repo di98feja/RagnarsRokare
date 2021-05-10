@@ -69,9 +69,9 @@ namespace RagnarsRokare.MobAI
         public FixerAI() : base()
         { }
 
-        public FixerAI(MonsterAI instance, string configString) : base(instance, State.Idle)
+        public FixerAI(MonsterAI instance, object config) : base(instance, State.Idle)
         {
-            m_config = JsonUtility.FromJson<FixerAIConfig>(configString);
+            m_config = config as FixerAIConfig;
             m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
 
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
@@ -480,7 +480,8 @@ namespace RagnarsRokare.MobAI
             return new MobAIInfo
             {
                 Name = "Fixer",
-                AIType = this.GetType()
+                AIType = this.GetType(),
+                ConfigType = typeof(FixerAIConfig)
             };
         }
 

@@ -42,13 +42,6 @@ Used to register a mob to use a MobAI.
 - mobAIName is the type of MobAI to be used. Available types can be found via **``MobManager.GetRegisteredMobAIs()``**
 - configAsJson is the MobAI specific config serialized as JSON
 
-**``RegisterMob(Character character, string uniqueId, string mobAIName, object config)``**  
-Used to register a mob to use a MobAI.
-- character is the Character component of the mob
-- uniqueId is a string that is used to uniquely identify the mob among all other mobs
-- mobAIName is the type of MobAI to be used. Available types can be found via **``MobManager.GetRegisteredMobAIs()``**
-- config is the MobAI specific config
-
 **``UnregisterMob(string uniqueId)``**  
 Used to stop controlling a mob.
 
@@ -82,8 +75,5 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More built-in MobAI classes
 
 ### Changelog ###
-- Version 0.1.1  
-Added overload for RegisterMob that takes the config as an object
-
 - Version 0.1.0  
 First release

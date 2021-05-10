@@ -52,7 +52,7 @@ namespace RagnarsRokare.MobAI
 
         #region Mobs
         public static Dictionary<string, MobAIBase> AliveMobs = new Dictionary<string, MobAIBase>();
-        private static Dictionary<string, (string controller, string config)> MobsRegister = new Dictionary<string, (string controller, string config)>();
+        private static readonly Dictionary<string, (string controller, object config)> MobsRegister = new Dictionary<string, (string controller, object config)>();
 
         /// <summary>
         /// Register a Character to use a certain mobAI.
@@ -67,13 +67,32 @@ namespace RagnarsRokare.MobAI
             if (string.IsNullOrEmpty(uniqueId)) throw new ArgumentException("UniqueId must not be empty");
             if (!m_mobAIs.ContainsKey(mobAIName)) throw new ArgumentException($"Unknown mob controller {mobAIName}");
 
+            var configType = m_mobAIs[mobAIName].ConfigType;
+            var aiConfig = JsonUtility.FromJson(configAsJson,configType);
+            RegisterMob(character, uniqueId, mobAIName, aiConfig);
+        }
+
+        /// <summary>
+        /// Register a Character to use a certain mobAI.
+        /// If the given uniqueId already exists its mobAI and config is replaced.
+        /// </summary>
+        /// <param name="character">The Character component</param>
+        /// <param name="uniqueId">An identifier string for this specific mob. Must be unique among all other mobs.</param>
+        /// <param name="mobAIName">The name of the mobAI to use</param>
+        /// <param name="mobAIConfig">The matching config for the mobAI. For example WorkerAI must have a WorkerAIConfig</param>
+        public static void RegisterMob(Character character, string uniqueId, string mobAIName, object mobAIConfig)
+        {
+            if (string.IsNullOrEmpty(uniqueId)) throw new ArgumentException("UniqueId must not be empty");
+            if (!m_mobAIs.ContainsKey(mobAIName)) throw new ArgumentException($"Unknown mob controller {mobAIName}");
+            if (mobAIConfig.GetType() != m_mobAIs[mobAIName].ConfigType) throw new ArgumentException($"Wrong type of config {mobAIConfig.GetType()}");
+
             if (MobsRegister.ContainsKey(uniqueId))
             {
-                MobsRegister[uniqueId] = (mobAIName, configAsJson);
+                MobsRegister[uniqueId] = (mobAIName, mobAIConfig);
             }
             else
             {
-                MobsRegister.Add(uniqueId, (mobAIName, configAsJson));
+                MobsRegister.Add(uniqueId, (mobAIName, mobAIConfig));
                 SetUniqueId(character, uniqueId);
             }
         }
@@ -122,9 +141,9 @@ namespace RagnarsRokare.MobAI
             if (!MobsRegister.ContainsKey(uniqueId)) return null;
 
             var controllerName = MobsRegister[uniqueId].controller;
-            var configString = MobsRegister[uniqueId].config;
+            var config = MobsRegister[uniqueId].config;
             var mobType = m_mobAIs[controllerName].AIType;
-            return Activator.CreateInstance(mobType, new object[]{ baseAI, configString}) as MobAIBase;
+            return Activator.CreateInstance(mobType, new object[]{ baseAI, config}) as MobAIBase;
         }
 
         private static void SetUniqueId(Character character, string uniqueId)

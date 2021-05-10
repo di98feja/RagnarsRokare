@@ -67,9 +67,9 @@ namespace RagnarsRokare.MobAI
         public WorkerAI() : base()
         { }
 
-        public WorkerAI(MonsterAI instance, string configString) : base(instance, State.Idle.ToString())
+        public WorkerAI(MonsterAI instance, object config) : base(instance, State.Idle.ToString())
         {
-            m_config = JsonUtility.FromJson<WorkerAIConfig>(configString);
+            m_config = config as WorkerAIConfig;
             m_assignment = new MaxStack<Assignment>(20);
             m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
             m_carrying = null;
@@ -481,7 +481,8 @@ namespace RagnarsRokare.MobAI
             return new MobAIInfo
             {
                 Name = "Worker",
-                AIType = this.GetType()
+                AIType = this.GetType(),
+                ConfigType = typeof(WorkerAIConfig)
             };
         }
 
