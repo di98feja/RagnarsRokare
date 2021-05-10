@@ -2,6 +2,7 @@
 using RagnarsRokare.MobAI;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using UnityEngine;
 
 namespace RagnarsRokare.SlaveGreylings
 {
