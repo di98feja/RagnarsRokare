@@ -40,6 +40,10 @@ namespace RagnarsRokare.MobAI
             Brain = new StateMachine<string,string>(() => CurrentAIState, s => CurrentAIState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentAIState = initState;
+            if (NView.IsValid())
+            {
+                NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
+            }
         }
 
         public Character Character
