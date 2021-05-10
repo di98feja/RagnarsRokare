@@ -381,9 +381,7 @@ namespace RagnarsRokare.MobAI
 
         public bool MoveToAssignment(float dt)
         {
-            Debug.Log($"assignment:{m_assignment}, {m_assignment?.Peek()}");
             bool assignmentIsInvalid = m_assignment.Peek()?.GetComponent<ZNetView>()?.IsValid() != true;
-            Debug.Log($"1");
             if (assignmentIsInvalid)
             {
                 m_assignment.Pop();
