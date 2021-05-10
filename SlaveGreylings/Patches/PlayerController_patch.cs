@@ -65,8 +65,10 @@ namespace RagnarsRokare.SlaveGreylings
             if (Time.time - m_callHomeKeyTimer < m_callHomeKeyDelay) return;
             if (Input.GetKey(m_callHomeKey))
             {
+                Debug.Log($"CallHome command");
                 m_callHomeKeyTimer = Time.time;
                 ___m_nview.InvokeRPC(ZNetView.Everybody, Constants.Z_CallHomeCommand, Player.m_localPlayer.transform.position);
+                Debug.Log($"1");
 
                 var charsInRange = new List<Character>();
                 var m_nview = typeof(Character).GetField("m_nview", BindingFlags.Instance | BindingFlags.NonPublic);

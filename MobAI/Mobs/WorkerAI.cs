@@ -81,16 +81,6 @@ namespace RagnarsRokare.MobAI
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
-            NView.Register<string, string>(Constants.Z_updateTrainedAssignments, (long source, string uniqueID, string trainedAssignments) =>
-            {
-                if (NView.IsOwner()) return;
-                if (UniqueID == uniqueID)
-                {
-                    m_trainedAssignments.Clear();
-                    m_trainedAssignments.AddRange(trainedAssignments.Split());
-                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "A worker learned a new skill.");
-                }
-            });
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());
             ConfigureFlee();
             ConfigureFollow();
@@ -103,6 +93,26 @@ namespace RagnarsRokare.MobAI
             ConfigureDoneWithAssignment();
             ConfigureUnloadToAssignment();
             ConfigureShoutedAt();
+        }
+
+        protected override void OnAfterSetInstance()
+        {
+            base.OnAfterSetInstance();
+            RegisterRPCMethods();
+        }
+
+        private void RegisterRPCMethods()
+        {
+            NView.Register<string, string>(Constants.Z_updateTrainedAssignments, (long source, string uniqueID, string trainedAssignments) =>
+            {
+                if (NView.IsOwner()) return;
+                if (UniqueID == uniqueID)
+                {
+                    m_trainedAssignments.Clear();
+                    m_trainedAssignments.AddRange(trainedAssignments.Split());
+                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "A worker learned a new skill.");
+                }
+            });
         }
 
         private void ConfigureSearchContainers()

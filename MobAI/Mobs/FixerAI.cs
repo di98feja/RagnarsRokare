@@ -89,6 +89,31 @@ namespace RagnarsRokare.MobAI
                     }
                 }
             }
+
+            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
+            LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
+
+            searchForItemsBehaviour = new SearchForItemsBehaviour();
+            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
+            fightBehaviour = new FightBehaviour();
+            fightBehaviour.Configure(this, Brain, State.Fight.ToString());
+
+            ConfigureIdle();
+            ConfigureFollow();
+            ConfigureIsHungry();
+            ConfigureSearchForItems();
+            ConfigureAssigned();
+            ConfigureFlee();
+        }
+
+        protected override void OnAfterSetInstance()
+        {
+            base.OnAfterSetInstance();
+            RegisterRPCMethods();
+        }
+
+        private void RegisterRPCMethods()
+        {
             NView.Register(Constants.Z_AddAssignment, (long source, string assignment) =>
             {
                 if (NView.IsOwner())
@@ -113,22 +138,7 @@ namespace RagnarsRokare.MobAI
                     }
                 }
             });
-            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
-            LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
-
-            searchForItemsBehaviour = new SearchForItemsBehaviour();
-            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
-            fightBehaviour = new FightBehaviour();
-            fightBehaviour.Configure(this, Brain, State.Fight.ToString());
-
-            ConfigureIdle();
-            ConfigureFollow();
-            ConfigureIsHungry();
-            ConfigureSearchForItems();
-            ConfigureAssigned();
-            ConfigureFlee();
         }
-
 
         private void ConfigureIdle()
         {

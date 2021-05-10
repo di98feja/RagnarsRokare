@@ -19,6 +19,15 @@ namespace RagnarsRokare.MobAI
             set
             {
                 m_instance = value;
+                OnAfterSetInstance();
+            }
+        }
+
+        protected virtual void OnAfterSetInstance()
+        {
+            if (NView.IsValid())
+            {
+                NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
             }
         }
 
@@ -40,14 +49,10 @@ namespace RagnarsRokare.MobAI
 
         public MobAIBase(BaseAI instance, string initState)
         {
-            m_instance = instance;
+            Instance = instance;
             Brain = new StateMachine<string,string>(() => CurrentAIState, s => CurrentAIState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentAIState = initState;
-            if (NView.IsValid())
-            {
-                NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
-            }
         }
 
         public Character Character
