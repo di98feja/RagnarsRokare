@@ -89,6 +89,7 @@ namespace RagnarsRokare.MobAI
                     }
                 }
             }
+            RegisterRPCMethods();
 
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
@@ -104,12 +105,6 @@ namespace RagnarsRokare.MobAI
             ConfigureSearchForItems();
             ConfigureAssigned();
             ConfigureFlee();
-        }
-
-        protected override void OnAfterSetInstance()
-        {
-            base.OnAfterSetInstance();
-            RegisterRPCMethods();
         }
 
         private void RegisterRPCMethods()

@@ -76,6 +76,8 @@ namespace RagnarsRokare.MobAI
             m_assignedTimer = 0f;
             m_foodsearchtimer = 0f;
 
+            RegisterRPCMethods();
+
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound.ToString());
 
@@ -93,12 +95,6 @@ namespace RagnarsRokare.MobAI
             ConfigureDoneWithAssignment();
             ConfigureUnloadToAssignment();
             ConfigureShoutedAt();
-        }
-
-        protected override void OnAfterSetInstance()
-        {
-            base.OnAfterSetInstance();
-            RegisterRPCMethods();
         }
 
         private void RegisterRPCMethods()

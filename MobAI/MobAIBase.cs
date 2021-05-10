@@ -16,19 +16,6 @@ namespace RagnarsRokare.MobAI
                 if (m_instance == null) throw new ArgumentException("Instance is missing");
                 return m_instance;
             }
-            set
-            {
-                m_instance = value;
-                OnAfterSetInstance();
-            }
-        }
-
-        protected virtual void OnAfterSetInstance()
-        {
-            if (NView.IsValid())
-            {
-                NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
-            }
         }
 
         public bool HasInstance()
@@ -49,7 +36,7 @@ namespace RagnarsRokare.MobAI
 
         public MobAIBase(BaseAI instance, string initState)
         {
-            Instance = instance;
+            m_instance = instance;
             Brain = new StateMachine<string,string>(() => CurrentAIState, s => CurrentAIState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentAIState = initState;
