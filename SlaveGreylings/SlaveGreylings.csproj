@@ -112,7 +112,7 @@
   <ItemGroup>
     <Content Include="Misc\SlaveGreylings.png" />
     <Content Include="Misc\SlaveGreylingsBanner.png" />
-    <Content Include="readme.txt" />
+    <None Include="readme.md" />
     <Content Include="sfx\CallHome.wav">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
