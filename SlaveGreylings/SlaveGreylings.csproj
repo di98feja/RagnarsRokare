@@ -97,7 +97,6 @@
     <Compile Include="CommonConfig.cs" />
     <Compile Include="GreylingConfig.cs" />
     <Compile Include="MobConfigManager.cs" />
-    <Compile Include="MobInfoTest.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
     <Compile Include="Patches\Character_patch.cs" />
     <Compile Include="Patches\MonsterAI_patch.cs" />

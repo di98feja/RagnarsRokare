@@ -1,6 +1,6 @@
 ﻿namespace RagnarsRokare.MobAI
 {
-    public interface IControllableMob
+    public interface IMobAIType
     {
         MobAIInfo GetMobAIInfo();
     }

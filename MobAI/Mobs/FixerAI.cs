@@ -6,7 +6,7 @@ using System.Reflection;
 using UnityEngine;
 namespace RagnarsRokare.MobAI
 {
-    public class FixerAI : MobAIBase, IControllableMob
+    public class FixerAI : MobAIBase, IMobAIType
     {
         public MaxStack<Piece> m_assignment = new MaxStack<Piece>(100);
         public MaxStack<Container> m_containers;
@@ -137,7 +137,7 @@ namespace RagnarsRokare.MobAI
 
         private void ConfigureIdle()
         {
-            Brain.Configure(State.Idle.ToString())
+            Brain.Configure(State.Idle)
                 .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20.0f)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
