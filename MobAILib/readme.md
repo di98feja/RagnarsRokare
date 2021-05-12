@@ -82,11 +82,14 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 // Barg and Morg
 
 ### Future plans ###
-- Ability to register custom MobAI-classes
 - Add a general Fighting-behaviour that can be used by all MobAI-classes
 - More built-in MobAI classes
+- More common behaviours
 
 ### Changelog ###
+-Version 0.1.2
+Added ability to register custom MobAI-classes
+
 - Version 0.1.1  
 Added overload for RegisterMob that takes the config as an object
 
