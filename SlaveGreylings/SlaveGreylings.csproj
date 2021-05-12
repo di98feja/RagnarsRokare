@@ -121,7 +121,12 @@
     <None Include="Misc\SlaveGreylingsBanner.pdn" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\MobAILib\MobAILib.csproj">
+      <Project>{17e57b00-6d93-4a15-b127-11749921623c}</Project>
+      <Name>MobAILib</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
