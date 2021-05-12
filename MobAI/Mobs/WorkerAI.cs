@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    public class WorkerAI : MobAIBase, IControllableMob
+    public class WorkerAI : MobAIBase, IMobAIType
     {
         public MaxStack<Assignment> m_assignment;
         public MaxStack<Container> m_containers;

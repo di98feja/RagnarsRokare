@@ -77,6 +77,7 @@
   <ItemGroup>
     <Compile Include="Helpers\Assignment.cs" />
     <Compile Include="MobAILib.cs" />
+    <Compile Include="Mobs\ExampleAI.cs" />
     <Compile Include="Mobs\FixerAI.cs" />
     <Compile Include="Config\FixerAIConfig.cs" />
     <Compile Include="Helpers\Common.cs" />
@@ -86,7 +87,7 @@
     <Compile Include="Mobs\WorkerAI.cs" />
     <Compile Include="Config\WorkerAIConfig.cs" />
     <Compile Include="IBehaviour.cs" />
-    <Compile Include="IControllableMob.cs" />
+    <Compile Include="IMobAIType.cs" />
     <Compile Include="Helpers\MaxStack.cs" />
     <Compile Include="MobAIBase.cs" />
     <Compile Include="MobAIInfo.cs" />

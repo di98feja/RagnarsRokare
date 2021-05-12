@@ -35,6 +35,11 @@ These are the default values
     public int TimeLimitOnAssignment = 30;  
     public string[] IncludedContainers = new string[] { "piece_chest_wood" };  
 
+**``RegisterMobAI(Type mobAIType)``**
+Used to register a custom MobAI
+mobAIType must be a class that inherit MobAIBase and implement the IMobAIType interface
+See wiki at [GitHub](https://github.com/di98feja/RagnarsRokare/wiki) for an example mobAI implementation.
+
 **``RegisterMob(Character character, string uniqueId, string mobAIName, string configAsJson)``**  
 Used to register a mob to use a MobAI.
 - character is the Character component of the mob

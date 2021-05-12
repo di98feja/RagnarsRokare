@@ -17,13 +17,31 @@ namespace RagnarsRokare.MobAI
             {
                 try
                 {
-                    var instance = Activator.CreateInstance(mobController) as IControllableMob;
+                    var instance = Activator.CreateInstance(mobController) as IMobAIType;
                     RegisterMobAI(instance);
                 }
                 catch (Exception e)
                 {
-                    Debug.LogWarning($"Failed to instanciate MobAIController type:{e.Message}");
+                    Debug.LogWarning($"Failed to instanciate MobAIType type:{e.Message}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Register a custom MobAI.
+        /// The type must inhert MobAIBase and implement the IMobAIType interface
+        /// </summary>
+        /// <param name="mobAIType">The Type of the MobAI class</param>
+        public static void RegisterMobAI(Type mobAIType)
+        {
+            try
+            {
+                var instance = Activator.CreateInstance(mobAIType) as IMobAIType;
+                RegisterMobAI(instance);
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"Failed to instanciate MobAIType type:{e.Message}");
             }
         }
 
@@ -36,7 +54,7 @@ namespace RagnarsRokare.MobAI
             return m_mobAIs.Keys;
         }
 
-        private static void RegisterMobAI(IControllableMob mob)
+        private static void RegisterMobAI(IMobAIType mob)
         {
             var mobInfo = mob.GetMobAIInfo();
             m_mobAIs.Add(mobInfo.Name, mobInfo);
@@ -44,7 +62,7 @@ namespace RagnarsRokare.MobAI
 
         private static IEnumerable<Type> GetAllMobAITypes()
         {
-            var it = typeof(IControllableMob);
+            var it = typeof(IMobAIType);
             var asm = Assembly.GetExecutingAssembly();
             return asm.GetLoadableTypes().Where(it.IsAssignableFrom).Where(t => !(t.Equals(it))).ToList();
         }
