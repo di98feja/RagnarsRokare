@@ -78,6 +78,14 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public Character TargetCreature
+        {
+            get
+            {
+                return (Character)(Instance as MonsterAI).GetType().GetField("m_targetCreature", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance);
+            }
+        }
+
         public Character Attacker { get; set; }
 
         public abstract void Follow(Player player);
@@ -111,11 +119,11 @@ namespace RagnarsRokare.MobAI
             return false;
         }
 
-        public bool MoveAndAvoidFire(Vector3 destination, float dt, float distance)
+        public bool MoveAndAvoidFire(Vector3 destination, float dt, float distance, bool running = false)
         {
             if (AvoidFire(dt)) return false;
 
-            return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, false);
+            return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
         }
 
         protected Player GetPlayer(ZDOID characterID)
