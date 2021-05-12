@@ -12,6 +12,7 @@ namespace RagnarsRokare.MobAI.Mobs
     /// <summary>
     /// Each MobAI must inherit the MobAIBase class.
     /// It wraps the Valheim original AI class that is accessible via the Instance property.
+    /// In addition it must implement the IMobAIType to be usable by the MobManager
     /// </summary>
     public class ExampleAI : MobAIBase, IMobAIType
     {
@@ -50,6 +51,9 @@ namespace RagnarsRokare.MobAI.Mobs
             };
         }
 
+        /// <summary>
+        /// Define an internal helperclass to define the States
+        /// </summary>
         class State
         {
             public const string Idle = "Idle";
@@ -58,10 +62,12 @@ namespace RagnarsRokare.MobAI.Mobs
             public const string PickupItem = "PickupItem";
         }
 
+        /// <summary>
+        /// Define an internal helperclass to define the triggers
+        /// </summary>
         class Trigger
         {
             public const string Bored = "Bored";
-            public const string Happy = "Happy";
             public const string FoundItem = "FoundItem";
             public const string Failed = "Failed";
             public const string Update = "Update";
