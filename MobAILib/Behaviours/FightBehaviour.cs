@@ -14,7 +14,7 @@ namespace RagnarsRokare.MobAI
             public const string Main = Prefix + "Main";
             public const string IdentifyEnemy = Prefix + "IdentifyEnemy";
             public const string TrackingEnemy = Prefix + "TrackingEnemy";
-            public const string EngaugingEnemy = Prefix + "EngaugingEnemy";
+            public const string EngagingEnemy = Prefix + "EngaugingEnemy";
             public const string CirclingEnemy = Prefix + "CirclingEnemy";
             public const string AvoidFire = Prefix + "AvoidFire"; 
             public const string DoneFighting = Prefix + "DoneFigfhting";
@@ -79,14 +79,14 @@ namespace RagnarsRokare.MobAI
             
             brain.Configure(State.TrackingEnemy)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.Attack, State.EngaugingEnemy)
+                .Permit(Trigger.Attack, State.EngagingEnemy)
                 .Permit(Trigger.NoTarget, State.IdentifyEnemy)
                 .OnEntry(t =>
                 {
 
                 });
             
-            brain.Configure(State.EngaugingEnemy)
+            brain.Configure(State.EngagingEnemy)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.Attack, State.TrackingEnemy)
                 .Permit(Trigger.NoTarget, State.IdentifyEnemy)
@@ -168,7 +168,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (aiBase.Brain.IsInState(State.EngaugingEnemy))
+            if (aiBase.Brain.IsInState(State.EngagingEnemy))
             {
                 m_circleTimer -= dt;
                 bool isLookingAtAssignment = (bool)Common.Invoke<MonsterAI>(aiBase.Character.GetComponent<MonsterAI>(), "IsLookingAt", aiBase.TargetCreature.transform.position, 10f);

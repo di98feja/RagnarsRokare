@@ -57,6 +57,7 @@ namespace RagnarsRokare.SlaveGreylings
                             Debug.LogError($"Failed to register Mob AI ({mobInfo.AIType}). {e.Message}");
                             return;
                         }
+                        __instance.m_faction = Character.Faction.Players;
                         tameable.m_fedDuration = mobInfo.PostTameFeedDuration;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);

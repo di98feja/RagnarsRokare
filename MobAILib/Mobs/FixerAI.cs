@@ -165,6 +165,12 @@ namespace RagnarsRokare.MobAI
                     fightBehaviour.SuccessState = State.Idle as string;
                     fightBehaviour.FailState = State.Flee as string;
                     Brain.Fire(Trigger.Fight);
+                })
+                .OnExit(t =>
+                {
+                    Attacker = null;
+                    StopMoving();
+                    Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
         }
         private void ConfigureFlee()
@@ -192,7 +198,9 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Follow");
+                    Attacker = null;
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
+
                 });
         }
 
@@ -434,16 +442,16 @@ namespace RagnarsRokare.MobAI
             var monsterAi = Instance as MonsterAI;
 
             //Runtime triggers
-            Brain.Fire(Trigger.Follow.ToString());
-            Brain.Fire(Trigger.TakeDamage.ToString());
-            Brain.Fire(Trigger.Hungry.ToString());
+            Brain.Fire(Trigger.Follow);
+            Brain.Fire(Trigger.TakeDamage);
+            Brain.Fire(Trigger.Hungry);
             Brain.Fire(UpdateTrigger, (monsterAi, dt));
 
             //Assigned timeout-function 
             m_assignedTimer += dt;
             if (m_assignedTimer > m_config.TimeLimitOnAssignment)
             {
-                Brain.Fire(Trigger.AssignmentTimedOut.ToString());
+                Brain.Fire(Trigger.AssignmentTimedOut);
             }
 
             if (Brain.IsInState(State.Follow))
