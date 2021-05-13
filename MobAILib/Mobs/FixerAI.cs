@@ -26,7 +26,7 @@ namespace RagnarsRokare.MobAI
         public float RoarTimeout { get; private set; } = 10;
         public float RepairMinDist { get; private set; } = 2.0f;
 
-        private class State
+        public class State
         {
             public const string Idle = "Idle";
             public const string Follow = "Follow";
@@ -57,6 +57,7 @@ namespace RagnarsRokare.MobAI
             public const string RepairNeeded = "RepairNeeded";
             public const string RepairDone = "RepairDone";
             public const string Failed = "Failed";
+            public const string Fight = "Fight";
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
@@ -95,9 +96,9 @@ namespace RagnarsRokare.MobAI
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
-            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
+            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems);
             fightBehaviour = new FightBehaviour();
-            fightBehaviour.Configure(this, Brain, State.Fight.ToString());
+            fightBehaviour.Configure(this, Brain, State.Fight);
 
             ConfigureIdle();
             ConfigureFollow();
@@ -105,6 +106,7 @@ namespace RagnarsRokare.MobAI
             ConfigureSearchForItems();
             ConfigureAssigned();
             ConfigureFlee();
+            ConfigureFight();
         }
 
         private void RegisterRPCMethods()
@@ -138,7 +140,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureIdle()
         {
             Brain.Configure(State.Idle)
-                .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20.0f)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20.0f)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
@@ -150,6 +152,19 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Nothing to do, bored");
+                });
+        }
+
+        private void ConfigureFight()
+        {
+            Brain.Configure(State.Fight)
+                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .Permit(Trigger.Fight, fightBehaviour.InitState)
+                .OnEntry(t =>
+                {
+                    fightBehaviour.SuccessState = State.Idle as string;
+                    fightBehaviour.FailState = State.Flee as string;
+                    Brain.Fire(Trigger.Fight);
                 });
         }
         private void ConfigureFlee()
@@ -184,7 +199,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureIsHungry()
         {
             Brain.Configure(State.Hungry)
-                .PermitIf(Trigger.TakeDamage, State.Flee, () => Attacker != null)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => Attacker != null)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10)
                 .OnEntry(t =>
@@ -236,7 +251,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureSearchForItems()
         {
             Brain.Configure(State.SearchForItems.ToString())
-                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Fight, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .Permit(Trigger.SearchForItems, searchForItemsBehaviour.InitState)
                 .OnEntry(t =>
@@ -253,23 +268,11 @@ namespace RagnarsRokare.MobAI
                 });
         }
 
-        private void ConfigureFight()
-        {
-            Brain.Configure(State.Fight.ToString())
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .Permit(Trigger.TakeDamage, fightBehaviour.InitState)
-                .OnEntry(t =>
-                {
-                    Debug.Log("FightBehaviour Initiated");
-                    Brain.Fire(Trigger.TakeDamage.ToString());
-                });
-        }
-
         private void ConfigureAssigned()
         {
             Brain.Configure(State.Assigned)
                 .InitialTransition(State.MoveToAssignment)
-                .PermitIf(Trigger.TakeDamage, State.Flee, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
                 .Permit(Trigger.AssignmentTimedOut, State.Idle)

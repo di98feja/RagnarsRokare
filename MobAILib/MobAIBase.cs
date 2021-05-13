@@ -84,6 +84,10 @@ namespace RagnarsRokare.MobAI
             {
                 return (Character)(Instance as MonsterAI).GetType().GetField("m_targetCreature", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance);
             }
+            set
+            {
+                (Instance as MonsterAI).GetType().GetField("m_targetCreature", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Instance, value);
+            }
         }
 
         public Character Attacker { get; set; }
