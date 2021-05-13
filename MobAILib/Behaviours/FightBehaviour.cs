@@ -150,18 +150,20 @@ namespace RagnarsRokare.MobAI
             if (aiBase.TargetCreature == null)
             {
                 aiBase.Brain.Fire(Trigger.TargetLost);
+                return;
             }
 
             if (aiBase.Brain.IsInState(State.IdentifyEnemy))
             {
                 m_searchTimer -= dt;
                 var parameters = new object[] { (m_aiBase.Character as Humanoid), dt, null, null };
-                typeof(MonsterAI).GetMethod("UpdateTarget", BindingFlags.NonPublic|BindingFlags.Instance).Invoke(aiBase, parameters);
+                typeof(MonsterAI).GetMethod("UpdateTarget", BindingFlags.NonPublic|BindingFlags.Instance).Invoke(aiBase.Instance, parameters);
                 m_canHearTarget = (bool)parameters[1];
                 m_canSeeTarget = (bool)parameters[2];
                 if (m_canHearTarget || m_canSeeTarget)
                 {
                     aiBase.Brain.Fire(Trigger.FoundTarget);
+                    return;
                 }
                 else
                 {
