@@ -164,11 +164,13 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle as string;
                     fightBehaviour.FailState = State.Flee as string;
+                    TargetCreature = Attacker;
                     Brain.Fire(Trigger.Fight);
                 })
                 .OnExit(t =>
                 {
                     Attacker = null;
+                    TargetCreature = null;
                     StopMoving();
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
