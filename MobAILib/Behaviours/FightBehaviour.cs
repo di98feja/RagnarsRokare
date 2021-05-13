@@ -155,11 +155,8 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.IdentifyEnemy))
             {
                 m_searchTimer -= dt;
-                var parameters = new object[] { (m_aiBase.Character as Humanoid), dt, null, null };
-                typeof(MonsterAI).GetMethod("UpdateTarget", BindingFlags.NonPublic|BindingFlags.Instance).Invoke(aiBase, parameters);
-                m_canHearTarget = (bool)parameters[1];
-                m_canSeeTarget = (bool)parameters[2];
-                if (m_canHearTarget || m_canSeeTarget)
+                aiBase.TargetCreature = BaseAI.FindClosestEnemy(aiBase.Character, aiBase.Character.transform.position, m_circleTargetDistance);
+                if (aiBase.TargetCreature != null)
                 {
                     aiBase.Brain.Fire(Trigger.FoundTarget);
                 }
