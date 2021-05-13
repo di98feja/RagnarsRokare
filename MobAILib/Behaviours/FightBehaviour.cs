@@ -43,15 +43,13 @@ namespace RagnarsRokare.MobAI
         public string SuccessState { get; set; }
         public string FailState { get; set; }
         public string InitState { get { return State.Main; } }
-        private bool m_canHearTarget = false;
-        private bool m_canSeeTarget = false;
         private ItemDrop.ItemData m_weapon;
         private float m_circleTargetDistance = 10;
         private float m_agressionLevel = 10;
         private float m_circleTimer;
         private float m_searchTimer;
         private MobAIBase m_aiBase;
-        private object m_startPosition;
+        private Vector3 m_startPosition;
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
@@ -134,6 +132,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus("Done fighting.");
+                    aiBase.Brain.Fire(Trigger.Done); 
                 });
         }
 
@@ -147,18 +146,14 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (aiBase.TargetCreature == null)
-            {
-                aiBase.Brain.Fire(Trigger.TargetLost);
-                return;
-            }
-
             if (aiBase.Brain.IsInState(State.IdentifyEnemy))
             {
                 m_searchTimer -= dt;
-                aiBase.TargetCreature = BaseAI.FindClosestEnemy(aiBase.Character, aiBase.Character.transform.position, m_circleTargetDistance);
-                if (aiBase.TargetCreature != null)
+                Debug.LogWarning("Identify Enemy");
+                aiBase.TargetCreature = BaseAI.FindClosestEnemy(aiBase.Character, m_startPosition, aiBase.Instance.m_viewRange);
+                if (aiBase.TargetCreature != null && Vector3.Distance(aiBase.Character.transform.position, aiBase.TargetCreature.transform.position) < aiBase.Instance.m_viewRange)
                 {
+                    Debug.LogWarning($"Target distance: {Vector3.Distance(m_startPosition, aiBase.TargetCreature.transform.position)}");
                     aiBase.Brain.Fire(Trigger.FoundTarget);
                     return;
                 }
@@ -169,7 +164,15 @@ namespace RagnarsRokare.MobAI
                 if (m_searchTimer <= 0)
                 {
                     aiBase.Brain.Fire(Trigger.NoTarget);
+                    aiBase.StopMoving();
                 }
+                return;
+            }
+
+            if (aiBase.TargetCreature == null)
+            {
+                aiBase.Brain.Fire(Trigger.TargetLost);
+                Debug.LogWarning("Target Lost");
                 return;
             }
 
