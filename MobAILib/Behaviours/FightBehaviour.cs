@@ -17,7 +17,7 @@ namespace RagnarsRokare.MobAI
             public const string EngaugingEnemy = Prefix + "EngaugingEnemy";
             public const string CirclingEnemy = Prefix + "CirclingEnemy";
             public const string AvoidFire = Prefix + "AvoidFire"; 
-            public const string DoneFigfhting = Prefix + "DoneFigfhting";
+            public const string DoneFighting = Prefix + "DoneFigfhting";
         }
 
         private class Trigger
@@ -29,6 +29,7 @@ namespace RagnarsRokare.MobAI
             public const string Attack = Prefix + "Attack";
             public const string Flee = Prefix + "Flee";
             public const string Reposition = Prefix + "Reposition";
+            public const string Done = Prefix + "Done";
         }
 
         // Input
@@ -52,10 +53,9 @@ namespace RagnarsRokare.MobAI
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
-            
             brain.Configure(State.Main)
                 .InitialTransition(State.IdentifyEnemy)
-                .Permit(Trigger.Flee, FixerAI.State.Flee)
+                .PermitDynamic(Trigger.Flee, () => FailState)
                 .SubstateOf(parentState)
                 .OnEntry(t =>
                 {
@@ -66,7 +66,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.IdentifyEnemy)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.FoundTarget, State.TrackingEnemy)
-                .Permit(Trigger.NoTarget, State.DoneFigfhting)
+                .Permit(Trigger.NoTarget, State.DoneFighting)
                 .OnEntry(t =>
                 {
                     if (aiBase.TargetCreature != null)
@@ -105,9 +105,9 @@ namespace RagnarsRokare.MobAI
                 });
             
 
-            brain.Configure(State.DoneFigfhting)
-                .InitialTransition(FixerAI.State.Idle)
+            brain.Configure(State.DoneFighting)
                 .SubstateOf(State.Main)
+                .PermitDynamic(Trigger.Done, () => SuccessState)
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus("Done fighting.");
