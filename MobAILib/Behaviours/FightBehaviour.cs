@@ -150,6 +150,7 @@ namespace RagnarsRokare.MobAI
             if (aiBase.TargetCreature == null)
             {
                 aiBase.Brain.Fire(Trigger.TargetLost);
+                return;
             }
 
             if (aiBase.Brain.IsInState(State.IdentifyEnemy))
@@ -159,6 +160,7 @@ namespace RagnarsRokare.MobAI
                 if (aiBase.TargetCreature != null)
                 {
                     aiBase.Brain.Fire(Trigger.FoundTarget);
+                    return;
                 }
                 else
                 {
