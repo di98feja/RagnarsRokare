@@ -101,6 +101,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.TrackingEnemy)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.Attack, State.EngagingEnemy)
+
                 .Permit(Trigger.NoTarget, State.IdentifyEnemy)
                 .OnEntry(t =>
                 {
@@ -122,7 +123,8 @@ namespace RagnarsRokare.MobAI
                 .SubstateOf(State.Main)
                 .OnEntry(t =>
                 {
-                    m_circleTimer = 100 / m_agressionLevel + 1;
+                    m_circleTimer = 100 / m_agressionLevel;
+                    aiBase.Character.Heal(aiBase.Character.GetMaxHealth()/50);
                 });
 
 
@@ -159,7 +161,7 @@ namespace RagnarsRokare.MobAI
                 }
                 else
                 {
-                    Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_circleTargetDistance, true);
+                    Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_circleTargetDistance * 2, true);
                 }
                 if (m_searchTimer <= 0)
                 {
@@ -180,6 +182,12 @@ namespace RagnarsRokare.MobAI
             {
                 Debug.LogWarning($"Enemy:{aiBase.TargetCreature}, Weapon:{m_weapon}, AttackRange:{m_weapon.m_shared.m_aiAttackRange}, Dist:{Vector3.Distance(aiBase.Instance.transform.position, aiBase.TargetCreature.transform.position)}");
                 m_searchTimer -= dt;
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > 2 * m_agressionLevel + m_circleTargetDistance)
+                {
+                    aiBase.Brain.Fire(Trigger.NoTarget);
+                    Debug.LogWarning("Target Got Away.");
+                    return;
+                }
                 if (aiBase.MoveAndAvoidFire(aiBase.TargetCreature.transform.position, dt, Math.Max(m_weapon.m_shared.m_aiAttackRange - 0.5f, 1.0f), true))
                 {
                     aiBase.StopMoving();
