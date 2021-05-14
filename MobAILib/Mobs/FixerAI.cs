@@ -167,8 +167,10 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Fight, fightBehaviour.InitState)
                 .OnEntry(t =>
                 {
-                    fightBehaviour.SuccessState = State.Idle as string;
-                    fightBehaviour.FailState = State.Flee as string;
+                    fightBehaviour.SuccessState = State.Idle;
+                    fightBehaviour.FailState = State.Flee;
+                    fightBehaviour.m_circleTargetDistance = 10;
+                    fightBehaviour.m_agressionLevel = 10;
                     TargetCreature = Attacker;
                     Brain.Fire(Trigger.Fight);
                 })
