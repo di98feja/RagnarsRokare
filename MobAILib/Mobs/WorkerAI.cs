@@ -232,7 +232,6 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Fight, fightBehaviour.InitState)
                 .OnEntry(t =>
                 {
-                    Debug.LogWarning("Enter Fight mode");
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
                     fightBehaviour.m_circleTargetDistance = 10;
