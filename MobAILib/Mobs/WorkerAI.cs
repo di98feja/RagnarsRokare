@@ -235,7 +235,7 @@ namespace RagnarsRokare.MobAI
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
                     fightBehaviour.m_circleTargetDistance = 10;
-                    fightBehaviour.m_agressionLevel = 5;
+                    fightBehaviour.m_agressionLevel = 2;
                     TargetCreature = Attacker;
                     Brain.Fire(Trigger.Fight);
                 })
