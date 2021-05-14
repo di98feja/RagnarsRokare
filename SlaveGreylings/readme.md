@@ -48,6 +48,16 @@ In order to keep build the creatures behaviour, we have been using Stateless sta
 We hope you find this little mod fun!
 // Barg and Morg
 
+0.7.1 Patch Notes:
+From the book of Barg:  
+##################################  
+Today the day 65 in this paradise world of Odin we call Valheim, we found a way of training the slaves to defend themselves.  
+After teaching the brutes to attack back if they are attacked, the greylings soon copied their behavior and now also tries to attack.   
+They still fall back on fleeing as soon as hurt, so I am afraid they wont help out much in the way of defense.   
+It seems like this defensive behavior have enraged Eikthyr so that Eikthyr's beasts now attacks slaves. 
+##################################  
+* This updatte is adjusted for the use fight behaviour in MobAILib 0.1.3 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
+
 0.7 Patch Notes:  
 * MobAI separated out to MobAILib that can be used separatley in any mod (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
 * This makes the SlaveGreylings dependent on MobAILib from rev 0.7 and forward.
