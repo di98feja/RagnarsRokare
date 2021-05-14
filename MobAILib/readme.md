@@ -23,7 +23,7 @@ Will fight if hurt but give up easily (has low aggression level). The FeedDurati
     public int TimeLimitOnAssignment = 60;  
 
 - **FixerAI**  
-Makes the character go and repair any damaged structures it finds. It will equip the item from position 0 in inventory and use its attack animation when reapairing. Will fight aggressively if hurt (has high aggression level).  
+Makes the character go and repair any damaged structures it finds. It will equip the item from position 0 in inventory or Hammer if it exists and use its attack animation when reapairing. Will fight aggressively if hurt (has high aggression level).  
 The FeedDuration setting only applies if there is a Tameable component attached to the gameObject.  
 **FixerAIConfig**  
 These are the default values  
