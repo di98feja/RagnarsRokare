@@ -19,6 +19,7 @@ namespace RagnarsRokare.MobAI
         {
             public const string Idle = "Idle";
             public const string Flee = "Flee";
+            public const string Fight = "Fight";
             public const string Follow = "Follow";
             public const string Assigned = "Assigned";
             public const string Hungry = "Hungry";
@@ -52,12 +53,14 @@ namespace RagnarsRokare.MobAI
             public const string AssignmentFinished = "AssignmentFinished";
             public const string LeaveAssignment = "LeaveAssignment";
             public const string ShoutedAt = "ShoutedAt";
+            public const string Fight = "Fight";
         }
 
         private readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         private readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         private float m_triggerTimer;
         private readonly SearchForItemsBehaviour searchForItemsBehaviour;
+        readonly FightBehaviour fightBehaviour;
         private float m_closeEnoughTimer;
         private float m_searchForNewAssignmentTimer;
         private float m_shoutedAtTimer;
@@ -67,7 +70,7 @@ namespace RagnarsRokare.MobAI
         public WorkerAI() : base()
         { }
 
-        public WorkerAI(MonsterAI instance, object config) : base(instance, State.Idle.ToString())
+        public WorkerAI(MonsterAI instance, object config) : base(instance, State.Idle)
         {
             m_config = config as WorkerAIConfig;
             m_assignment = new MaxStack<Assignment>(20);
@@ -83,12 +86,16 @@ namespace RagnarsRokare.MobAI
 
             RegisterRPCMethods();
 
-            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
-            LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound.ToString());
+            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
+            LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
-            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems.ToString());
+            searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems);
+            fightBehaviour = new FightBehaviour();
+            fightBehaviour.Configure(this, Brain, State.Fight);
+
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());
+
             ConfigureFlee();
             ConfigureFollow();
             ConfigureIsHungry();
@@ -100,6 +107,7 @@ namespace RagnarsRokare.MobAI
             ConfigureDoneWithAssignment();
             ConfigureUnloadToAssignment();
             ConfigureShoutedAt();
+            ConfigureFight();
         }
 
         private void RegisterRPCMethods()
@@ -118,11 +126,11 @@ namespace RagnarsRokare.MobAI
 
         private void ConfigureSearchContainers()
         {
-            Brain.Configure(State.SearchForItems.ToString())
-                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .Permit(Trigger.SearchForItems.ToString(), searchForItemsBehaviour.InitState)
-                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
+            Brain.Configure(State.SearchForItems)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .Permit(Trigger.SearchForItems, searchForItemsBehaviour.InitState)
+                .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .OnEntry(t =>
                 {
                     searchForItemsBehaviour.KnownContainers = m_containers;
@@ -132,18 +140,18 @@ namespace RagnarsRokare.MobAI
                     searchForItemsBehaviour.ContainerSearchRadius = m_config.ContainerSearchRadius;
                     searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
                     searchForItemsBehaviour.FailState = t.Parameters[2] as string;
-                    Brain.Fire(Trigger.SearchForItems.ToString());
+                    Brain.Fire(Trigger.SearchForItems);
                 });
         }
 
         private void ConfigureIdle()
         {
-            Brain.Configure(State.Idle.ToString())
-                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => Tameable?.IsHungry() ?? false)
-                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
-                .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) =>
+            Brain.Configure(State.Idle)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(Trigger.Hungry, State.Hungry, () => Tameable?.IsHungry() ?? false)
+                .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
+                .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
@@ -157,28 +165,28 @@ namespace RagnarsRokare.MobAI
 
         private void ConfigureIsHungry()
         {
-            Brain.Configure(State.Hungry.ToString())
-                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(UpdateTrigger, State.SearchForFood.ToString(), (arg) => (m_foodsearchtimer += arg.dt) > 10)
-                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
+            Brain.Configure(State.Hungry)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10)
+                .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Is hungry, no work a do");
                     m_foodsearchtimer = 0f;
                 });
 
-            Brain.Configure(State.SearchForFood.ToString())
-                .SubstateOf(State.Hungry.ToString())
-                .Permit(LookForItemTrigger.Trigger, State.SearchForItems.ToString())
+            Brain.Configure(State.SearchForFood)
+                .SubstateOf(State.Hungry)
+                .Permit(LookForItemTrigger.Trigger, State.SearchForItems)
                 .OnEntry(t =>
                 {
-                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem.ToString(), State.HaveNoFoodItem.ToString());
+                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem, State.HaveNoFoodItem);
                 });
 
-            Brain.Configure(State.HaveFoodItem.ToString())
-                .SubstateOf(State.Hungry.ToString())
-                .Permit(Trigger.ConsumeItem.ToString(), State.Idle.ToString())
+            Brain.Configure(State.HaveFoodItem)
+                .SubstateOf(State.Hungry)
+                .Permit(Trigger.ConsumeItem, State.Idle)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("*burps*");
@@ -192,22 +200,22 @@ namespace RagnarsRokare.MobAI
                     {
                         Instance.GetComponent<Character>().Heal(ConsumeHeal);
                     }
-                    Brain.Fire(Trigger.ConsumeItem.ToString());
+                    Brain.Fire(Trigger.ConsumeItem);
                 });
 
-            Brain.Configure(State.HaveNoFoodItem.ToString())
-                .SubstateOf(State.Hungry.ToString())
-                .PermitIf(Trigger.ItemNotFound.ToString(), State.Hungry.ToString())
+            Brain.Configure(State.HaveNoFoodItem)
+                .SubstateOf(State.Hungry)
+                .PermitIf(Trigger.ItemNotFound, State.Hungry)
                 .OnEntry(t =>
                 {
-                    Brain.Fire(Trigger.ItemNotFound.ToString());
+                    Brain.Fire(Trigger.ItemNotFound);
                 });
         }
 
         private void ConfigureFollow()
         {
-            Brain.Configure(State.Follow.ToString())
-                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => !(bool)args.instance.GetFollowTarget())
+            Brain.Configure(State.Follow)
+                .PermitIf(UpdateTrigger, State.Idle, (args) => !(bool)args.instance.GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Follow");
@@ -217,11 +225,33 @@ namespace RagnarsRokare.MobAI
                 });
         }
 
+        private void ConfigureFight()
+        {
+            Brain.Configure(State.Fight)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .Permit(Trigger.Fight, fightBehaviour.InitState)
+                .OnEntry(t =>
+                {
+                    fightBehaviour.SuccessState = State.Idle;
+                    fightBehaviour.FailState = State.Flee;
+                    fightBehaviour.m_circleTargetDistance = 10;
+                    fightBehaviour.m_agressionLevel = 2;
+                    TargetCreature = Attacker;
+                    Brain.Fire(Trigger.Fight);
+                })
+                .OnExit(t =>
+                {
+                    Attacker = null;
+                    TargetCreature = null;
+                    StopMoving();
+                    Invoke<MonsterAI>(Instance, "SetAlerted", false);
+                });
+        }
         private void ConfigureFlee()
         {
-            Brain.Configure(State.Flee.ToString())
-                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => TimeSinceHurt >= 20f)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
+            Brain.Configure(State.Flee)
+                .PermitIf(UpdateTrigger, State.Idle, (args) => TimeSinceHurt >= 20f)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Got hurt, flee!");
@@ -237,8 +267,8 @@ namespace RagnarsRokare.MobAI
 
         private void ConfigureShoutedAt()
         {
-            Brain.Configure(State.MoveAwayFrom.ToString())
-                .PermitIf(UpdateTrigger, State.Idle.ToString(), (args) => (m_shoutedAtTimer += args.dt) >= 1f)
+            Brain.Configure(State.MoveAwayFrom)
+                .PermitIf(UpdateTrigger, State.Idle, (args) => (m_shoutedAtTimer += args.dt) >= 1f)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Ahhh Scary!");
@@ -254,13 +284,13 @@ namespace RagnarsRokare.MobAI
 
         private void ConfigureAssigned()
         {
-            Brain.Configure(State.Assigned.ToString())
-                .InitialTransition(State.MoveToAssignment.ToString())
-                .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => Tameable?.IsHungry() ?? false)
-                .Permit(Trigger.AssignmentTimedOut.ToString(), State.DoneWithAssignment.ToString())
-                .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
+            Brain.Configure(State.Assigned)
+                .InitialTransition(State.MoveToAssignment)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(Trigger.Hungry, State.Hungry, () => Tameable?.IsHungry() ?? false)
+                .Permit(Trigger.AssignmentTimedOut, State.DoneWithAssignment)
+                .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus($"I'm on it Boss");
@@ -275,38 +305,38 @@ namespace RagnarsRokare.MobAI
                     }
                 });
 
-            Brain.Configure(State.HaveAssignmentItem.ToString())
-                .SubstateOf(State.Assigned.ToString())
-                .Permit(Trigger.ItemFound.ToString(), State.MoveToAssignment.ToString())
+            Brain.Configure(State.HaveAssignmentItem)
+                .SubstateOf(State.Assigned)
+                .Permit(Trigger.ItemFound, State.MoveToAssignment)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus($"Trying to Pickup {searchForItemsBehaviour.FoundItem.m_shared.m_name}");
                     var pickedUpInstance = (Character as Humanoid).PickupPrefab(searchForItemsBehaviour.FoundItem.m_dropPrefab);
                     (Character as Humanoid).EquipItem(pickedUpInstance);
                     m_carrying = pickedUpInstance;
-                    Brain.Fire(Trigger.ItemFound.ToString());
+                    Brain.Fire(Trigger.ItemFound);
                 });
 
-            Brain.Configure(State.HaveNoAssignmentItem.ToString())
-                .SubstateOf(State.Assigned.ToString())
-                .PermitIf(Trigger.ItemNotFound.ToString(), State.DoneWithAssignment.ToString())
+            Brain.Configure(State.HaveNoAssignmentItem)
+                .SubstateOf(State.Assigned)
+                .PermitIf(Trigger.ItemNotFound, State.DoneWithAssignment)
                 .OnEntry(t =>
                 {
-                    Brain.Fire(Trigger.ItemNotFound.ToString());
+                    Brain.Fire(Trigger.ItemNotFound);
                 });
         }
 
         private void ConfigureMoveToAssignment()
         {
             string nextState = State.Idle;
-            Brain.Configure(State.MoveToAssignment.ToString())
-                .SubstateOf(State.Assigned.ToString())
-                .PermitDynamicIf(UpdateTrigger, (args) => true ? nextState.ToString() : State.Idle.ToString(), (arg) => MoveToAssignment(arg.dt))
+            Brain.Configure(State.MoveToAssignment)
+                .SubstateOf(State.Assigned)
+                .PermitDynamicIf(UpdateTrigger, (args) => true ? nextState : State.Idle, (arg) => MoveToAssignment(arg.dt))
                 .OnEntry(t =>
                 {
                     UpdateAiStatus($"Moving to assignment {m_assignment.Peek().TypeOfAssignment.Name}");
                     m_closeEnoughTimer = 0;
-                    if (t.Source == State.HaveAssignmentItem.ToString())
+                    if (t.Source == State.HaveAssignmentItem)
                     {
                         nextState = State.UnloadToAssignment;
                     }
@@ -319,10 +349,10 @@ namespace RagnarsRokare.MobAI
 
         private void ConfigureCheckAsignment()
         {
-            Brain.Configure(State.CheckingAssignment.ToString())
-                .SubstateOf(State.Assigned.ToString())
-                .Permit(LookForItemTrigger.Trigger, State.SearchForItems.ToString())
-                .Permit(Trigger.AssignmentFinished.ToString(), State.DoneWithAssignment.ToString())
+            Brain.Configure(State.CheckingAssignment)
+                .SubstateOf(State.Assigned)
+                .Permit(LookForItemTrigger.Trigger, State.SearchForItems)
+                .Permit(Trigger.AssignmentFinished, State.DoneWithAssignment)
                 .OnEntry(t =>
                 {
                     StopMoving();
@@ -343,20 +373,20 @@ namespace RagnarsRokare.MobAI
                     }
                     if (!fetchItems.Any())
                     {
-                        Brain.Fire(Trigger.AssignmentFinished.ToString());
+                        Brain.Fire(Trigger.AssignmentFinished);
                     }
                     else
                     {
-                        Brain.Fire(LookForItemTrigger, fetchItems, State.HaveAssignmentItem.ToString(), State.HaveNoAssignmentItem.ToString());
+                        Brain.Fire(LookForItemTrigger, fetchItems, State.HaveAssignmentItem, State.HaveNoAssignmentItem);
                     }
                 });
         }
 
         private void ConfigureUnloadToAssignment()
         {
-            Brain.Configure(State.UnloadToAssignment.ToString())
-                .SubstateOf(State.Assigned.ToString())
-                .Permit(Trigger.AssignmentFinished.ToString(), State.CheckingAssignment.ToString())
+            Brain.Configure(State.UnloadToAssignment)
+                .SubstateOf(State.Assigned)
+                .Permit(Trigger.AssignmentFinished, State.CheckingAssignment)
                 .OnEntry(t =>
                 {
                     StopMoving();
@@ -386,15 +416,15 @@ namespace RagnarsRokare.MobAI
                     (Character as Humanoid).UnequipItem(m_carrying, false);
                     m_carrying = null;
 
-                    Brain.Fire(Trigger.AssignmentFinished.ToString());
+                    Brain.Fire(Trigger.AssignmentFinished);
                 });
         }
 
         private void ConfigureDoneWithAssignment()
         {
-            Brain.Configure(State.DoneWithAssignment.ToString())
-                .SubstateOf(State.Assigned.ToString())
-                .Permit(Trigger.LeaveAssignment.ToString(), State.Idle.ToString())
+            Brain.Configure(State.DoneWithAssignment)
+                .SubstateOf(State.Assigned)
+                .Permit(Trigger.LeaveAssignment, State.Idle)
                 .OnEntry(t =>
                 {
                     if (m_carrying != null)
@@ -405,7 +435,7 @@ namespace RagnarsRokare.MobAI
                     }
                     UpdateAiStatus($"Done doin worksignment!");
                     m_containers.Peek()?.SetInUse(inUse: false);
-                    Brain.Fire(Trigger.LeaveAssignment.ToString());
+                    Brain.Fire(Trigger.LeaveAssignment);
                 });
         }
 
@@ -420,31 +450,31 @@ namespace RagnarsRokare.MobAI
             UpdateFeedtimerIfHurt(m_config.FeedDuration);
 
             //Runtime triggers
-            Brain.Fire(Trigger.TakeDamage.ToString());
-            Brain.Fire(Trigger.Follow.ToString());
-            Brain.Fire(Trigger.Hungry.ToString());
+            Brain.Fire(Trigger.TakeDamage);
+            Brain.Fire(Trigger.Follow);
+            Brain.Fire(Trigger.Hungry);
             Brain.Fire(UpdateTrigger, (monsterAi, dt));
 
             //Assigned timeout-function 
             m_assignedTimer += dt;
             if (m_assignedTimer > m_config.TimeLimitOnAssignment)
             {
-                Brain.Fire(Trigger.AssignmentTimedOut.ToString());
+                Brain.Fire(Trigger.AssignmentTimedOut);
             }
             //Assignment timeout-function
             if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt, m_config.TimeBeforeAssignmentCanBeRepeated))
             {
-                Brain.Fire(Trigger.AssignmentTimedOut.ToString());
+                Brain.Fire(Trigger.AssignmentTimedOut);
             }
 
-            if (Brain.IsInState(State.Flee.ToString()) || Brain.IsInState(State.MoveAwayFrom.ToString()))
+            if (Brain.IsInState(State.Flee) || Brain.IsInState(State.MoveAwayFrom))
             {
                 var fleeFrom = Attacker == null ? Character.transform.position : Attacker.transform.position;
                 Invoke<MonsterAI>(Instance, "Flee", dt, fleeFrom);
                 return;
             }
 
-            if (Brain.IsInState(State.Follow.ToString()))
+            if (Brain.IsInState(State.Follow))
             {
                 Invoke<MonsterAI>(Instance, "Follow", monsterAi.GetFollowTarget(), dt);
                 return;
@@ -453,6 +483,12 @@ namespace RagnarsRokare.MobAI
             if (Brain.IsInState(searchForItemsBehaviour.InitState))
             {
                 searchForItemsBehaviour.Update(this, dt);
+                return;
+            }
+
+            if (Brain.IsInState(fightBehaviour.InitState))
+            {
+                fightBehaviour.Update(this, dt);
                 return;
             }
         }
@@ -512,7 +548,7 @@ namespace RagnarsRokare.MobAI
         {
             Attacker = mob.Character;
             m_shoutedAtTimer = 0.0f;
-            Brain.Fire(Trigger.ShoutedAt.ToString());
+            Brain.Fire(Trigger.ShoutedAt);
         }
     }
 }

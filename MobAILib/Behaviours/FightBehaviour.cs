@@ -44,8 +44,8 @@ namespace RagnarsRokare.MobAI
         public string FailState { get; set; }
         public string InitState { get { return State.Main; } }
         private ItemDrop.ItemData m_weapon;
-        private float m_circleTargetDistance = 10;
-        private float m_agressionLevel = 10;
+        public float m_circleTargetDistance;
+        public float m_agressionLevel;
         private float m_circleTimer;
         private float m_searchTimer;
         private MobAIBase m_aiBase;
