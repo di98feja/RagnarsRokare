@@ -75,6 +75,11 @@ namespace RagnarsRokare.MobAI
             m_config = config as FixerAIConfig;
             m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
 
+            if (instance.m_consumeHeal == 0.0f)
+            {
+                instance.m_consumeHeal = Character.GetMaxHealth() * 0.25f;
+            }
+
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
             if (!string.IsNullOrEmpty(loadedAssignments))
             {
@@ -142,7 +147,7 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.Idle)
                 .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20.0f)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
+                .PermitIf(Trigger.Hungry, State.Hungry, () => Tameable?.IsHungry() ?? false)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
@@ -284,7 +289,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(State.MoveToAssignment)
                 .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
+                .PermitIf(Trigger.Hungry, State.Hungry, () => Tameable?.IsHungry() ?? false)
                 .Permit(Trigger.AssignmentTimedOut, State.Idle)
                 .OnEntry(t =>
                 {
@@ -442,6 +447,8 @@ namespace RagnarsRokare.MobAI
 
             m_triggerTimer = 0f;
             var monsterAi = Instance as MonsterAI;
+
+            UpdateFeedtimerIfHurt(m_config.PostTameFeedDuration);
 
             //Runtime triggers
             Brain.Fire(Trigger.Follow);

@@ -20,11 +20,6 @@ namespace RagnarsRokare.MobAI
             }
         }
 
-        public static Tameable Tameable(this MonsterAI instance)
-        {
-            return instance.GetType().GetField("m_tamable", BindingFlags.Instance|BindingFlags.NonPublic).GetValue(instance) as Tameable;
-        }
-
         public static T RandomOrDefault<T>(this IEnumerable<T> list)
         {
             if (list == null || !list.Any()) return list.FirstOrDefault();

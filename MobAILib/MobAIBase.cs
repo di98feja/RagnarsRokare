@@ -54,6 +54,14 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public Tameable Tameable
+        {
+            get
+            {
+                return Instance.GetType().GetField("m_tamable", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Instance) as Tameable;
+            }
+        }
+
         public ZNetView NView
         {
             get
@@ -156,6 +164,18 @@ namespace RagnarsRokare.MobAI
                 }
             }
             return newStatus;
+        }
+
+        public void UpdateFeedtimerIfHurt(float normalFeedDuration)
+        {
+            if (Tameable != null && Character.GetHealthPercentage() < 1.0f)
+            {
+                Tameable.m_fedDuration = 30.0f;
+            }
+            else
+            {
+                Tameable.m_fedDuration = normalFeedDuration;
+            }
         }
     }
 }

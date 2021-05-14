@@ -76,6 +76,11 @@ namespace RagnarsRokare.MobAI
             m_assignedTimer = 0f;
             m_foodsearchtimer = 0f;
 
+            if (instance.m_consumeHeal == 0.0f)
+            {
+                instance.m_consumeHeal = Character.GetMaxHealth() * 0.25f;
+            }
+
             RegisterRPCMethods();
 
             UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update.ToString());
@@ -136,7 +141,7 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.Idle.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
+                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => Tameable?.IsHungry() ?? false)
                 .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .PermitIf(UpdateTrigger, State.Assigned.ToString(), (arg) =>
                 {
@@ -253,7 +258,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(State.MoveToAssignment.ToString())
                 .PermitIf(Trigger.TakeDamage.ToString(), State.Flee.ToString(), () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => (Instance as MonsterAI).Tameable()?.IsHungry() ?? false)
+                .PermitIf(Trigger.Hungry.ToString(), State.Hungry.ToString(), () => Tameable?.IsHungry() ?? false)
                 .Permit(Trigger.AssignmentTimedOut.ToString(), State.DoneWithAssignment.ToString())
                 .Permit(Trigger.ShoutedAt.ToString(), State.MoveAwayFrom.ToString())
                 .OnEntry(t =>
@@ -411,6 +416,8 @@ namespace RagnarsRokare.MobAI
             if (m_triggerTimer < 0.1f) return;
             m_triggerTimer = 0f;
             var monsterAi = Instance as MonsterAI;
+
+            UpdateFeedtimerIfHurt(m_config.FeedDuration);
 
             //Runtime triggers
             Brain.Fire(Trigger.TakeDamage.ToString());
