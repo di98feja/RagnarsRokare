@@ -134,7 +134,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus("Done fighting.");
-                    aiBase.Brain.Fire(Trigger.Done); 
+                    aiBase.Character.Heal(aiBase.Character.GetMaxHealth() / 10);
                 });
         }
 
@@ -153,7 +153,7 @@ namespace RagnarsRokare.MobAI
                 m_searchTimer -= dt;
                 Debug.LogWarning("Identify Enemy");
                 aiBase.TargetCreature = BaseAI.FindClosestEnemy(aiBase.Character, m_startPosition, aiBase.Instance.m_viewRange);
-                if (aiBase.TargetCreature != null && Vector3.Distance(aiBase.Character.transform.position, aiBase.TargetCreature.transform.position) < aiBase.Instance.m_viewRange)
+                if (aiBase.TargetCreature != null && Vector3.Distance(m_startPosition, aiBase.TargetCreature.transform.position) < aiBase.Instance.m_viewRange)
                 {
                     Debug.LogWarning($"Target distance: {Vector3.Distance(m_startPosition, aiBase.TargetCreature.transform.position)}");
                     aiBase.Brain.Fire(Trigger.FoundTarget);
@@ -186,6 +186,7 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.Brain.Fire(Trigger.NoTarget);
                     Debug.LogWarning("Target Got Away.");
+                    aiBase.StopMoving();
                     return;
                 }
                 if (aiBase.MoveAndAvoidFire(aiBase.TargetCreature.transform.position, dt, Math.Max(m_weapon.m_shared.m_aiAttackRange - 0.5f, 1.0f), true))
@@ -237,6 +238,17 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.Attack);
                     return;
                 }
+            }
+
+            if (aiBase.Brain.IsInState(State.DoneFighting))
+            {
+                aiBase.Brain.Fire(Trigger.TargetLost);
+                aiBase.MoveAndAvoidFire(m_startPosition, dt, 0.5f, false);
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) < 1f)
+                {
+                    aiBase.Brain.Fire(Trigger.Done);
+                }
+                return;
             }
 
         }
