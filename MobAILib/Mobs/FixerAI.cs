@@ -183,7 +183,7 @@ namespace RagnarsRokare.MobAI
                     if (currentWeapon != null)
                     {
                         (Character as Humanoid).UnequipItem(currentWeapon);
-                        Debug.LogWarning($"Unequipped {currentWeapon.m_shared.m_name}");
+                        Common.Dbgl($"Unequipped {currentWeapon.m_shared.m_name}");
                     }
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
@@ -375,7 +375,7 @@ namespace RagnarsRokare.MobAI
                             currentWeapon = inventory.GetItem(0);
                         }
                         (Character as Humanoid).EquipItem(currentWeapon);
-                        Debug.Log($"Equipped {currentWeapon.m_shared.m_name}");
+                        Common.Dbgl($"Equipped {currentWeapon.m_shared.m_name} as repair tool");
                         zAnim.SetTrigger(currentWeapon.m_shared.m_attack.m_attackAnimation);
                         hammerAnimationStarted = true;
                     }
