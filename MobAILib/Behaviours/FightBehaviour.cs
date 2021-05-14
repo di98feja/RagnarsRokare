@@ -151,11 +151,9 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.IdentifyEnemy))
             {
                 m_searchTimer -= dt;
-                Debug.LogWarning("Identify Enemy");
                 aiBase.TargetCreature = BaseAI.FindClosestEnemy(aiBase.Character, m_startPosition, aiBase.Instance.m_viewRange);
                 if (aiBase.TargetCreature != null && Vector3.Distance(m_startPosition, aiBase.TargetCreature.transform.position) < aiBase.Instance.m_viewRange)
                 {
-                    Debug.LogWarning($"Target distance: {Vector3.Distance(m_startPosition, aiBase.TargetCreature.transform.position)}");
                     aiBase.Brain.Fire(Trigger.FoundTarget);
                     return;
                 }
@@ -174,18 +172,15 @@ namespace RagnarsRokare.MobAI
             if (aiBase.TargetCreature == null)
             {
                 aiBase.Brain.Fire(Trigger.TargetLost);
-                Debug.LogWarning("Target Lost");
                 return;
             }
 
             if (aiBase.Brain.IsInState(State.TrackingEnemy))
             {
-                Debug.LogWarning($"Enemy:{aiBase.TargetCreature}, Weapon:{m_weapon}, AttackRange:{m_weapon.m_shared.m_aiAttackRange}, Dist:{Vector3.Distance(aiBase.Instance.transform.position, aiBase.TargetCreature.transform.position)}");
                 m_searchTimer -= dt;
                 if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > 2 * m_agressionLevel + m_circleTargetDistance)
                 {
                     aiBase.Brain.Fire(Trigger.NoTarget);
-                    Debug.LogWarning("Target Got Away.");
                     aiBase.StopMoving();
                     return;
                 }
@@ -207,7 +202,6 @@ namespace RagnarsRokare.MobAI
                 m_circleTimer -= dt;
                 bool isLookingAtTarget = (bool)Common.Invoke<MonsterAI>(aiBase.Instance, "IsLookingAt", aiBase.TargetCreature.transform.position, 10f);
                 bool isCloseToTarget = Vector3.Distance(aiBase.Instance.transform.position, aiBase.TargetCreature.transform.position) < m_weapon.m_shared.m_aiAttackRange;
-                Debug.LogWarning($"isLookingAtTarget:{isLookingAtTarget}, isCloseToTarget:{isCloseToTarget}, circleTime:{m_circleTimer}");
                 if (!isCloseToTarget)
                 {
                     aiBase.Brain.Fire(Trigger.Attack);
@@ -224,7 +218,6 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.Reposition);
                     return;
                 }
-                Debug.LogWarning("Smiting the enemy!");
                 Common.Invoke<MonsterAI>(aiBase.Instance, "DoAttack", aiBase.TargetCreature, false);
                 return;
             }
@@ -242,7 +235,6 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.DoneFighting))
             {
-                aiBase.Brain.Fire(Trigger.TargetLost);
                 aiBase.MoveAndAvoidFire(m_startPosition, dt, 0.5f, false);
                 if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) < 1f)
                 {
