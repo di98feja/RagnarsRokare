@@ -18,6 +18,7 @@ namespace RagnarsRokare.SlaveGreylings
                     __instance.m_consumeItems.Clear();
                     __instance.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
                     __instance.m_consumeSearchRange = 50;
+                    ___m_character.m_faction = Character.Faction.Players;
                     try
                     {
                         var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
