@@ -11,7 +11,7 @@ Each MobAI has its own config file with settings: WorkerAIConfig and FixerAIConf
 
 - **WorkerAI**  
 Makes the character walk around and refill Smelters, Kilns, Fireplaces and Torches. It will search for items on the ground and in chests.
-Does not fight, only flee when getting damaged. The FeedDuration setting only applies if there is a Tameable component attached to the gameObject.  
+Will fight if hurt but give up easily (has low aggression level). The FeedDuration setting only applies if there is a Tameable component attached to the gameObject.  
 **WorkerAIConfig**  
     public int FeedDuration = 1000;  
     public int AssignmentSearchRadius = 30;  
@@ -23,7 +23,7 @@ Does not fight, only flee when getting damaged. The FeedDuration setting only ap
     public int TimeLimitOnAssignment = 60;  
 
 - **FixerAI**  
-Makes the character go and repair any damaged structures it finds. It will equip the item from position 0 in inventory and use its attack animation when reapairing. Does not fight, only flee when taking damage.  
+Makes the character go and repair any damaged structures it finds. It will equip the item from position 0 in inventory and use its attack animation when reapairing. Will fight aggressively if hurt (has high aggression level).  
 The FeedDuration setting only applies if there is a Tameable component attached to the gameObject.  
 **FixerAIConfig**  
 These are the default values  
@@ -35,9 +35,9 @@ These are the default values
     public int TimeLimitOnAssignment = 30;  
     public string[] IncludedContainers = new string[] { "piece_chest_wood" };  
 
-**``RegisterMobAI(Type mobAIType)``**
-Used to register a custom MobAI
-mobAIType must be a class that inherit MobAIBase and implement the IMobAIType interface
+**``RegisterMobAI(Type mobAIType)``**  
+Used to register a custom MobAI  
+mobAIType must be a class that inherit MobAIBase and implement the IMobAIType interface  
 See wiki at [GitHub](https://github.com/di98feja/RagnarsRokare/wiki) for an example mobAI implementation.
 
 **``RegisterMob(Character character, string uniqueId, string mobAIName, string configAsJson)``**  
@@ -82,12 +82,19 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 // Barg and Morg
 
 ### Future plans ###
-- Add a general Fighting-behaviour that can be used by all MobAI-classes
+- Add more specialized Fighting-behaviours that can be used by all MobAI-classes
+- Add Interface and Strategy pattern for runtime selection of fightingBehaviour
+- FeedingBehaviour, remove the need for Tameable component
+- ItemSorterBehaviour
 - More built-in MobAI classes
 - More common behaviours
 
 ### Changelog ###
--Version 0.1.2
+- Version 0.1.3  
+Added basic FightingBehaviour to FixerAI and WorkerAI  
+Fixed error when adding fuel to fireplaces with no mob on follow
+
+- Version 0.1.2  
 Added ability to register custom MobAI-classes
 
 - Version 0.1.1  
