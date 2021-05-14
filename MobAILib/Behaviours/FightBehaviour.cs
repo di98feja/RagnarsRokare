@@ -86,6 +86,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_weapon = (ItemDrop.ItemData)Common.Invoke<MonsterAI>(aiBase.Instance, "SelectBestAttack", (aiBase.Character as Humanoid), 1.0f);
+                    Debug.Log($"Equipped {m_weapon.m_shared.m_name}");
                     if (m_weapon == null)
                     {
                         brain.Fire(Trigger.Failed);

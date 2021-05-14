@@ -179,9 +179,16 @@ namespace RagnarsRokare.MobAI
                     Attacker = null;
                     TargetCreature = null;
                     StopMoving();
+                    var currentWeapon = (Character as Humanoid).GetCurrentWeapon();
+                    if (currentWeapon != null)
+                    {
+                        (Character as Humanoid).UnequipItem(currentWeapon);
+                        Debug.LogWarning($"Unequipped {currentWeapon.m_shared.m_name}");
+                    }
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
         }
+
         private void ConfigureFlee()
         {
             Brain.Configure(State.Flee)
@@ -357,12 +364,18 @@ namespace RagnarsRokare.MobAI
                     if (!hammerAnimationStarted)
                     {
                         var zAnim = typeof(Character).GetField("m_zanim", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Character) as ZSyncAnimation;
-                        ItemDrop.ItemData currentWeapon = (Character as Humanoid).GetCurrentWeapon();
-                        if (null == currentWeapon)
+                        ItemDrop.ItemData currentWeapon = null;
+                        var inventory = (Character as Humanoid).GetInventory();
+                        if (inventory.ContainsItem(ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Tool, "Hammer").FirstOrDefault().m_itemData))
                         {
-                            currentWeapon = (Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault();
-                            (Character as Humanoid).EquipItem(currentWeapon);
+                            currentWeapon = inventory.GetItem("$item_hammer");
                         }
+                        else
+                        {
+                            currentWeapon = inventory.GetItem(0);
+                        }
+                        (Character as Humanoid).EquipItem(currentWeapon);
+                        Debug.Log($"Equipped {currentWeapon.m_shared.m_name}");
                         zAnim.SetTrigger(currentWeapon.m_shared.m_attack.m_attackAnimation);
                         hammerAnimationStarted = true;
                     }
