@@ -12,7 +12,10 @@ namespace RagnarsRokare.MobAI
         public MaxStack<Container> m_containers;
         public ItemDrop.ItemData m_carrying;
         public float m_assignedTimer;
-        
+
+        // Management
+        private Vector3 m_startPosition;
+
         private class State
         {
             public const string Idle = "Idle";
@@ -158,12 +161,49 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Nothing to do, bored");
+                    m_startPosition = Instance.transform.position;
                 });
         }
 
         private void ConfigureIsHungry()
         {
-        }
+            Brain.Configure(State.Hungry)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10)
+                .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus("Is hungry, no work a do");
+                    m_foodsearchtimer = 0f;
+                });
+
+            Brain.Configure(State.SearchForFood)
+                .SubstateOf(State.Hungry)
+                .Permit(LookForItemTrigger.Trigger, State.SearchForItems)
+                .OnEntry(t =>
+                {
+                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem, State.HaveNoFoodItem);
+                });
+
+            Brain.Configure(State.HaveFoodItem)
+                .SubstateOf(State.Hungry)
+                .Permit(Trigger.ConsumeItem, State.Idle)
+                .OnEntry(t =>
+                {
+                    UpdateAiStatus("*burps*");
+                    (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
+                    (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
+                    var animator = Instance.GetType().GetField("m_animator", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
+                    animator.SetTrigger("consume");
+                    float ConsumeHeal = (Instance as MonsterAI).m_consumeHeal;
+
+                    if (ConsumeHeal > 0f)
+                    {
+                        Instance.GetComponent<Character>().Heal(ConsumeHeal);
+                    }
+                    Brain.Fire(Trigger.ConsumeItem);
+                });
 
         private void ConfigureFollow()
         {
@@ -248,6 +288,7 @@ namespace RagnarsRokare.MobAI
                 {
                     UpdateAiStatus($"I'm on it Boss");
                     m_assignedTimer = 0;
+                    m_startPosition = Instance.transform.position;
                 })
                 .OnExit(t =>
                 {
@@ -442,6 +483,12 @@ namespace RagnarsRokare.MobAI
             if (Brain.IsInState(fightBehaviour.StartState))
             {
                 fightBehaviour.Update(this, dt);
+                return;
+            }
+
+            if (Brain.IsInState(State.Idle) || Brain.IsInState(State.Hungry))
+            {
+                Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
                 return;
             }
         }

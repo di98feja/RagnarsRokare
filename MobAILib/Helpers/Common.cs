@@ -169,5 +169,18 @@ namespace RagnarsRokare.MobAI
             }
             return false;
         }
+
+        public static bool Alarmed(BaseAI instance, float Awareness)
+        {
+            foreach (Character allCharacter in Character.GetAllCharacters())
+            {
+                if (BaseAI.IsEnemy(instance.GetComponent<Character>(), allCharacter) && instance.CanSenseTarget(allCharacter) && Vector3.Distance(instance.transform.position, allCharacter.transform.position) < Awareness * 5)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
     }
 }
