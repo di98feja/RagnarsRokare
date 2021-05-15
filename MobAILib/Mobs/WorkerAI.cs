@@ -213,7 +213,7 @@ namespace RagnarsRokare.MobAI
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
-                    Character.SetMoveDir(Vector3.zero);
+                    StopMoving();
                 });
         }
 
