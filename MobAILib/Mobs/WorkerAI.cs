@@ -196,9 +196,6 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    Attacker = null;
-                    TargetCreature = null;
-                    StopMoving();
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
         }

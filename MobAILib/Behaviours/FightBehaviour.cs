@@ -63,6 +63,10 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus("Entered fighting behaviour");
                     m_startPosition = aiBase.Instance.transform.position;
+                })
+                .OnExit(t =>
+                {
+                    aiBase.StopMoving();
                 });
 
             brain.Configure(State.IdentifyEnemy)
@@ -139,7 +143,7 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.Attacker = null;
                     aiBase.TargetCreature = null;
-                    aiBase.StopMoving();
+                    aiBase.TimeSinceHurt = 20;
                 });
         }
 
