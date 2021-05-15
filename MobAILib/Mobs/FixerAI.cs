@@ -145,7 +145,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureIdle()
         {
             Brain.Configure(State.Idle)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20.0f)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20.0f  )
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(Trigger.Hungry, State.Hungry, () => Tameable?.IsHungry() ?? false)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>

@@ -56,7 +56,7 @@ After teaching the brutes to attack back if they are attacked, the greylings soo
 They still fall back on fleeing as soon as hurt, so I am afraid they wont help out much in the way of defense.   
 It seems like this defensive behavior have enraged Eikthyr so that Eikthyr's beasts now attacks slaves. 
 ##################################  
-* This updatte is adjusted for the use fight behaviour in MobAILib 0.1.3 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
+* This update is adjusted for the use fight behavior in MobAILib 0.1.3 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
 
 0.7 Patch Notes:  
 * MobAI separated out to MobAILib that can be used separatley in any mod (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
