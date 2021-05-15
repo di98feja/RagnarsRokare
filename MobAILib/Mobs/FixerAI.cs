@@ -180,7 +180,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    Attacker = null;
+                    Attacker = null; 
                     TargetCreature = null;
                     StopMoving();
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
@@ -220,7 +220,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureIsHungry()
         {
             Brain.Configure(State.Hungry)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => Attacker != null)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => Attacker != null || Common.Alarmed(Instance, m_config.AwarenessLevel))
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10)
                 .OnEntry(t =>
@@ -273,7 +273,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureSearchForItems()
         {
             Brain.Configure(State.SearchForItems.ToString())
-                .PermitIf(Trigger.TakeDamage.ToString(), State.Fight, () => TimeSinceHurt < 20)
+                .PermitIf(Trigger.TakeDamage.ToString(), State.Fight, () => TimeSinceHurt < 20 || Common.Alarmed(Instance, m_config.AwarenessLevel))
                 .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
                 .Permit(Trigger.SearchForItems, searchForItemsBehaviour.InitState)
                 .OnEntry(t =>
