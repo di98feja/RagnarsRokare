@@ -110,6 +110,9 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.Configure(this, Brain, State.Idle);
             eatingBehaviour.HungryTimeout = m_config.PostTameFeedDuration;
             eatingBehaviour.SearchForItemsState = State.SearchForItems;
+            eatingBehaviour.SuccessState = State.Idle;
+            eatingBehaviour.FailState = State.Idle;
+            eatingBehaviour.HealPercentageOnConsume = 0.1f;
 
             ConfigureIdle();
             ConfigureFollow();
@@ -215,7 +218,6 @@ namespace RagnarsRokare.MobAI
                     UpdateAiStatus("Follow");
                     Attacker = null;
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
-
                 });
         }
 
@@ -445,7 +447,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if(Brain.IsInState(State.Idle) || Brain.IsInState(State.Hungry))
+            if(Brain.IsInState(State.Idle) || Brain.IsInState(eatingBehaviour.StartState))
             {
                 Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
                 return;

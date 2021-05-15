@@ -8,21 +8,23 @@ namespace RagnarsRokare.MobAI
 {
     public class EatingBehaviour : IBehaviour
     {
+        private const string Prefix = "RR_EAT";
+
         private class State
         {
-            public const string Hungry = "Hungry";
-            public const string SearchForFood = "SearchForFood";
-            public const string HaveFoodItem = "HaveFoodItem";
-            public const string HaveNoFoodItem = "HaveNoFoodItem";
+            public const string Hungry = Prefix + "Hungry";
+            public const string SearchForFood = Prefix + "SearchForFood";
+            public const string HaveFoodItem = Prefix + "HaveFoodItem";
+            public const string HaveNoFoodItem = Prefix + "HaveNoFoodItem";
         }
 
         private class Trigger
         {
-            public const string ConsumeItem = "ConsumeItem";
-            public const string ItemFound = "ItemFound";
-            public const string Update = "Update";
-            public const string ItemNotFound = "ItemNotFound";
-            public const string SearchForItems = "SearchForItems";
+            public const string ConsumeItem = Prefix + "ConsumeItem";
+            public const string ItemFound = Prefix + "ItemFound";
+            public const string Update = Prefix + "Update";
+            public const string ItemNotFound = Prefix + "ItemNotFound";
+            public const string SearchForItems = Prefix + "SearchForItems";
         }
 
         public Vector3 LastKnownFoodPosition { get; set; }
@@ -30,7 +32,7 @@ namespace RagnarsRokare.MobAI
         private float m_hungryTimer;
         private float m_foodsearchtimer;
 
-        private StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
+        private StateMachine<string, string>.TriggerWithParameters<float> UpdateTrigger;
         private StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
 
         // Settings
@@ -40,7 +42,7 @@ namespace RagnarsRokare.MobAI
         public string SearchForItemsState;
         public string StartState { get { return State.Hungry; } }
         public float HungryTimeout { get; set; } = 500;
-        public float HurtHungryTimeout { get; set; } = 30;
+        public float HurtHungryTimeout { get; set; } = 10;
 
         public bool IsHungry(bool isHurt)
         {
@@ -51,20 +53,24 @@ namespace RagnarsRokare.MobAI
         {
             m_foodsearchtimer = 0f;
 
-            UpdateTrigger = brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
+            UpdateTrigger = brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
             brain.Configure(State.Hungry)
-                .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10)
+                .PermitIf(UpdateTrigger, State.SearchForFood, (dt) => (m_foodsearchtimer += dt) > 10)
                 .OnEntry(t =>
                 {
+                    aiBase.StopMoving();
                     aiBase.UpdateAiStatus("Is hungry, no work a do");
+                })
+                .OnExit(t =>
+                {
                     m_foodsearchtimer = 0f;
                 });
 
             brain.Configure(State.SearchForFood)
                 .SubstateOf(State.Hungry)
-                .Permit(LookForItemTrigger.Trigger, SearchForItemsState)
+                .PermitDynamic(LookForItemTrigger.Trigger, () => SearchForItemsState)
                 .OnEntry(t =>
                 {
                     brain.Fire(LookForItemTrigger, (aiBase.Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem, State.HaveNoFoodItem);
@@ -86,6 +92,7 @@ namespace RagnarsRokare.MobAI
                     {
                         aiBase.Instance.GetComponent<Character>().Heal(consumeHeal);
                     }
+                    m_hungryTimer = 0f;
                     brain.Fire(Trigger.ConsumeItem);
                 });
 
