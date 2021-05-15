@@ -163,7 +163,7 @@ namespace RagnarsRokare.MobAI
                 }
                 if (m_searchTimer <= 0)
                 {
-                    aiBase.Brain.Fire(Trigger.NoTarget);
+                    aiBase.Brain.Fire(Trigger.NoTarget);w
                     aiBase.StopMoving();
                 }
                 return;
