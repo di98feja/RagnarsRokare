@@ -20,6 +20,9 @@ namespace RagnarsRokare.MobAI
         private float m_repairTimer;
         private float m_roarTimer;
 
+        // Management
+        private Vector3 m_startPosition;
+
         // Settings
         public float CloseEnoughTimeout { get; private set; } = 10;
         public float RepairTimeout { get; private set; } = 5;
@@ -156,6 +159,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnEntry(t =>
                 {
+                    m_startPosition = Instance.transform.position;
                     UpdateAiStatus("Nothing to do, bored");
                 });
         }
@@ -169,8 +173,8 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_circleTargetDistance = 10;
-                    fightBehaviour.m_agressionLevel = 10;
+                    fightBehaviour.m_circleTargetDistance = m_config.MobilityLevel;
+                    fightBehaviour.m_agressionLevel = m_config.AggressionLevel;
                     TargetCreature = Attacker;
                     Brain.Fire(Trigger.Fight);
                 })
@@ -222,6 +226,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Is hungry, no work a do");
+                    m_startPosition = Instance.transform.position;
                     m_foodsearchtimer = 0f;
                 })
                 .OnExit(t => 
@@ -296,6 +301,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus($"uuhhhmm..  checkin' dis over 'ere");
+                    m_startPosition = Instance.transform.position;
                     m_assignedTimer = 0;
                 });
 
@@ -464,7 +470,7 @@ namespace RagnarsRokare.MobAI
             {
                 Brain.Fire(Trigger.AssignmentTimedOut);
             }
-
+           
             if (Brain.IsInState(State.Follow))
             {
                 Invoke<MonsterAI>(Instance, "Follow", monsterAi.GetFollowTarget(), dt);
@@ -490,6 +496,11 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
+            if (Brain.IsInState(State.Idle))
+            {
+                Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
+                return;
+            }
         }
 
         public override void Follow(Player player)

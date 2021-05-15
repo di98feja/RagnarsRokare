@@ -14,7 +14,11 @@ namespace RagnarsRokare.MobAI
         public ItemDrop.ItemData m_carrying;
         public float m_assignedTimer;
         public float m_foodsearchtimer;
-        
+
+
+        // Management
+        private Vector3 m_startPosition;
+
         private class State
         {
             public const string Idle = "Idle";
@@ -160,6 +164,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Nothing to do, bored");
+                    m_startPosition = Instance.transform.position;
                 });
         }
 
@@ -174,6 +179,7 @@ namespace RagnarsRokare.MobAI
                 {
                     UpdateAiStatus("Is hungry, no work a do");
                     m_foodsearchtimer = 0f;
+                    m_startPosition = Instance.transform.position;
                 });
 
             Brain.Configure(State.SearchForFood)
@@ -295,6 +301,7 @@ namespace RagnarsRokare.MobAI
                 {
                     UpdateAiStatus($"I'm on it Boss");
                     m_assignedTimer = 0;
+                    m_startPosition = Instance.transform.position;
                 })
                 .OnExit(t =>
                 {
@@ -489,6 +496,12 @@ namespace RagnarsRokare.MobAI
             if (Brain.IsInState(fightBehaviour.InitState))
             {
                 fightBehaviour.Update(this, dt);
+                return;
+            }
+
+            if (Brain.IsInState(State.Idle))
+            {
+                Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
                 return;
             }
         }
