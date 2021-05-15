@@ -9,7 +9,7 @@ namespace RagnarsRokare.MobAI
     public abstract class MobAIBase
     {
         private BaseAI m_instance = null;
-        public BaseAI Instance 
+        public BaseAI Instance
         {
             get
             {
@@ -34,10 +34,11 @@ namespace RagnarsRokare.MobAI
         public MobAIBase()
         { }
 
-        public MobAIBase(BaseAI instance, string initState)
+        public MobAIBase(BaseAI instance, string initState, MobAIBaseConfig config)
         {
             m_instance = instance;
-            Brain = new StateMachine<string,string>(() => CurrentAIState, s => CurrentAIState = s);
+            Config = config;
+            Brain = new StateMachine<string, string>(() => CurrentAIState, s => CurrentAIState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentAIState = initState;
             if (NView.IsValid())
@@ -46,11 +47,19 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        #region Config
+        private MobAIBaseConfig Config { get; set; }
+        public int Awareness { get { return Config.Awareness; } }
+        public int Agressiveness { get { return Config.Agressiveness; } }
+        public int Mobility { get { return Config.Mobility; } }
+        public int Intelligence { get { return Config.Intelligence; } }
+        #endregion
+
         public Character Character
         {
             get
             {
-                return Instance.GetType().GetField("m_character", BindingFlags.NonPublic|BindingFlags.Instance).GetValue(Instance) as Character;
+                return Instance.GetType().GetField("m_character", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance) as Character;
             }
         }
 
@@ -83,6 +92,14 @@ namespace RagnarsRokare.MobAI
             get
             {
                 return (float)Instance.GetType().GetField("m_timeSinceHurt", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance);
+            }
+        }
+
+        public bool IsHurt
+        {
+            get
+            {
+                return Character.GetHealthPercentage() < 1.0f;
             }
         }
 
@@ -164,18 +181,6 @@ namespace RagnarsRokare.MobAI
                 }
             }
             return newStatus;
-        }
-
-        public void UpdateFeedtimerIfHurt(float normalFeedDuration)
-        {
-            if (Tameable != null && Character.GetHealthPercentage() < 1.0f)
-            {
-                Tameable.m_fedDuration = 30.0f;
-            }
-            else
-            {
-                Tameable.m_fedDuration = normalFeedDuration;
-            }
         }
     }
 }

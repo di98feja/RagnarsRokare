@@ -75,6 +75,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Behaviours\EatingBehaviour.cs" />
+    <Compile Include="Config\MobAIBaseConfig.cs" />
     <Compile Include="Helpers\Assignment.cs" />
     <Compile Include="MobAILib.cs" />
     <Compile Include="Mobs\ExampleAI.cs" />

@@ -1,6 +1,6 @@
 ﻿namespace RagnarsRokare.MobAI
 {
-    public class FixerAIConfig
+    public class FixerAIConfig : MobAIBaseConfig
     {
         public int PostTameFeedDuration = 1000;
         public int AssignmentSearchRadius = 10;

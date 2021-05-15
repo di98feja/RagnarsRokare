@@ -1,6 +1,6 @@
 ﻿namespace RagnarsRokare.MobAI
 {
-    public class WorkerAIConfig
+    public class WorkerAIConfig : MobAIBaseConfig
     {
         public int FeedDuration = 1000;
         public int AssignmentSearchRadius = 30;

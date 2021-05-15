@@ -48,7 +48,7 @@ namespace RagnarsRokare.MobAI
         // Settings
         public float OpenChestDelay { get; private set; } = 1;
         public float MaxSearchTime { get; set; } = 60;
-        public string InitState { get { return State.Main; } }
+        public string StartState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
         public int ItemSearchRadius { get; set; }

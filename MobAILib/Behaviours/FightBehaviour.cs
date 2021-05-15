@@ -42,7 +42,7 @@ namespace RagnarsRokare.MobAI
         // Settings
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public string InitState { get { return State.Main; } }
+        public string StartState { get { return State.Main; } }
         private ItemDrop.ItemData m_weapon;
         public float m_circleTargetDistance;
         public float m_agressionLevel;
