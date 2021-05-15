@@ -196,8 +196,6 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    Attacker = null;
-                    TargetCreature = null;
                     StopMoving();
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
@@ -216,7 +214,7 @@ namespace RagnarsRokare.MobAI
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
-                    Character.SetMoveDir(Vector3.zero);
+                    StopMoving();
                 });
         }
 

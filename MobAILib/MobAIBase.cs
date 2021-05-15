@@ -93,6 +93,10 @@ namespace RagnarsRokare.MobAI
             {
                 return (float)Instance.GetType().GetField("m_timeSinceHurt", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(Instance);
             }
+            set
+            {
+                Instance.GetType().GetField("m_timeSinceHurt", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(Instance, value);
+            }
         }
 
         public bool IsHurt
