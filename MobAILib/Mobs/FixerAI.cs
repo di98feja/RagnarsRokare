@@ -18,6 +18,8 @@ namespace RagnarsRokare.MobAI
         private float m_closeEnoughTimer;
         private float m_repairTimer;
         private float m_roarTimer;
+        private float m_lastSuccessfulFindAssignment;
+        private float m_lastFailedFindAssignment;
         private float m_stuckInIdleTimer;
 
         // Management
@@ -29,6 +31,7 @@ namespace RagnarsRokare.MobAI
         public float RepairTimeout { get; private set; } = 5;
         public float RoarTimeout { get; private set; } = 10;
         public float RepairMinDist { get; private set; } = 2.0f;
+        public float AdjustAssignmentStackSizeTime { get; private set; } = 60;
 
         public class State
         {
@@ -169,7 +172,7 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Root)
                 .InitialTransition(State.Idle)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, m_config.AwarenessLevel)))
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, Awareness)))
                 .PermitIf(Trigger.Follow, State.Follow, () => !Brain.IsInState(State.Follow) && (bool)(Instance as MonsterAI).GetFollowTarget());
         }
 
@@ -211,9 +214,9 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_mobilityLevel = m_config.MobilityLevel;
-                    fightBehaviour.m_agressionLevel = m_config.AggressionLevel;
-                    fightBehaviour.m_awarenessLevel = m_config.AwarenessLevel;
+                    fightBehaviour.m_mobilityLevel = Mobility;
+                    fightBehaviour.m_agressionLevel = Agressiveness;
+                    fightBehaviour.m_awarenessLevel = Awareness;
 
                     Brain.Fire(Trigger.Fight);
                 })
@@ -382,6 +385,7 @@ namespace RagnarsRokare.MobAI
                 {
                     if (t.Trigger == Trigger.Failed || Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() != true) return;
 
+                    Debug.LogWarning($"Trigger:{t.Trigger}");
                     var pieceToRepair = m_assignment.Peek();
                     UpdateAiStatus($"Dis {m_assignment.Peek().m_name} is goood as new!");
                     WearNTear component = pieceToRepair.GetComponent<WearNTear>();
@@ -433,9 +437,39 @@ namespace RagnarsRokare.MobAI
             Common.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
             if (piece != null && !string.IsNullOrEmpty(Common.GetOrCreateUniqueId(Common.GetNView(piece))))
             {
+                m_lastSuccessfulFindAssignment = Time.time;
+                if (Time.time - m_lastFailedFindAssignment > AdjustAssignmentStackSizeTime)
+                {
+                    var newStack = new MaxStack<Piece>(Math.Min(100, (int)(m_assignment.MaxSize * 1.2f)));
+                    int num = 0;
+                    foreach (var p in m_assignment.Reverse())
+                    {
+                        newStack.Push(p);
+                        num++;
+                    }
+                    Common.Dbgl($"Increased Assigned stack to {newStack.MaxSize} from {m_assignment.MaxSize} and copied {num} pieces");
+                    m_assignment = newStack;
+                }
                 m_assignment.Push(piece);
                 return true;
             }
+            else
+            {
+                m_lastFailedFindAssignment = Time.time;
+                if (Time.time - m_lastSuccessfulFindAssignment > AdjustAssignmentStackSizeTime)
+                {
+                    var newStack = new MaxStack<Piece>(Math.Max(1, (int)(m_assignment.MaxSize * 0.8f)));
+                    int num = 0;
+                    foreach (var p in m_assignment.Reverse())
+                    {
+                        newStack.Push(p);
+                        num++;
+                    }
+                    Common.Dbgl($"Decreased Assigned stack to {newStack.MaxSize} from {m_assignment.MaxSize} and copied {num} pieces");
+                    m_assignment = newStack;
+                }
+            }
+
             return false;
         }
 

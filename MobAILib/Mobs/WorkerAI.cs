@@ -211,9 +211,9 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_mobilityLevel = m_config.MobilityLevel;
-                    fightBehaviour.m_agressionLevel = m_config.AggressionLevel;
-                    fightBehaviour.m_awarenessLevel = m_config.AwarenessLevel;
+                    fightBehaviour.m_mobilityLevel =  Mobility;
+                    fightBehaviour.m_agressionLevel = Agressiveness;
+                    fightBehaviour.m_awarenessLevel = Awareness;
                     Brain.Fire(Trigger.Fight);
                 })
                 .OnExit(t =>
