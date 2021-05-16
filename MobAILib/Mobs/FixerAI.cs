@@ -194,6 +194,7 @@ namespace RagnarsRokare.MobAI
                         m_startPosition = HomePosition;
                         m_stuckInIdleTimer = 0;
                     }
+                    if ((m_assignedTimer += arg.dt) < 2f) return false;
                     return AddNewAssignment(arg.instance.transform.position);
                 })
                 .OnEntry(t =>
