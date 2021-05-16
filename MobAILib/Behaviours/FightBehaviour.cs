@@ -44,9 +44,9 @@ namespace RagnarsRokare.MobAI
         public string FailState { get; set; }
         public string StartState { get { return State.Main; } }
         
-        public float m_mobilitylevel;
+        public float m_mobilityLevel;
         public float m_agressionLevel;
-        public float m_Awareness;
+        public float m_awarenessLevel;
 
         // Management
         private float m_viewRange;
@@ -73,9 +73,9 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus("Entered fighting behaviour");
                     m_startPosition = aiBase.Instance.transform.position;
-                    m_viewRange = m_Awareness * 5f;
-                    m_circleTargetDistance = m_mobilitylevel * 2 - m_agressionLevel;
-                    m_searchTargetMovement = m_mobilitylevel;
+                    m_viewRange = m_awarenessLevel * 5f;
+                    m_circleTargetDistance = m_mobilityLevel * 2 - m_agressionLevel;
+                    m_searchTargetMovement = m_mobilityLevel;
                 })
                 .OnExit(t =>
                 {
