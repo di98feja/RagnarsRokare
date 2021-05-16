@@ -43,13 +43,23 @@ namespace RagnarsRokare.MobAI
         public string SuccessState { get; set; }
         public string FailState { get; set; }
         public string StartState { get { return State.Main; } }
-        private ItemDrop.ItemData m_weapon;
-        public float m_circleTargetDistance;
+        
+        public float m_mobilitylevel;
         public float m_agressionLevel;
+        public float m_Awareness;
+
+        // Management
+        private float m_viewRange;
+        private Vector3 m_startPosition;
+        private float m_circleTargetDistance;
+        private float m_searchTargetMovement;
+        private MobAIBase m_aiBase;
+        private ItemDrop.ItemData m_weapon;
+
+        // Timers
         private float m_circleTimer;
         private float m_searchTimer;
-        private MobAIBase m_aiBase;
-        private Vector3 m_startPosition;
+        
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
@@ -63,6 +73,9 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus("Entered fighting behaviour");
                     m_startPosition = aiBase.Instance.transform.position;
+                    m_viewRange = m_Awareness * 5f;
+                    m_circleTargetDistance = m_mobilitylevel * 2 - m_agressionLevel;
+                    m_searchTargetMovement = m_mobilitylevel;
                 })
                 .OnExit(t =>
                 {
@@ -75,10 +88,10 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.NoTarget, State.DoneFighting)
                 .OnEntry(t =>
                 {
-                    m_searchTimer = m_agressionLevel * 2;
                     Debug.Log("IdentifyEnemy-Enter");
-                    if (aiBase.TargetCreature != null)
+                    if (aiBase.Instance.CanSenseTarget(aiBase.Attacker))
                     {
+                        aiBase.TargetCreature = aiBase.Attacker;
                         aiBase.Brain.Fire(Trigger.FoundTarget);
                         return;
                     }
@@ -128,7 +141,7 @@ namespace RagnarsRokare.MobAI
                 .SubstateOf(State.Main)
                 .OnEntry(t =>
                 {
-                    m_circleTimer = 100 / m_agressionLevel;
+                    m_circleTimer = 30f / m_agressionLevel;
                     aiBase.Character.Heal(aiBase.Character.GetMaxHealth()/50);
                 });
 
@@ -149,10 +162,9 @@ namespace RagnarsRokare.MobAI
                 });
         }
 
-
         public void Update(MobAIBase aiBase, float dt)
         {
-            if (aiBase.Character.GetHealthPercentage() < 1 / m_agressionLevel)
+            if (aiBase.Character.GetHealthPercentage() < 1 - m_agressionLevel * 0.08)
             {
                 aiBase.Brain.Fire(Trigger.Flee);
                 return;
@@ -162,16 +174,18 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.IdentifyEnemy))
             {
                 m_searchTimer -= dt;
-                aiBase.TargetCreature = BaseAI.FindClosestEnemy(aiBase.Character, m_startPosition, aiBase.Instance.m_viewRange);
-                if (aiBase.TargetCreature != null && Vector3.Distance(m_startPosition, aiBase.TargetCreature.transform.position) < aiBase.Instance.m_viewRange)
+                Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_circleTargetDistance, true);
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_viewRange - 5)
                 {
+                    return;
+                }
+                aiBase.TargetCreature = BaseAI.FindClosestEnemy(aiBase.Character, m_startPosition, m_viewRange);
+                if (aiBase.TargetCreature != null && Vector3.Distance(m_startPosition, aiBase.TargetCreature.transform.position) < m_viewRange)
+                {
+                    Common.Invoke<MonsterAI>(aiBase.Instance, "LookAt", aiBase.TargetCreature.transform.position);
                     Debug.Log("IdentifyEnemy-FoundTarget");
                     aiBase.Brain.Fire(Trigger.FoundTarget);
                     return;
-                }
-                else
-                {
-                    Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_circleTargetDistance * 2, true);
                 }
                 if (m_searchTimer <= 0)
                 {
@@ -184,6 +198,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.TargetCreature == null)
             {
+                aiBase.Attacker = null;
                 aiBase.Brain.Fire(Trigger.TargetLost);
                 Debug.Log("TargetLost");
                 return;
@@ -192,10 +207,17 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.TrackingEnemy))
             {
                 m_searchTimer -= dt;
-                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > 2 * m_agressionLevel + m_circleTargetDistance)
+                if (aiBase.TargetCreature != aiBase.Attacker && aiBase.Instance.CanSenseTarget(aiBase.Attacker))
+                {
+                    aiBase.TargetCreature = aiBase.Attacker;
+                    //Debug.Log("TrackingEnemy-Switch target to Attacker");
+                }
+                Common.Invoke<MonsterAI>(aiBase.Instance, "LookAt", aiBase.TargetCreature.transform.position);
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_viewRange && (aiBase.TargetCreature != aiBase.Attacker || m_agressionLevel < 5))
                 {
                     Debug.Log("TrackingEnemy-NoTarget(lost track)");
                     aiBase.TargetCreature = null;
+                    aiBase.Attacker = null;
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.NoTarget);
                     return;
@@ -212,6 +234,7 @@ namespace RagnarsRokare.MobAI
                 {
                     Debug.Log("TrackingEnemy-NoTarget(timeout)");
                     aiBase.TargetCreature = null;
+                    aiBase.Attacker = null;
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.NoTarget);
                 }
@@ -268,7 +291,6 @@ namespace RagnarsRokare.MobAI
                 }
                 return;
             }
-
         }
     }
 }
