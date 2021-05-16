@@ -66,7 +66,7 @@ namespace RagnarsRokare.MobAI
         private float m_searchForNewAssignmentTimer;
         private float m_shoutedAtTimer;
 
-        public WorkerAIConfig Config { get; set; }
+        public WorkerAIConfig m_config { get; set; }
 
         public float CloseEnoughTimeout { get; private set; } = 30;
 
@@ -78,9 +78,9 @@ namespace RagnarsRokare.MobAI
 
         public WorkerAI(MonsterAI instance, MobAIBaseConfig config) : base(instance, State.Idle, config)
         {
-            Config = config as WorkerAIConfig;
+            m_config = config as WorkerAIConfig;
             m_assignment = new MaxStack<Assignment>(20);
-            m_containers = new MaxStack<Container>(Config.MaxContainersInMemory);
+            m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
             m_carrying = null;
             m_assignedTimer = 0f;
 
@@ -95,7 +95,7 @@ namespace RagnarsRokare.MobAI
             fightBehaviour.Configure(this, Brain, State.Fight);
             eatingBehaviour = new EatingBehaviour();
             eatingBehaviour.Configure(this, Brain, State.Hungry);
-            eatingBehaviour.HungryTimeout = Config.FeedDuration;
+            eatingBehaviour.HungryTimeout = m_config.FeedDuration;
             eatingBehaviour.SearchForItemsState = State.SearchForItems;
             eatingBehaviour.SuccessState = State.Idle;
             eatingBehaviour.FailState = State.Idle;
@@ -161,9 +161,9 @@ namespace RagnarsRokare.MobAI
                 {
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
-                    searchForItemsBehaviour.AcceptedContainerNames = Config.IncludedContainers;
-                    searchForItemsBehaviour.ItemSearchRadius = Config.ItemSearchRadius;
-                    searchForItemsBehaviour.ContainerSearchRadius = Config.ContainerSearchRadius;
+                    searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
+                    searchForItemsBehaviour.ItemSearchRadius = m_config.ItemSearchRadius;
+                    searchForItemsBehaviour.ContainerSearchRadius = m_config.ContainerSearchRadius;
                     searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
                     searchForItemsBehaviour.FailState = t.Parameters[2] as string;
                     Brain.Fire(Trigger.SearchForItems);
@@ -211,9 +211,9 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_mobilitylevel = Mobility;
-                    fightBehaviour.m_agressionLevel = Agressiveness;
-                    TargetCreature = Attacker;
+                    fightBehaviour.m_mobilityLevel = m_config.MobilityLevel;
+                    fightBehaviour.m_agressionLevel = m_config.AggressionLevel;
+                    fightBehaviour.m_awarenessLevel = m_config.AwarenessLevel;
                     Brain.Fire(Trigger.Fight);
                 })
                 .OnExit(t =>
@@ -434,12 +434,12 @@ namespace RagnarsRokare.MobAI
 
             //Assigned timeout-function 
             m_assignedTimer += dt;
-            if (m_assignedTimer > Config.TimeLimitOnAssignment)
+            if (m_assignedTimer > m_config.TimeLimitOnAssignment)
             {
                 Brain.Fire(Trigger.AssignmentTimedOut);
             }
             //Assignment timeout-function
-            if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt, Config.TimeBeforeAssignmentCanBeRepeated))
+            if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt, m_config.TimeBeforeAssignmentCanBeRepeated))
             {
                 Brain.Fire(Trigger.AssignmentTimedOut);
             }
@@ -478,7 +478,7 @@ namespace RagnarsRokare.MobAI
 
         public bool AddNewAssignment(BaseAI instance, MaxStack<Assignment> KnownAssignments)
         {
-            Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Config.AssignmentSearchRadius);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, m_config.AssignmentSearchRadius);
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);
