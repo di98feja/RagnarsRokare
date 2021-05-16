@@ -195,7 +195,7 @@ namespace RagnarsRokare.MobAI
                         Debug.LogWarning("m_startPosition = m_homePosition");
                         m_startPosition = HomePosition;
                     }
-                    return AddNewAssignment(arg.instance.transform.position, m_assignment);
+                    return AddNewAssignment(arg.instance.transform.position);
                 })
                 .OnEntry(t =>
                 {
@@ -420,7 +420,7 @@ namespace RagnarsRokare.MobAI
             return MoveAndAvoidFire(m_assignment.Peek().FindClosestPoint(Instance.transform.position), dt, distance);
         }
 
-        private bool AddNewAssignment(Vector3 position, MaxStack<Piece> m_assignment)
+        private bool AddNewAssignment(Vector3 position)
         {
             Common.Dbgl($"Enter {nameof(AddNewAssignment)}");
             var pieceList = new List<Piece>();
@@ -457,6 +457,7 @@ namespace RagnarsRokare.MobAI
                 m_lastFailedFindAssignment = Time.time;
                 if (Time.time - m_lastSuccessfulFindAssignment > AdjustAssignmentStackSizeTime)
                 {
+                    m_lastSuccessfulFindAssignment = Time.time;
                     var newStack = new MaxStack<Piece>(Math.Max(1, (int)(m_assignment.MaxSize * 0.8f)));
                     int num = 0;
                     foreach (var p in m_assignment.Reverse())
