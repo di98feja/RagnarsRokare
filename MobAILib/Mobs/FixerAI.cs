@@ -18,9 +18,11 @@ namespace RagnarsRokare.MobAI
         private float m_closeEnoughTimer;
         private float m_repairTimer;
         private float m_roarTimer;
+        private float m_stuckInIdleTimer;
 
         // Management
-        private Vector3 m_startPosition;
+        public Vector3 m_startPosition;
+        public Vector3 m_homePosition;
 
         // Settings
         public float CloseEnoughTimeout { get; private set; } = 10;
@@ -84,6 +86,11 @@ namespace RagnarsRokare.MobAI
             if (instance.m_consumeHeal == 0.0f)
             {
                 instance.m_consumeHeal = Character.GetMaxHealth() * 0.25f;
+            }
+
+            if (m_startPosition == Vector3.zero)
+            {
+                m_startPosition = instance.transform.position;
             }
 
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
@@ -181,11 +188,16 @@ namespace RagnarsRokare.MobAI
                 {
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
+                    if((m_stuckInIdleTimer += arg.dt) > 60)
+                    {
+                        Debug.LogWarning("m_startPosition = m_homePosition");
+                        m_startPosition = m_homePosition;
+                    }
                     return AddNewAssignment(arg.instance.transform.position, m_assignment);
                 })
                 .OnEntry(t =>
                 {
-                    m_startPosition = Instance.transform.position;
+                    m_stuckInIdleTimer = 0;
                     UpdateAiStatus("Nothing to do, bored");
                 });
         }
@@ -242,6 +254,10 @@ namespace RagnarsRokare.MobAI
                     UpdateAiStatus("Follow");
                     Attacker = null;
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
+                })
+                .OnExit(t =>
+                {
+                    m_homePosition = m_startPosition = eatingBehaviour.LastKnownFoodPosition = Instance.transform.position;
                 });
         }
 
@@ -273,7 +289,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus($"uuhhhmm..  checkin' dis over 'ere");
-                    m_startPosition = Instance.transform.position;
+                    m_startPosition = m_assignment.Peek().transform.position;
                     m_assignedTimer = 0;
                 });
 

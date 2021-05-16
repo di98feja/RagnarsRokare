@@ -61,8 +61,9 @@ namespace RagnarsRokare.SlaveGreylings
                         tameable.m_fedDuration = mobInfo.PostTameFeedDuration;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
-                        ai.m_randomMoveRange = 5;
                         ai.m_consumeSearchRange = GreylingsConfig.ItemSearchRadius.Value;
+                        ai.m_randomMoveRange = 20;
+                        ai.m_randomMoveInterval = 5;
                         string givenName = ___m_nview?.GetZDO()?.GetString(Constants.Z_GivenName);
                         if (!string.IsNullOrEmpty(givenName))
                         {
