@@ -165,7 +165,7 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Root)
                 .InitialTransition(State.Idle)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, m_config.AwarenessLevel)))
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, Awareness)))
                 .PermitIf(Trigger.Follow, State.Follow, () => !Brain.IsInState(State.Follow) && (bool)(Instance as MonsterAI).GetFollowTarget());
         }
 
@@ -202,9 +202,9 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_mobilityLevel = m_config.MobilityLevel;
-                    fightBehaviour.m_agressionLevel = m_config.AggressionLevel;
-                    fightBehaviour.m_awarenessLevel = m_config.AwarenessLevel;
+                    fightBehaviour.m_mobilityLevel = Mobility;
+                    fightBehaviour.m_agressionLevel = Agressiveness;
+                    fightBehaviour.m_awarenessLevel = Awareness;
 
                     Brain.Fire(Trigger.Fight);
                 })

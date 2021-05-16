@@ -51,7 +51,11 @@ namespace RagnarsRokare.SlaveGreylings
                                 ItemSearchRadius = GreylingsConfig.ItemSearchRadius.Value,
                                 MaxContainersInMemory = GreylingsConfig.MaxContainersInMemory.Value,
                                 TimeBeforeAssignmentCanBeRepeated = GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value,
-                                TimeLimitOnAssignment = GreylingsConfig.TimeLimitOnAssignment.Value
+                                TimeLimitOnAssignment = GreylingsConfig.TimeLimitOnAssignment.Value,
+                                Agressiveness = 2,
+                                Awareness = 10,
+                                Mobility = 10,
+                                Intelligence = 3
                             })
                         };
                     }
@@ -73,7 +77,11 @@ namespace RagnarsRokare.SlaveGreylings
                                 IncludedContainers = BruteConfig.IncludedContainersList.Value.Split(','),
                                 ItemSearchRadius = BruteConfig.ItemSearchRadius.Value,
                                 MaxContainersInMemory = BruteConfig.MaxContainersInMemory.Value,
-                                TimeLimitOnAssignment = BruteConfig.TimeLimitOnAssignment.Value
+                                TimeLimitOnAssignment = BruteConfig.TimeLimitOnAssignment.Value,
+                                Agressiveness = 8,
+                                Awareness = 8,
+                                Mobility = 10,
+                                Intelligence = 5
                             })
                     };
                     }

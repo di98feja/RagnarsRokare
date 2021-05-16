@@ -10,8 +10,5 @@
         public int MaxContainersInMemory = 3;
         public int TimeBeforeAssignmentCanBeRepeated = 120;
         public int TimeLimitOnAssignment = 60;
-        public int AggressionLevel = 2; // 1-10
-        public int MobilityLevel = 10; // 1-10
-        public int AwarenessLevel = 10; // 1-10
     }
 }
