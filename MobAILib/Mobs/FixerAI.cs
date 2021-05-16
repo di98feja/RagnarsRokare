@@ -190,12 +190,14 @@ namespace RagnarsRokare.MobAI
                 {
                     if ((m_stuckInIdleTimer += arg.dt) > 300f)
                     {
-                        Common.Dbgl("m_startPosition = m_homePosition");
+                        Common.Dbgl("m_startPosition = HomePosition");
                         m_startPosition = HomePosition;
-                        m_stuckInIdleTimer = 0;
+                        m_stuckInIdleTimer = 0f;
                     }
-                    if ((m_assignedTimer += arg.dt) < 2f) return false;
+                    if ((m_searchForNewAssignmentTimer += arg.dt) < 2f) return false;
+                    m_searchForNewAssignmentTimer = 0f;
                     return AddNewAssignment(arg.instance.transform.position);
+
                 })
                 .OnEntry(t =>
                 {
@@ -292,7 +294,6 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus($"uuhhhmm..  checkin' dis over 'ere");
-                    m_startPosition = m_assignment.Peek().transform.position;
                     m_assignedTimer = 0;
                 });
 
@@ -339,6 +340,7 @@ namespace RagnarsRokare.MobAI
                     if (health < 0.9f)
                     {
                         UpdateAiStatus($"Hum, no goood");
+                        m_startPosition = Instance.transform.position;
                         Brain.Fire(Trigger.RepairNeeded);
                     }
                     else
@@ -384,7 +386,7 @@ namespace RagnarsRokare.MobAI
                 .OnExit(t =>
                 {
                     if (t.Trigger == Trigger.Failed || Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() != true) return;
-
+                    m_stuckInIdleTimer = 0;
                     Debug.LogWarning($"Trigger:{t.Trigger}");
                     var pieceToRepair = m_assignment.Peek();
                     UpdateAiStatus($"Dis {m_assignment.Peek().m_name} is goood as new!");
