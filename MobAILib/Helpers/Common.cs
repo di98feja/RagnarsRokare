@@ -182,5 +182,13 @@ namespace RagnarsRokare.MobAI
             return false;
         }
 
+        public static bool TurnToFacePosition(MobAIBase mob, Vector3 position)
+        {
+            bool isLookingAtTarget = (bool)Invoke<MonsterAI>(mob.Instance, "IsLookingAt", position, 10f);
+            if (isLookingAtTarget) return true;
+
+            Invoke<MonsterAI>(mob.Instance, "LookAt", position);
+            return false;
+        }
     }
 }

@@ -41,6 +41,7 @@ namespace RagnarsRokare.MobAI
             public const string RepairAssignment = "RepairAssignment";
             public const string Root = "Root";
             public const string Hungry = "Hungry";
+            public const string TurnToFaceAssignment = "TurnToFaceAssignment";
         }
 
         private class Trigger
@@ -206,6 +207,11 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
+                    ItemDrop.ItemData currentWeapon = (Character as Humanoid).GetCurrentWeapon();
+                    if (null != currentWeapon)
+                    {
+                        (Character as Humanoid).UnequipItem(currentWeapon);
+                    }
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
         }
@@ -288,8 +294,12 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    Character.SetMoveDir(Vector3.zero);
+                    StopMoving();
                 });
+
+            Brain.Configure(State.TurnToFaceAssignment)
+                .SubstateOf(State.Assigned)
+                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => Common.TurnToFacePosition(this, m_assignment.Peek().transform.position));
 
             Brain.Configure(State.CheckRepairState)
                 .SubstateOf(State.Assigned)
