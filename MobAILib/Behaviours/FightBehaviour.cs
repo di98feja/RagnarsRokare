@@ -89,7 +89,8 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     Debug.Log("IdentifyEnemy-Enter");
-                    if (aiBase.Instance.CanSenseTarget(aiBase.Attacker))
+                    m_searchTimer = m_agressionLevel * 2;
+                    if (aiBase.Attacker != null && aiBase.Instance.CanSenseTarget(aiBase.Attacker))
                     {
                         aiBase.TargetCreature = aiBase.Attacker;
                         aiBase.Brain.Fire(Trigger.FoundTarget);
@@ -124,6 +125,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     Debug.Log("TrackingEnemy-Enter");
+                    m_searchTimer = m_agressionLevel * 2;
                 });
 
             brain.Configure(State.EngagingEnemy)
@@ -207,7 +209,7 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.TrackingEnemy))
             {
                 m_searchTimer -= dt;
-                if (aiBase.TargetCreature != aiBase.Attacker && aiBase.Instance.CanSenseTarget(aiBase.Attacker))
+                if (aiBase.Attacker != null && aiBase.TargetCreature != aiBase.Attacker && aiBase.Instance.CanSenseTarget(aiBase.Attacker))
                 {
                     aiBase.TargetCreature = aiBase.Attacker;
                     //Debug.Log("TrackingEnemy-Switch target to Attacker");
