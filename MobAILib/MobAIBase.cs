@@ -99,6 +99,25 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public Vector3 HomePosition
+        {
+            get
+            {
+                if (NView?.IsValid() ?? false)
+                {
+                    return NView.GetZDO().GetVec3(Constants.Z_SavedHomePosition, Character.transform.position);
+                }
+                return Character.transform.position;
+            }
+            set
+            {
+                if (NView?.IsValid() ?? false)
+                {
+                    NView.GetZDO().Set(Constants.Z_SavedHomePosition, value);
+                }
+            }
+        }
+
         public bool IsHurt
         {
             get

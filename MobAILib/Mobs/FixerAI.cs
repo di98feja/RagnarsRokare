@@ -24,7 +24,6 @@ namespace RagnarsRokare.MobAI
 
         // Management
         public Vector3 m_startPosition;
-        public Vector3 m_homePosition;
 
         // Settings
         public float CloseEnoughTimeout { get; private set; } = 10;
@@ -194,7 +193,7 @@ namespace RagnarsRokare.MobAI
                     if((m_stuckInIdleTimer += arg.dt) > 60)
                     {
                         Debug.LogWarning("m_startPosition = m_homePosition");
-                        m_startPosition = m_homePosition;
+                        m_startPosition = HomePosition;
                     }
                     return AddNewAssignment(arg.instance.transform.position, m_assignment);
                 })
@@ -260,7 +259,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    m_homePosition = m_startPosition = eatingBehaviour.LastKnownFoodPosition = Instance.transform.position;
+                    HomePosition = m_startPosition = eatingBehaviour.LastKnownFoodPosition = Instance.transform.position;
                 });
         }
 

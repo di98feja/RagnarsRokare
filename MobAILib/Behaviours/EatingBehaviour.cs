@@ -27,10 +27,28 @@ namespace RagnarsRokare.MobAI
             public const string SearchForItems = Prefix + "SearchForItems";
         }
 
-        public Vector3 LastKnownFoodPosition { get; set; }
+        public Vector3 LastKnownFoodPosition 
+        {
+            get
+            {
+                if (m_aiBase?.NView?.IsValid() ?? false)
+                {
+                    return m_aiBase.NView.GetZDO().GetVec3(Constants.Z_SavedFoodPosition, m_aiBase.Character.transform.position);
+                }
+                return m_aiBase.Character.transform.position;
+            }
+            set
+            {
+                if (m_aiBase?.NView?.IsValid() ?? false)
+                {
+                    m_aiBase.NView.GetZDO().Set(Constants.Z_SavedFoodPosition, value);
+                }
+            }
+        }
 
         private float m_hungryTimer;
         private float m_foodsearchtimer;
+        private MobAIBase m_aiBase;
 
         private StateMachine<string, string>.TriggerWithParameters<float> UpdateTrigger;
         private StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
@@ -51,6 +69,7 @@ namespace RagnarsRokare.MobAI
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
+            m_aiBase = aiBase;
             m_foodsearchtimer = 0f;
             if (LastKnownFoodPosition == Vector3.zero)
             {
