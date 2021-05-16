@@ -188,10 +188,11 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
-                    if ((m_stuckInIdleTimer += arg.dt) > 60f)
+                    if ((m_stuckInIdleTimer += arg.dt) > 300f)
                     {
-                        Debug.LogWarning("m_startPosition = m_homePosition");
+                        Common.Dbgl("m_startPosition = m_homePosition");
                         m_startPosition = HomePosition;
+                        m_stuckInIdleTimer = 0;
                     }
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
@@ -260,6 +261,7 @@ namespace RagnarsRokare.MobAI
                 .OnExit(t =>
                 {
                     HomePosition = m_startPosition = eatingBehaviour.LastKnownFoodPosition = Instance.transform.position;
+
                 });
         }
 
