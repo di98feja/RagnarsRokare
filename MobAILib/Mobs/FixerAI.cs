@@ -126,7 +126,7 @@ namespace RagnarsRokare.MobAI
             ConfigureFight();
             ConfigureHungry();
             var graph = new Stateless.Graph.StateGraph(Brain.GetInfo());
-            Debug.Log(graph.ToGraph(new Stateless.Graph.UmlDotGraphStyle()));
+            //Debug.Log(graph.ToGraph(new Stateless.Graph.UmlDotGraphStyle()));
         }
 
         private void RegisterRPCMethods()
@@ -203,16 +203,13 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_circleTargetDistance = m_config.MobilityLevel;
+                    fightBehaviour.m_mobilitylevel = m_config.MobilityLevel;
                     fightBehaviour.m_agressionLevel = m_config.AggressionLevel;
                     TargetCreature = Attacker;
                     Brain.Fire(Trigger.Fight);
                 })
                 .OnExit(t =>
                 {
-                    Attacker = null; 
-                    TargetCreature = null;
-                    StopMoving();
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
         }
@@ -230,7 +227,7 @@ namespace RagnarsRokare.MobAI
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
-                    Character.SetMoveDir(Vector3.zero);
+                    StopMoving();
                 });
         }
 
@@ -457,7 +454,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (Brain.IsInState(searchForItemsBehaviour.StartState))
+            if (Brain.IsInState(State.Hungry))
             {
                 searchForItemsBehaviour.Update(this, dt);
                 return;
