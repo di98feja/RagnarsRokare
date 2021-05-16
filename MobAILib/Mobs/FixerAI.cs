@@ -73,7 +73,7 @@ namespace RagnarsRokare.MobAI
         { }
 
         public FixerAI(MonsterAI instance, object config) : this(instance, config as MobAIBaseConfig)
-        { } 
+        { }
 
         public FixerAI(MonsterAI instance, MobAIBaseConfig config) : base(instance, State.Idle, config)
         {
@@ -168,12 +168,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureHungry()
         {
             Brain.Configure(State.Hungry)
-                .SubstateOf(State.Root)
-                .Permit(Trigger.EnterEatBehaviour, eatingBehaviour.StartState)
-                .OnEntry(t =>
-                {
-                    Brain.Fire(Trigger.EnterEatBehaviour);
-                });
+                .SubstateOf(State.Root);
         }
 
         private void ConfigureIdle()
@@ -418,8 +413,15 @@ namespace RagnarsRokare.MobAI
             return false;
         }
 
+        private string m_lastState = "";
         public override void UpdateAI(float dt)
         {
+            if (Brain.State != m_lastState)
+            {
+                Debug.LogWarning($"State:{Brain.State}");
+                m_lastState = Brain.State;
+            }
+
             base.UpdateAI(dt);
             m_triggerTimer += dt;
             if (m_triggerTimer < 0.1f) return;
@@ -441,7 +443,7 @@ namespace RagnarsRokare.MobAI
             {
                 Brain.Fire(Trigger.AssignmentTimedOut);
             }
-           
+
             if (Brain.IsInState(State.Follow))
             {
                 Invoke<MonsterAI>(Instance, "Follow", monsterAi.GetFollowTarget(), dt);
@@ -455,7 +457,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (Brain.IsInState(State.Hungry))
+            if (Brain.IsInState(State.SearchForItems))
             {
                 searchForItemsBehaviour.Update(this, dt);
                 return;
@@ -467,7 +469,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if(Brain.State == State.Idle)
+            if (Brain.State == State.Idle)
             {
                 Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
                 return;
