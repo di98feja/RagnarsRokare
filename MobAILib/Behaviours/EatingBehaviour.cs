@@ -52,11 +52,16 @@ namespace RagnarsRokare.MobAI
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_foodsearchtimer = 0f;
+            if (LastKnownFoodPosition == Vector3.zero)
+            {
+                LastKnownFoodPosition = aiBase.Character.transform.position;
+            }
 
             UpdateTrigger = brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
             brain.Configure(State.Hungry)
+                .SubstateOf(parentState)
                 .PermitIf(UpdateTrigger, State.SearchForFood, (dt) => (m_foodsearchtimer += dt) > 10)
                 .OnEntry(t =>
                 {
@@ -93,6 +98,7 @@ namespace RagnarsRokare.MobAI
                         aiBase.Instance.GetComponent<Character>().Heal(consumeHeal);
                     }
                     m_hungryTimer = 0f;
+                    LastKnownFoodPosition = aiBase.Character.transform.position;
                     brain.Fire(Trigger.ConsumeItem);
                 });
 
@@ -111,6 +117,7 @@ namespace RagnarsRokare.MobAI
             m_hungryTimer += dt;
             if (instance.Brain.State == State.Hungry)
             {
+                Common.Invoke<BaseAI>(instance.Instance, "RandomMovement", dt, LastKnownFoodPosition);
                 instance.Brain.Fire(UpdateTrigger, dt);
             }
         }
