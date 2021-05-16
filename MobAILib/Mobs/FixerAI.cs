@@ -189,13 +189,13 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
-                    if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
-                    m_searchForNewAssignmentTimer = 0f;
-                    if((m_stuckInIdleTimer += arg.dt) > 60)
+                    if ((m_stuckInIdleTimer += arg.dt) > 60f)
                     {
                         Debug.LogWarning("m_startPosition = m_homePosition");
                         m_startPosition = m_homePosition;
                     }
+                    if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
+                    m_searchForNewAssignmentTimer = 0f;
                     return AddNewAssignment(arg.instance.transform.position, m_assignment);
                 })
                 .OnEntry(t =>
