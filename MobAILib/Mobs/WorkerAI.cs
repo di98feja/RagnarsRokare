@@ -79,8 +79,8 @@ namespace RagnarsRokare.MobAI
         public WorkerAI(MonsterAI instance, MobAIBaseConfig config) : base(instance, State.Idle, config)
         {
             m_config = config as WorkerAIConfig;
-            m_assignment = new MaxStack<Assignment>(20);
-            m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
+            m_assignment = new MaxStack<Assignment>(Intelligence);
+            m_containers = new MaxStack<Container>(Intelligence);
             m_carrying = null;
             m_assignedTimer = 0f;
 

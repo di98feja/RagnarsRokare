@@ -83,7 +83,7 @@ namespace RagnarsRokare.MobAI
         public FixerAI(MonsterAI instance, MobAIBaseConfig config) : base(instance, State.Idle, config)
         {
             m_config = config as FixerAIConfig;
-            m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
+            m_containers = new MaxStack<Container>(Intelligence);
 
             if (instance.m_consumeHeal == 0.0f)
             {
