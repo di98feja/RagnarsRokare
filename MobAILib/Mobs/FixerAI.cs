@@ -471,7 +471,7 @@ namespace RagnarsRokare.MobAI
         {
             if (Brain.State != m_lastState)
             {
-                Debug.LogWarning($"State:{Brain.State}");
+                Common.Dbgl($"State:{Brain.State}");
                 m_lastState = Brain.State;
             }
 
