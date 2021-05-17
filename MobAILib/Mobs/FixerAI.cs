@@ -428,7 +428,7 @@ namespace RagnarsRokare.MobAI
             Common.Dbgl($"Enter {nameof(AddNewAssignment)}");
             var pieceList = new List<Piece>();
             var start = DateTime.Now;
-            Piece.GetAllPiecesInRadius(position, m_config.AssignmentSearchRadius, pieceList);
+            Piece.GetAllPiecesInRadius(position, m_config.Awareness*5 , pieceList);
             var piece = pieceList
                 .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
                 .Where(p => !m_assignment.Contains(p))
@@ -461,7 +461,7 @@ namespace RagnarsRokare.MobAI
                 if (Time.time - m_lastSuccessfulFindAssignment > AdjustAssignmentStackSizeTime)
                 {
                     m_lastSuccessfulFindAssignment = Time.time;
-                    var newStack = new MaxStack<Piece>(Math.Max(1, (int)(m_assignment.MaxSize * 0.8f)));
+                    var newStack = new MaxStack<Piece>(Math.Max(1, (int)(Math.Max(5, m_assignment.Count() * 0.8f))));
                     int num = 0;
                     foreach (var p in m_assignment.Reverse())
                     {
