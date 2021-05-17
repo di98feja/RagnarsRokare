@@ -442,15 +442,11 @@ namespace RagnarsRokare.MobAI
                 m_lastSuccessfulFindAssignment = Time.time;
                 if (Time.time - m_lastFailedFindAssignment > AdjustAssignmentStackSizeTime)
                 {
-                    var newStack = new MaxStack<Piece>(Math.Min(100, (int)(m_assignment.MaxSize * 1.2f)));
-                    int num = 0;
-                    foreach (var p in m_assignment.Reverse())
-                    {
-                        newStack.Push(p);
-                        num++;
-                    }
-                    Common.Dbgl($"Increased Assigned stack to {newStack.MaxSize} from {m_assignment.MaxSize} and copied {num} pieces");
-                    m_assignment = newStack;
+                    int newMaxSize = Math.Min(100, (int)(m_assignment.MaxSize * 1.2f));
+                    int oldCount = m_assignment.Count();
+                    Common.Dbgl($"Increased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} and copied {oldCount} pieces");
+
+                    m_assignment.MaxSize = newMaxSize;
                 }
                 m_assignment.Push(piece);
                 return true;
@@ -461,15 +457,10 @@ namespace RagnarsRokare.MobAI
                 if (Time.time - m_lastSuccessfulFindAssignment > AdjustAssignmentStackSizeTime)
                 {
                     m_lastSuccessfulFindAssignment = Time.time;
-                    var newStack = new MaxStack<Piece>(Math.Max(1, (int)(Math.Max(5, m_assignment.Count() * 0.8f))));
-                    int num = 0;
-                    foreach (var p in m_assignment.Reverse())
-                    {
-                        newStack.Push(p);
-                        num++;
-                    }
-                    Common.Dbgl($"Decreased Assigned stack to {newStack.MaxSize} from {m_assignment.MaxSize} and copied {num} pieces");
-                    m_assignment = newStack;
+                    int newMaxSize = Math.Max(1, (int)(m_assignment.Count() * 0.8f));
+                    int oldCount = m_assignment.Count();
+                    Common.Dbgl($"Decreased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} pushing {oldCount} pieces");
+                    m_assignment.MaxSize = newMaxSize;
                 }
             }
 
