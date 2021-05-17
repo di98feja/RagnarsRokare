@@ -60,7 +60,7 @@ namespace RagnarsRokare.SlaveGreylings
                         __instance.m_faction = Character.Faction.Players;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
-                        ai.m_consumeSearchRange = GreylingsConfig.ItemSearchRadius.Value;
+                        ai.m_consumeSearchRange = mobInfo.AIConfig.Awareness * 5;
                         ai.m_randomMoveRange = 20;
                         ai.m_randomMoveInterval = 5;
                         string givenName = ___m_nview?.GetZDO()?.GetString(Constants.Z_GivenName);

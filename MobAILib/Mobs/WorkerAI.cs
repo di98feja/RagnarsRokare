@@ -476,7 +476,7 @@ namespace RagnarsRokare.MobAI
 
         public bool AddNewAssignment(BaseAI instance, MaxStack<Assignment> KnownAssignments)
         {
-            Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, m_config.AssignmentSearchRadius);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Awareness * 5);
             if (newassignment != null)
             {
                 KnownAssignments.Push(newassignment);
