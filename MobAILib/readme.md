@@ -8,6 +8,12 @@ Start by adding a reference to MobAILib inside your mod-project.
 The RagnarsRokare.MobAI.MobManager is used to register and keep track of controlled mobs.
 It has a list of available MobAIs to use as the "brain" of the mob and controls its actions.  
 Each MobAI has its own config file with settings: WorkerAIConfig and FixerAIConfig.
+They inherit MobAIBaseConfig that contain the base attributes:  
+**Awareness** - General awareness, used to calculate search ranges and ability to detect enemies  
+**Agressiveness** - Agressivness determines how to behave when fighting and when to give up and flee  
+**Mobility** - Mobility is used to determine how often and how far the mob moves  
+**Intelligence** - General intelligence, how much the mob can remember
+
 
 - **WorkerAI**  
 Makes the character walk around and refill Smelters, Kilns, Fireplaces and Torches. It will search for items on the ground and in chests.
@@ -90,6 +96,11 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###
+- Version 0.2.0  
+Added base mob attributes to control behaviours.  
+Line of sight required for containers and assignments.  
+Reworked Statemachine tree  
+
 - Version 0.1.3  
 Added basic FightingBehaviour to FixerAI and WorkerAI  
 Fixed error when adding fuel to fireplaces with no mob on follow
