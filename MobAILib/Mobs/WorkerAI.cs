@@ -414,8 +414,16 @@ namespace RagnarsRokare.MobAI
                 });
         }
 
+        private string m_lastState = "";
+
         public override void UpdateAI(float dt)
         {
+            if (Brain.State != m_lastState)
+            {
+                Common.Dbgl($"State:{Brain.State}");
+                m_lastState = Brain.State;
+            }
+
             base.UpdateAI(dt);
             m_triggerTimer += dt;
             if (m_triggerTimer < 0.1f) return;
