@@ -223,7 +223,7 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Flee)
                 .SubstateOf(State.Root)
-                .PermitIf(UpdateTrigger, State.Idle, (args) => TimeSinceHurt >= 20f)
+                .PermitIf(UpdateTrigger, State.Idle, (args) => Common.Alarmed(args.instance, Mathf.Max(1, Awareness-1)))
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Got hurt, flee!");
