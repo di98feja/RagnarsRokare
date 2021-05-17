@@ -90,7 +90,6 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 ### Future plans ###
 - Add more specialized Fighting-behaviours that can be used by all MobAI-classes
 - Add Interface and Strategy pattern for runtime selection of fightingBehaviour
-- FeedingBehaviour, remove the need for Tameable component
 - ItemSorterBehaviour
 - More built-in MobAI classes
 - More common behaviours
@@ -99,7 +98,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - Version 0.2.0  
 Added base mob attributes to control behaviours.  
 Line of sight required for containers and assignments.  
+Added FeedingBehaviour, removed the need for Tameable component  
 Reworked Statemachine tree  
+Deprecated some config values
 
 - Version 0.1.3  
 Added basic FightingBehaviour to FixerAI and WorkerAI  
