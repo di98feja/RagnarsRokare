@@ -58,7 +58,6 @@ namespace RagnarsRokare.SlaveGreylings
                             return;
                         }
                         __instance.m_faction = Character.Faction.Players;
-                        tameable.m_fedDuration = mobInfo.PostTameFeedDuration;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
                         ai.m_consumeSearchRange = GreylingsConfig.ItemSearchRadius.Value;
@@ -101,7 +100,7 @@ namespace RagnarsRokare.SlaveGreylings
                 return uniqueId;
             }
 
-            private static void AddVisualEquipmentCapability(Character __instance)
+            public static void AddVisualEquipmentCapability(Character __instance)
             {
                 var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
                 if (visEquipment == null)

@@ -442,6 +442,7 @@ namespace RagnarsRokare.MobAI
                 m_lastSuccessfulFindAssignment = Time.time;
                 if (Time.time - m_lastFailedFindAssignment > AdjustAssignmentStackSizeTime)
                 {
+                    m_lastFailedFindAssignment = Time.time;
                     int newMaxSize = Math.Min(100, (int)(m_assignment.MaxSize * 1.2f));
                     int oldCount = m_assignment.Count();
                     Common.Dbgl($"Increased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} and copied {oldCount} pieces");
