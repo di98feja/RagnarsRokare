@@ -162,8 +162,6 @@ namespace RagnarsRokare.MobAI
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
-                    searchForItemsBehaviour.ItemSearchRadius = m_config.ItemSearchRadius;
-                    searchForItemsBehaviour.ContainerSearchRadius = m_config.ContainerSearchRadius;
                     searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
                     searchForItemsBehaviour.FailState = t.Parameters[2] as string;
                     Brain.Fire(Trigger.SearchForItems);
@@ -457,7 +455,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (Brain.IsInState(State.Hungry))
+            if (Brain.IsInState(State.SearchForItems))
             {
                 searchForItemsBehaviour.Update(this, dt);
                 return;
