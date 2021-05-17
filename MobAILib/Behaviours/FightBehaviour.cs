@@ -59,7 +59,11 @@ namespace RagnarsRokare.MobAI
         // Timers
         private float m_circleTimer;
         private float m_searchTimer;
-        
+
+        public bool IsBelowHealthThreshold(MobAIBase aiBase)
+        {
+            return aiBase.Character.GetHealthPercentage() < 1 - m_agressionLevel * 0.08;
+        }
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
@@ -166,7 +170,7 @@ namespace RagnarsRokare.MobAI
 
         public void Update(MobAIBase aiBase, float dt)
         {
-            if (aiBase.Character.GetHealthPercentage() < 1 - m_agressionLevel * 0.08)
+            if (IsBelowHealthThreshold(aiBase))
             {
                 aiBase.Brain.Fire(Trigger.Flee);
                 return;
