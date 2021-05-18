@@ -73,7 +73,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.Timeout, () => FailState)
                 .OnEntry(t =>
                 {
-                    //Debug.Log("Entered SearchForItemsBehaviour");
+                    Common.Dbgl("Entered SearchForItemsBehaviour");
                 })
                 .OnExit(t =>
                 {
