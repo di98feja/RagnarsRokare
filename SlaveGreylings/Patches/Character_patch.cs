@@ -58,11 +58,11 @@ namespace RagnarsRokare.SlaveGreylings
                             return;
                         }
                         __instance.m_faction = Character.Faction.Players;
-                        tameable.m_fedDuration = mobInfo.PostTameFeedDuration;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
-                        ai.m_randomMoveRange = 5;
-                        ai.m_consumeSearchRange = GreylingsConfig.ItemSearchRadius.Value;
+                        ai.m_consumeSearchRange = mobInfo.AIConfig.Awareness * 5;
+                        ai.m_randomMoveRange = mobInfo.AIConfig.Mobility * 2;
+                        ai.m_randomMoveInterval = 15 - mobInfo.AIConfig.Mobility;
                         string givenName = ___m_nview?.GetZDO()?.GetString(Constants.Z_GivenName);
                         if (!string.IsNullOrEmpty(givenName))
                         {
@@ -100,7 +100,7 @@ namespace RagnarsRokare.SlaveGreylings
                 return uniqueId;
             }
 
-            private static void AddVisualEquipmentCapability(Character __instance)
+            public static void AddVisualEquipmentCapability(Character __instance)
             {
                 var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
                 if (visEquipment == null)

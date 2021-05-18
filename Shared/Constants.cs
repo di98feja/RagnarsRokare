@@ -12,6 +12,8 @@
         public const string Z_trainedAssignments = "RR_trainedAssignments";
         public const string Z_updateTrainedAssignments = "RR_updateTrainedAssignments";
         public const string Z_AddAssignment = "RR_AddAssignment";
+        public const string Z_SavedHomePosition = "RR_SavedHomePosition";
         public const string Z_SavedAssignmentList = "RR_SavedAssignmentList";
+        public const string Z_SavedFoodPosition = "RR_SavedFoodPosition";
     }
 }

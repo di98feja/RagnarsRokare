@@ -13,7 +13,7 @@ namespace RagnarsRokare.SlaveGreylings
         public float PostTameFeedDuration { get; set; }
         public float TamingTime { get; set; }
         public string AIType { get; set; }
-        public string AIConfig { get; set; }
+        public MobAIBaseConfig AIConfig { get; set; }
     }
 
     public static class MobConfigManager
@@ -33,7 +33,7 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 case "Greyling":
                     {
-                        
+
                         return new MobConfig
                         {
                             PostTameConsumables = GreylingsConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
@@ -42,17 +42,17 @@ namespace RagnarsRokare.SlaveGreylings
                             PreTameFeedDuration = GreylingsConfig.FeedDuration.Value,
                             TamingTime = GreylingsConfig.TamingTime.Value,
                             AIType = "Worker",
-                            AIConfig = JsonUtility.ToJson(new WorkerAIConfig
+                            AIConfig = new WorkerAIConfig
                             {
-                                AssignmentSearchRadius = GreylingsConfig.AssignmentSearchRadius.Value,
-                                ContainerSearchRadius = GreylingsConfig.ContainerSearchRadius.Value,
                                 FeedDuration = GreylingsConfig.FeedDuration.Value,
                                 IncludedContainers = GreylingsConfig.IncludedContainersList.Value.Split(','),
-                                ItemSearchRadius = GreylingsConfig.ItemSearchRadius.Value,
-                                MaxContainersInMemory = GreylingsConfig.MaxContainersInMemory.Value,
                                 TimeBeforeAssignmentCanBeRepeated = GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value,
-                                TimeLimitOnAssignment = GreylingsConfig.TimeLimitOnAssignment.Value
-                            })
+                                TimeLimitOnAssignment = GreylingsConfig.TimeLimitOnAssignment.Value,
+                                Agressiveness = GreylingsConfig.Agressiveness.Value,
+                                Awareness = GreylingsConfig.Awareness.Value,
+                                Mobility = GreylingsConfig.Mobility.Value,
+                                Intelligence = GreylingsConfig.Intelligence.Value
+                            }
                         };
                     }
                 case "Greydwarf_Elite":
@@ -65,17 +65,17 @@ namespace RagnarsRokare.SlaveGreylings
                             PreTameFeedDuration = BruteConfig.PreTameFeedDuration.Value,
                             TamingTime = BruteConfig.TamingTime.Value,
                             AIType = "Fixer",
-                            AIConfig = JsonUtility.ToJson(new FixerAIConfig
+                            AIConfig = new FixerAIConfig
                             {
-                                AssignmentSearchRadius = BruteConfig.AssignmentSearchRadius.Value,
-                                ContainerSearchRadius = BruteConfig.ContainerSearchRadius.Value,
                                 PostTameFeedDuration = BruteConfig.PostTameFeedDuration.Value,
                                 IncludedContainers = BruteConfig.IncludedContainersList.Value.Split(','),
-                                ItemSearchRadius = BruteConfig.ItemSearchRadius.Value,
-                                MaxContainersInMemory = BruteConfig.MaxContainersInMemory.Value,
-                                TimeLimitOnAssignment = BruteConfig.TimeLimitOnAssignment.Value
-                            })
-                    };
+                                TimeLimitOnAssignment = BruteConfig.TimeLimitOnAssignment.Value,
+                                Agressiveness = BruteConfig.Agressiveness.Value,
+                                Awareness = BruteConfig.Awareness.Value,
+                                Mobility = BruteConfig.Mobility.Value,
+                                Intelligence = BruteConfig.Intelligence.Value
+                            }
+                        };
                     }
                 default:
                     return null;
