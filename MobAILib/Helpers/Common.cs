@@ -32,6 +32,25 @@ namespace RagnarsRokare.MobAI
             return ClosestObject;
         }
 
+        public static ItemDrop GetClosestItem(BaseAI instance, int range = 10)
+        {
+            Vector3 position = instance.transform.position;
+            ItemDrop ClosestObject = null;
+            foreach (Collider collider in Physics.OverlapSphere(position, range, LayerMask.GetMask(new string[] { "item" })))
+            {
+                ItemDrop item = collider.transform?.GetComponentInParent<ItemDrop>();
+                if (item?.GetComponent<ZNetView>()?.IsValid() != true)
+                {
+                    continue;
+                }
+                if (item?.transform?.position != null && CanSeeTarget(instance, item.gameObject) && (ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
+                {
+                    ClosestObject = item;
+                }
+            }
+            return ClosestObject;
+        }
+
         public static Assignment FindRandomNearbyAssignment(BaseAI instance, List<string> trainedAssignments, MaxStack<Assignment> knownassignments, float assignmentSearchRadius)
         {
             Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
