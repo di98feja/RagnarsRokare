@@ -95,7 +95,7 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.OpenContainer)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.ContainerOpened, State.SearchForItem)
+                .Permit(Trigger.ContainerOpened, State.AddContainerItemsToItemDictionary)
                 .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
