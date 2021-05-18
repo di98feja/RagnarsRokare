@@ -48,6 +48,20 @@ In order to keep build the creatures behaviour, we have been using Stateless sta
 We hope you find this little mod fun!
 // Barg and Morg
 
+0.7.2 Patch Notes:
+From the book of Barg:  
+##################################  
+Today the day 67 in this paradise world of Odin we call Valheim, we managed to teach the slaves to not only look at their feet's when searching for assignments and chests.  
+This makes them wandering longer distances in search of assignments making it easy for them to get lost. The solution for this was to teach them to return to the "home" position where we last set them to stay (not follow).   
+##################################  
+* This update is adjusted for the use fight behavior in MobAILib 0.2 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
+* Making use of Feedingbehaviour in MobAILib.
+* Making use of new Attributes in BaseIA rather then configuring everything separately.
+* Added random movement in idle and a return point to last stay position to return to after stuck without tasks.
+
+
+
+
 0.7.1 Patch Notes:
 From the book of Barg:  
 ##################################  
@@ -56,7 +70,7 @@ After teaching the brutes to attack back if they are attacked, the greylings soo
 They still fall back on fleeing as soon as hurt, so I am afraid they wont help out much in the way of defense.   
 It seems like this defensive behavior have enraged Eikthyr so that Eikthyr's beasts now attacks slaves. 
 ##################################  
-* This updatte is adjusted for the use fight behaviour in MobAILib 0.1.3 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
+* This update is adjusted for the use fight behavior in MobAILib 0.1.3 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
 
 0.7 Patch Notes:  
 * MobAI separated out to MobAILib that can be used separatley in any mod (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).

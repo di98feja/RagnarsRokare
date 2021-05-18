@@ -48,21 +48,24 @@ namespace RagnarsRokare.MobAI
         // Settings
         public float OpenChestDelay { get; private set; } = 1;
         public float MaxSearchTime { get; set; } = 60;
-        public string InitState { get { return State.Main; } }
+        public string StartState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public int ItemSearchRadius { get; set; }
-        public float ContainerSearchRadius { get; set; }
+
 
         private ItemDrop m_groundItem;
         private MobAIBase m_aiBase;
         private float m_openChestTimer;
         private float m_currentSearchTime;
+        private int m_searchRadius;
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
             FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(Trigger.FoundGroundItem);
+            m_searchRadius = aiBase.Awareness *5;
+
+
 
             brain.Configure(State.Main)
                 .InitialTransition(State.SearchItemsOnGround)
@@ -83,7 +86,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Failed, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, ItemSearchRadius);
+                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, m_searchRadius);
                     if (groundItem != null)
                     {
                         m_aiBase.UpdateAiStatus( $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
@@ -114,7 +117,7 @@ namespace RagnarsRokare.MobAI
                         }
                     }
                     
-                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames, ContainerSearchRadius);
+                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames, m_searchRadius);
                     if (nearbyChest != null)
                     {
                         KnownContainers.Push(nearbyChest);
@@ -238,11 +241,13 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.MoveToContainer))
             {
+                //Common.Dbgl($"State MoveToContainer: {KnownContainers.Peek().name}");
                 if (KnownContainers.Peek() == null)
                 {
                     aiBase.StopMoving();
                     KnownContainers.Pop();
                     aiBase.Brain.Fire(Trigger.Failed);
+                    //Common.Dbgl("Container = null");
                     return;
                 }
                 aiBase.MoveAndAvoidFire(KnownContainers.Peek().transform.position, dt, 0.5f);
@@ -250,6 +255,7 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.ContainerIsClose);
+                    //Debug.Log($"{KnownContainers.Peek().name} is close");
                 }
                 return;
             }
@@ -261,6 +267,7 @@ namespace RagnarsRokare.MobAI
                     m_groundItem = null;
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.Failed);
+                    //Debug.Log("GroundItem = null");
                     return;
                 }
                 aiBase.MoveAndAvoidFire(m_groundItem.transform.position, dt, 0.5f);
@@ -268,6 +275,7 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.GroundItemIsClose);
+                    //Debug.Log("GroundItem is close");
                 }
                 return;
             }
@@ -276,6 +284,7 @@ namespace RagnarsRokare.MobAI
             {
                 if ((m_openChestTimer += dt) > OpenChestDelay)
                 {
+                    //Debug.Log("Open Container");
                     aiBase.Brain.Fire(Trigger.ContainerOpened);
                 }
             }

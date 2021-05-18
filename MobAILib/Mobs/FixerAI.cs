@@ -13,18 +13,24 @@ namespace RagnarsRokare.MobAI
 
         // Timers
         private float m_searchForNewAssignmentTimer;
-        private float m_foodsearchtimer;
         private float m_triggerTimer;
         private float m_assignedTimer;
         private float m_closeEnoughTimer;
         private float m_repairTimer;
         private float m_roarTimer;
+        private float m_lastSuccessfulFindAssignment;
+        private float m_lastFailedFindAssignment;
+        private float m_stuckInIdleTimer;
+
+        // Management
+        public Vector3 m_startPosition;
 
         // Settings
         public float CloseEnoughTimeout { get; private set; } = 10;
         public float RepairTimeout { get; private set; } = 5;
         public float RoarTimeout { get; private set; } = 10;
         public float RepairMinDist { get; private set; } = 2.0f;
+        public float AdjustAssignmentStackSizeTime { get; private set; } = 60;
 
         public class State
         {
@@ -32,15 +38,14 @@ namespace RagnarsRokare.MobAI
             public const string Follow = "Follow";
             public const string Fight = "Fight";
             public const string Flee = "Flee";
-            public const string Hungry = "Hungry";
             public const string Assigned = "Assigned";
-            public const string SearchForFood = "SearchForFood";
             public const string SearchForItems = "SearchForItems";
-            public const string HaveFoodItem = "HaveFoodItem";
-            public const string HaveNoFoodItem = "HaveNoFoodItem";
             public const string MoveToAssignment = "MoveToAssignment";
             public const string CheckRepairState = "CheckRepairState";
             public const string RepairAssignment = "RepairAssignment";
+            public const string Root = "Root";
+            public const string Hungry = "Hungry";
+            public const string TurnToFaceAssignment = "TurnToFaceAssignment";
         }
 
         private class Trigger
@@ -58,26 +63,36 @@ namespace RagnarsRokare.MobAI
             public const string RepairDone = "RepairDone";
             public const string Failed = "Failed";
             public const string Fight = "Fight";
+            public const string EnterEatBehaviour = "EnterEatBehaviour";
         }
 
         readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         readonly SearchForItemsBehaviour searchForItemsBehaviour;
         readonly FightBehaviour fightBehaviour;
+        readonly EatingBehaviour eatingBehaviour;
 
         FixerAIConfig m_config;
 
         public FixerAI() : base()
         { }
 
-        public FixerAI(MonsterAI instance, object config) : base(instance, State.Idle)
+        public FixerAI(MonsterAI instance, object config) : this(instance, config as MobAIBaseConfig)
+        { }
+
+        public FixerAI(MonsterAI instance, MobAIBaseConfig config) : base(instance, State.Idle, config)
         {
             m_config = config as FixerAIConfig;
-            m_containers = new MaxStack<Container>(m_config.MaxContainersInMemory);
+            m_containers = new MaxStack<Container>(Intelligence);
 
             if (instance.m_consumeHeal == 0.0f)
             {
                 instance.m_consumeHeal = Character.GetMaxHealth() * 0.25f;
+            }
+
+            if (m_startPosition == Vector3.zero)
+            {
+                m_startPosition = instance.transform.position;
             }
 
             var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
@@ -104,14 +119,24 @@ namespace RagnarsRokare.MobAI
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems);
             fightBehaviour = new FightBehaviour();
             fightBehaviour.Configure(this, Brain, State.Fight);
+            eatingBehaviour = new EatingBehaviour();
+            eatingBehaviour.Configure(this, Brain, State.Hungry);
+            eatingBehaviour.HungryTimeout = m_config.PostTameFeedDuration;
+            eatingBehaviour.SearchForItemsState = State.SearchForItems;
+            eatingBehaviour.SuccessState = State.Idle;
+            eatingBehaviour.FailState = State.Idle;
+            eatingBehaviour.HealPercentageOnConsume = 0.1f;
 
+            ConfigureRoot();
             ConfigureIdle();
             ConfigureFollow();
-            ConfigureIsHungry();
             ConfigureSearchForItems();
             ConfigureAssigned();
             ConfigureFlee();
             ConfigureFight();
+            ConfigureHungry();
+            var graph = new Stateless.Graph.StateGraph(Brain.GetInfo());
+            //Debug.Log(graph.ToGraph(new Stateless.Graph.UmlDotGraphStyle()));
         }
 
         private void RegisterRPCMethods()
@@ -142,20 +167,41 @@ namespace RagnarsRokare.MobAI
             });
         }
 
+        private void ConfigureRoot()
+        {
+            Brain.Configure(State.Root)
+                .InitialTransition(State.Idle)
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, Awareness)))
+                .PermitIf(Trigger.Follow, State.Follow, () => !Brain.IsInState(State.Follow) && (bool)(Instance as MonsterAI).GetFollowTarget());
+        }
+
+        private void ConfigureHungry()
+        {
+            Brain.Configure(State.Hungry)
+                .SubstateOf(State.Root);
+        }
+
         private void ConfigureIdle()
         {
             Brain.Configure(State.Idle)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20.0f)
-                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => Tameable?.IsHungry() ?? false)
+                .SubstateOf(State.Root)
+                .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
-                    if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
+                    if ((m_stuckInIdleTimer += arg.dt) > 300f)
+                    {
+                        Common.Dbgl("m_startPosition = HomePosition");
+                        m_startPosition = HomePosition;
+                        m_stuckInIdleTimer = 0f;
+                    }
+                    if ((m_searchForNewAssignmentTimer += arg.dt) < 2f) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    return AddNewAssignment(arg.instance.transform.position, m_assignment);
+                    return AddNewAssignment(arg.instance.transform.position);
+
                 })
                 .OnEntry(t =>
                 {
+                    m_stuckInIdleTimer = 0;
                     UpdateAiStatus("Nothing to do, bored");
                 });
         }
@@ -163,27 +209,24 @@ namespace RagnarsRokare.MobAI
         private void ConfigureFight()
         {
             Brain.Configure(State.Fight)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .Permit(Trigger.Fight, fightBehaviour.InitState)
+                .SubstateOf(State.Root)
+                .Permit(Trigger.Fight, fightBehaviour.StartState)
                 .OnEntry(t =>
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_circleTargetDistance = 10;
-                    fightBehaviour.m_agressionLevel = 10;
-                    TargetCreature = Attacker;
+                    fightBehaviour.m_mobilityLevel = Mobility;
+                    fightBehaviour.m_agressionLevel = Agressiveness;
+                    fightBehaviour.m_awarenessLevel = Awareness;
+
                     Brain.Fire(Trigger.Fight);
                 })
                 .OnExit(t =>
                 {
-                    Attacker = null;
-                    TargetCreature = null;
-                    StopMoving();
-                    var currentWeapon = (Character as Humanoid).GetCurrentWeapon();
-                    if (currentWeapon != null)
+                    ItemDrop.ItemData currentWeapon = (Character as Humanoid).GetCurrentWeapon();
+                    if (null != currentWeapon)
                     {
                         (Character as Humanoid).UnequipItem(currentWeapon);
-                        Common.Dbgl($"Unequipped {currentWeapon.m_shared.m_name}");
                     }
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 });
@@ -192,8 +235,8 @@ namespace RagnarsRokare.MobAI
         private void ConfigureFlee()
         {
             Brain.Configure(State.Flee)
-                .PermitIf(UpdateTrigger, State.Idle, (args) => TimeSinceHurt >= 20.0f)
-                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
+                .SubstateOf(State.Root)
+                .PermitIf(UpdateTrigger, State.Idle, (args) => Common.Alarmed(args.instance, Mathf.Max(1, Awareness - 1)))
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Got hurt, flee!");
@@ -203,7 +246,7 @@ namespace RagnarsRokare.MobAI
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
-                    Character.SetMoveDir(Vector3.zero);
+                    StopMoving();
                 });
         }
 
@@ -216,76 +259,25 @@ namespace RagnarsRokare.MobAI
                     UpdateAiStatus("Follow");
                     Attacker = null;
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
-
-                });
-        }
-
-        private void ConfigureIsHungry()
-        {
-            Brain.Configure(State.Hungry)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => Attacker != null)
-                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(UpdateTrigger, State.SearchForFood, (arg) => (m_foodsearchtimer += arg.dt) > 10)
-                .OnEntry(t =>
-                {
-                    UpdateAiStatus("Is hungry, no work a do");
-                    m_foodsearchtimer = 0f;
                 })
-                .OnExit(t => 
+                .OnExit(t =>
                 {
-                    Character.SetMoveDir(Vector3.zero);
-                });
+                    HomePosition = m_startPosition = eatingBehaviour.LastKnownFoodPosition = Instance.transform.position;
 
-            Brain.Configure(State.SearchForFood)
-                .SubstateOf(State.Hungry)
-                .Permit(LookForItemTrigger.Trigger, State.SearchForItems)
-                .OnEntry(t =>
-                {
-                    Brain.Fire(LookForItemTrigger, (Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem, State.HaveNoFoodItem);
-                });
-
-            Brain.Configure(State.HaveFoodItem)
-                .SubstateOf(State.Hungry)
-                .Permit(Trigger.ConsumeItem, State.Idle)
-                .OnEntry(t =>
-                {
-                    UpdateAiStatus("*burps*");
-                    (Instance as MonsterAI).m_onConsumedItem((Instance as MonsterAI).m_consumeItems.FirstOrDefault());
-                    (Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(Instance.transform.position, Quaternion.identity);
-                    var animator = Instance.GetType().GetField("m_animator", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(Instance) as ZSyncAnimation;
-                    animator.SetTrigger("consume");
-                    float ConsumeHeal = (Instance as MonsterAI).m_consumeHeal;
-
-                    if (ConsumeHeal > 0f)
-                    {
-                        Instance.GetComponent<Character>().Heal(ConsumeHeal);
-                    }
-                    Brain.Fire(Trigger.ConsumeItem);
-                });
-
-            Brain.Configure(State.HaveNoFoodItem)
-                .SubstateOf(State.Hungry)
-                .PermitIf(Trigger.ItemNotFound, State.Hungry)
-                .OnEntry(t =>
-                {
-                    Brain.Fire(Trigger.ItemNotFound);
                 });
         }
 
         private void ConfigureSearchForItems()
         {
             Brain.Configure(State.SearchForItems.ToString())
-                .PermitIf(Trigger.TakeDamage.ToString(), State.Fight, () => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow.ToString(), State.Follow.ToString(), () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .Permit(Trigger.SearchForItems, searchForItemsBehaviour.InitState)
+                .SubstateOf(State.Root)
+                .Permit(Trigger.SearchForItems, searchForItemsBehaviour.StartState)
                 .OnEntry(t =>
                 {
                     Common.Dbgl("ConfigureSearchContainers Initiated");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
-                    searchForItemsBehaviour.ItemSearchRadius = m_config.ItemSearchRadius;
-                    searchForItemsBehaviour.ContainerSearchRadius = m_config.ContainerSearchRadius;
                     searchForItemsBehaviour.SuccessState = t.Parameters[1] as string;
                     searchForItemsBehaviour.FailState = t.Parameters[2] as string;
                     Brain.Fire(Trigger.SearchForItems.ToString());
@@ -295,10 +287,8 @@ namespace RagnarsRokare.MobAI
         private void ConfigureAssigned()
         {
             Brain.Configure(State.Assigned)
+                .SubstateOf(State.Idle)
                 .InitialTransition(State.MoveToAssignment)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
-                .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, State.Hungry, () => Tameable?.IsHungry() ?? false)
                 .Permit(Trigger.AssignmentTimedOut, State.Idle)
                 .OnEntry(t =>
                 {
@@ -323,8 +313,12 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    Character.SetMoveDir(Vector3.zero);
+                    StopMoving();
                 });
+
+            Brain.Configure(State.TurnToFaceAssignment)
+                .SubstateOf(State.Assigned)
+                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => Common.TurnToFacePosition(this, m_assignment.Peek().transform.position));
 
             Brain.Configure(State.CheckRepairState)
                 .SubstateOf(State.Assigned)
@@ -345,6 +339,7 @@ namespace RagnarsRokare.MobAI
                     if (health < 0.9f)
                     {
                         UpdateAiStatus($"Hum, no goood");
+                        m_startPosition = Instance.transform.position;
                         Brain.Fire(Trigger.RepairNeeded);
                     }
                     else
@@ -396,7 +391,8 @@ namespace RagnarsRokare.MobAI
                 .OnExit(t =>
                 {
                     if (t.Trigger == Trigger.Failed || Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() != true) return;
-
+                    m_stuckInIdleTimer = 0;
+                    Debug.LogWarning($"Trigger:{t.Trigger}");
                     var pieceToRepair = m_assignment.Peek();
                     UpdateAiStatus($"Dis {m_assignment.Peek().m_name} is goood as new!");
                     WearNTear component = pieceToRepair.GetComponent<WearNTear>();
@@ -432,12 +428,12 @@ namespace RagnarsRokare.MobAI
             return MoveAndAvoidFire(m_assignment.Peek().FindClosestPoint(Instance.transform.position), dt, distance);
         }
 
-        private bool AddNewAssignment(Vector3 position, MaxStack<Piece> m_assignment)
+        private bool AddNewAssignment(Vector3 position)
         {
             Common.Dbgl($"Enter {nameof(AddNewAssignment)}");
             var pieceList = new List<Piece>();
             var start = DateTime.Now;
-            Piece.GetAllPiecesInRadius(position, m_config.AssignmentSearchRadius, pieceList);
+            Piece.GetAllPiecesInRadius(position, m_config.Awareness*5 , pieceList);
             var piece = pieceList
                 .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
                 .Where(p => !m_assignment.Contains(p))
@@ -448,14 +444,44 @@ namespace RagnarsRokare.MobAI
             Common.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
             if (piece != null && !string.IsNullOrEmpty(Common.GetOrCreateUniqueId(Common.GetNView(piece))))
             {
+                m_lastSuccessfulFindAssignment = Time.time;
+                if (Time.time - m_lastFailedFindAssignment > AdjustAssignmentStackSizeTime)
+                {
+                    m_lastFailedFindAssignment = Time.time;
+                    int newMaxSize = Math.Min(100, (int)(m_assignment.MaxSize * 1.2f));
+                    int oldCount = m_assignment.Count();
+                    Common.Dbgl($"Increased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} and copied {oldCount} pieces");
+
+                    m_assignment.MaxSize = newMaxSize;
+                }
                 m_assignment.Push(piece);
                 return true;
             }
+            else
+            {
+                m_lastFailedFindAssignment = Time.time;
+                if (Time.time - m_lastSuccessfulFindAssignment > AdjustAssignmentStackSizeTime)
+                {
+                    m_lastSuccessfulFindAssignment = Time.time;
+                    int newMaxSize = Math.Max(1, (int)(m_assignment.Count() * 0.8f));
+                    int oldCount = m_assignment.Count();
+                    Common.Dbgl($"Decreased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} pushing {oldCount} pieces");
+                    m_assignment.MaxSize = newMaxSize;
+                }
+            }
+
             return false;
         }
 
+        private string m_lastState = "";
         public override void UpdateAI(float dt)
         {
+            if (Brain.State != m_lastState)
+            {
+                Common.Dbgl($"State:{Brain.State}");
+                m_lastState = Brain.State;
+            }
+
             base.UpdateAI(dt);
             m_triggerTimer += dt;
             if (m_triggerTimer < 0.1f) return;
@@ -463,7 +489,7 @@ namespace RagnarsRokare.MobAI
             m_triggerTimer = 0f;
             var monsterAi = Instance as MonsterAI;
 
-            UpdateFeedtimerIfHurt(m_config.PostTameFeedDuration);
+            eatingBehaviour.Update(this, dt);
 
             //Runtime triggers
             Brain.Fire(Trigger.Follow);
@@ -491,18 +517,23 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (Brain.IsInState(searchForItemsBehaviour.InitState))
+            if (Brain.IsInState(State.SearchForItems))
             {
                 searchForItemsBehaviour.Update(this, dt);
                 return;
             }
 
-            if (Brain.IsInState(fightBehaviour.InitState))
+            if (Brain.IsInState(State.Fight))
             {
                 fightBehaviour.Update(this, dt);
                 return;
             }
 
+            if (Brain.State == State.Idle)
+            {
+                Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
+                return;
+            }
         }
 
         public override void Follow(Player player)

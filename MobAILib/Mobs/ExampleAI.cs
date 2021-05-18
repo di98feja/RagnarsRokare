@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI.Mobs
 {
-    public class ExampleAIConfig
+    public class ExampleAIConfig : MobAIBaseConfig
     {
         public int InteractRange = 1;
     }
@@ -93,7 +93,7 @@ namespace RagnarsRokare.MobAI.Mobs
         /// </summary>
         /// <param name="instance">The original MonsterAI object</param>
         /// <param name="config">The config file sent in when registering the current mob</param>
-        public ExampleAI(MonsterAI instance, ExampleAIConfig config) : base(instance, State.Idle)
+        public ExampleAI(MonsterAI instance, ExampleAIConfig config) : base(instance, State.Idle, config)
         {
             Debug.Log("Example Config");
             m_config = config;

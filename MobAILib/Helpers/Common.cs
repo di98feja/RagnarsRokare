@@ -39,7 +39,7 @@ namespace RagnarsRokare.MobAI
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, assignmentSearchRadius, pieceList);
-            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)) )); //&& CanSeeTarget(instance, p.gameObject)
+            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject))); //&& CanSeeTarget(instance, p.gameObject)
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
             {
@@ -73,7 +73,7 @@ namespace RagnarsRokare.MobAI
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
-            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) ); //&& CanSeeTarget(instance, p.gameObject)
+            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject)); //&& CanSeeTarget(instance, p.gameObject)
             var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponentInChildren<Container>()).Where(c => !knownContainers.Contains(c)).ToList(); 
             containers.AddRange(allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c)));
             if (!containers.Any())
@@ -167,6 +167,27 @@ namespace RagnarsRokare.MobAI
             {
                 return true;
             }
+            return false;
+        }
+
+        public static bool Alarmed(BaseAI instance, float Awareness)
+        {
+            foreach (Character allCharacter in Character.GetAllCharacters())
+            {
+                if (BaseAI.IsEnemy(instance.GetComponent<Character>(), allCharacter) && instance.CanSenseTarget(allCharacter) && Vector3.Distance(instance.transform.position, allCharacter.transform.position) < Awareness * 5)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public static bool TurnToFacePosition(MobAIBase mob, Vector3 position)
+        {
+            bool isLookingAtTarget = (bool)Invoke<MonsterAI>(mob.Instance, "IsLookingAt", position, 10f);
+            if (isLookingAtTarget) return true;
+
+            Invoke<MonsterAI>(mob.Instance, "LookAt", position);
             return false;
         }
     }

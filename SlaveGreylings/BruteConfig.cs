@@ -11,15 +11,14 @@ namespace RagnarsRokare.SlaveGreylings
         public static ConfigEntry<int> PreTameFeedDuration;
         public static ConfigEntry<int> PostTameFeedDuration;
         public static ConfigEntry<int> TamingTime;
-        public static ConfigEntry<int> AssignmentSearchRadius;
-        public static ConfigEntry<int> ItemSearchRadius;
-        public static ConfigEntry<int> ContainerSearchRadius;
-        public static ConfigEntry<int> MaxContainersInMemory;
         public static ConfigEntry<int> TimeLimitOnAssignment;
         public static ConfigEntry<string> IncludedContainersList;
-
         public static IEnumerable<string> PreTameConsumables;
         public static IEnumerable<string> PostTameConsumables;
+        public static ConfigEntry<int> Awareness;
+        public static ConfigEntry<int> Agressiveness;
+        public static ConfigEntry<int> Mobility;
+        public static ConfigEntry<int> Intelligence;
 
         public static void Init(ConfigFile Config)
         {
@@ -28,14 +27,14 @@ namespace RagnarsRokare.SlaveGreylings
             PreTameFeedDuration = Config.Bind<int>("General", "Brute_PreTameFeedDuration", 100, "Time before getting hungry after consuming one item during taming");
             PostTameFeedDuration = Config.Bind<int>("General", "Brute_PostTameFeedDuration", 1000, "Time before getting hungry after consuming one item when tame");
             TamingTime = Config.Bind<int>("General", "Brute_TamingTime", 1000, "Total time it takes to tame a Brute");
-            AssignmentSearchRadius = Config.Bind<int>("General", "Brute_AssignmentSearchRadius", 10, "Radius to search for new assignments within");
-            ItemSearchRadius = Config.Bind<int>("General", "Brute_ItemSearchRadius", 10, "Radius to search for items on the ground");
-            ContainerSearchRadius = Config.Bind<int>("General", "Brute_ContainerSearchRadius", 10, "Radius to search for containers");
-            MaxContainersInMemory = Config.Bind<int>("General", "Brute_MaxContainersInMemory", 3, "How many containers the Brute should remember contents from");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Brute_TimeLimitOnAssignment", 30, "How long before moving on to next assignment");
             IncludedContainersList = Config.Bind<string>("General", "Brute_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
             PreTameConsumables = TamingItemList.Value.Split(',');
             PostTameConsumables = "Dandelion".Split(',');
+            Awareness = Config.Bind<int>("General", "Brute_Awareness", 6, "General awareness, used to calculate search ranges and ability to detect enemies");
+            Agressiveness = Config.Bind<int>("General", "Brute_Agressiveness", 8, "Agressivness determines how to behave when fighting and when to give up and flee");
+            Mobility = Config.Bind<int>("General", "Brute_Mobility", 10, "Mobility is used to determine how often and how far the mob moves");
+            Intelligence = Config.Bind<int>("General", "Brute_Intelligence", 5, "General intelligence, how much the mob can remember");
         }
     }
 }
