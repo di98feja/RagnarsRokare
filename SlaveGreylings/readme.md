@@ -51,12 +51,13 @@ We hope you find this little mod fun!
 0.7.2 Patch Notes:
 From the book of Barg:  
 ##################################  
-Today the day 67 in this paradise world of Odin we call Valheim, we managed to teach the slaves to not only look at their feets when searching for assignments and chests.  
-This makes them wandering longer distances in search of assignments making it easy for them to get lost. The solusin for this was to teach them to return to the "home" position where we last set them to stay (not follow).   
+Today the day 67 in this paradise world of Odin we call Valheim, we managed to teach the slaves to not only look at their feet's when searching for assignments and chests.  
+This makes them wandering longer distances in search of assignments making it easy for them to get lost. The solution for this was to teach them to return to the "home" position where we last set them to stay (not follow).   
 ##################################  
 * This update is adjusted for the use fight behavior in MobAILib 0.2 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
-* Making use of new Attributes in BaseIA rather then configuring everything separatley.
-* Added random movement in idle and a returnpoint to last stay position to return to after stuck without tasks.
+* Making use of Feedingbehaviour in MobAILib.
+* Making use of new Attributes in BaseIA rather then configuring everything separately.
+* Added random movement in idle and a return point to last stay position to return to after stuck without tasks.
 
 
 
