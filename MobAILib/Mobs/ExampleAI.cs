@@ -123,7 +123,7 @@ namespace RagnarsRokare.MobAI.Mobs
                 .OnEntry(t =>
                 {
                     // Check for nearby items on the ground
-                    m_groundItem = Common.GetNearbyItem(Instance, ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "").Select(i => i.m_itemData), 10);
+                    m_groundItem = Common.GetNearbyItem(Instance, ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, "").Select(i => i.m_itemData.m_shared.m_name), 10);
                     if (m_groundItem != null)
                     {
                         // Item found, trigger FoundItem

@@ -13,7 +13,7 @@ namespace RagnarsRokare.MobAI
             return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
         }
 
-        public static ItemDrop GetNearbyItem(BaseAI instance, IEnumerable<ItemDrop.ItemData> acceptedNames, int range = 10)
+        public static ItemDrop GetNearbyItem(BaseAI instance, IEnumerable<string> acceptedNames, int range = 10)
         {
             Vector3 position = instance.transform.position;
             ItemDrop ClosestObject = null;
@@ -24,7 +24,7 @@ namespace RagnarsRokare.MobAI
                 {
                     continue;
                 }
-                if (item?.transform?.position != null && acceptedNames.Select(n => n.m_shared.m_name).Contains(item.m_itemData.m_shared.m_name) && CanSeeTarget(instance, item.gameObject) && (ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
+                if (item?.transform?.position != null && acceptedNames.Contains(item.m_itemData.m_shared.m_name) && CanSeeTarget(instance, item.gameObject) && (ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
                 {
                     ClosestObject = item;
                 }

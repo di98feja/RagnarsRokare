@@ -86,7 +86,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Failed, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, m_searchRadius);
+                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items.Select(i => i.m_shared.m_name), m_searchRadius);
                     if (groundItem != null)
                     {
                         m_aiBase.UpdateAiStatus( $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
