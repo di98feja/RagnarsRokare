@@ -83,9 +83,9 @@ namespace RagnarsRokare.SlaveGreylings
                     {
                         return new MobConfig
                         {
-                            PostTameConsumables = GreydwarfConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PostTameConsumables = GreydwarfConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Consumable, i).FirstOrDefault()),
                             PostTameFeedDuration = GreydwarfConfig.PostTameFeedDuration.Value,
-                            PreTameConsumables = GreydwarfConfig.PreTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PreTameConsumables = GreydwarfConfig.PreTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Consumable, i).FirstOrDefault()),
                             PreTameFeedDuration = GreydwarfConfig.PreTameFeedDuration.Value,
                             TamingTime = GreydwarfConfig.TamingTime.Value,
                             AIType = "Sorter",
