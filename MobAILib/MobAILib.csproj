@@ -81,6 +81,7 @@
     <Compile Include="Helpers\Assignment.cs" />
     <Compile Include="MobAILib.cs" />
     <Compile Include="Mobs\ExampleAI.cs" />
+    <Compile Include="Mobs\SorterAI.cs" />
     <Compile Include="Mobs\FixerAI.cs" />
     <Compile Include="Config\FixerAIConfig.cs" />
     <Compile Include="Helpers\Common.cs" />
