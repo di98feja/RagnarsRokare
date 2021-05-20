@@ -23,6 +23,7 @@ namespace RagnarsRokare.SlaveGreylings
             var type = Common.GetPrefabName(mobType);
             if (type == "Greyling") return true;
             if (type == "Greydwarf_Elite") return true;
+            if (type == "Greydwarf") return true;
             return false;
         }
 
@@ -74,6 +75,28 @@ namespace RagnarsRokare.SlaveGreylings
                                 Awareness = BruteConfig.Awareness.Value,
                                 Mobility = BruteConfig.Mobility.Value,
                                 Intelligence = BruteConfig.Intelligence.Value
+                            }
+                        };
+                    }
+
+                case "Greydwarf":
+                    {
+                        return new MobConfig
+                        {
+                            PostTameConsumables = GreydwarfConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PostTameFeedDuration = GreydwarfConfig.PostTameFeedDuration.Value,
+                            PreTameConsumables = GreydwarfConfig.PreTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PreTameFeedDuration = GreydwarfConfig.PreTameFeedDuration.Value,
+                            TamingTime = GreydwarfConfig.TamingTime.Value,
+                            AIType = "Sorter",
+                            AIConfig = new SorterAIConfig
+                            {
+                                PostTameFeedDuration = GreydwarfConfig.PostTameFeedDuration.Value,
+                                IncludedContainers = GreydwarfConfig.IncludedContainersList.Value.Split(','),
+                                Agressiveness = GreydwarfConfig.Agressiveness.Value,
+                                Awareness = GreydwarfConfig.Awareness.Value,
+                                Mobility = GreydwarfConfig.Mobility.Value,
+                                Intelligence = GreydwarfConfig.Intelligence.Value
                             }
                         };
                     }
