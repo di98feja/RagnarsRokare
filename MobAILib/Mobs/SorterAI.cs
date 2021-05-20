@@ -1,5 +1,4 @@
 ﻿using Stateless;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -14,12 +13,6 @@ namespace RagnarsRokare.MobAI
         // Timers
         private float m_searchForNewAssignmentTimer;
         private float m_triggerTimer;
-        private float m_assignedTimer;
-        private float m_closeEnoughTimer;
-        private float m_repairTimer;
-        private float m_roarTimer;
-        private float m_lastSuccessfulFindAssignment;
-        private float m_lastFailedFindAssignment;
         private float m_stuckInIdleTimer;
 
         // Management
@@ -38,14 +31,10 @@ namespace RagnarsRokare.MobAI
             public const string Follow = "Follow";
             public const string Fight = "Fight";
             public const string Flee = "Flee";
-            public const string Assigned = "Assigned";
+            public const string Sorting = "Sorting";
             public const string SearchForItems = "SearchForItems";
-            public const string MoveToAssignment = "MoveToAssignment";
-            public const string CheckRepairState = "CheckRepairState";
-            public const string RepairAssignment = "RepairAssignment";
             public const string Root = "Root";
             public const string Hungry = "Hungry";
-            public const string TurnToFaceAssignment = "TurnToFaceAssignment";
         }
 
         private class Trigger
@@ -58,21 +47,19 @@ namespace RagnarsRokare.MobAI
             public const string ConsumeItem = "ConsumeItem";
             public const string ItemNotFound = "ItemNotFound";
             public const string SearchForItems = "SearchForItems";
-            public const string AssignmentTimedOut = "AssignmentTimedOut";
-            public const string RepairNeeded = "RepairNeeded";
-            public const string RepairDone = "RepairDone";
             public const string Failed = "Failed";
             public const string Fight = "Fight";
             public const string EnterEatBehaviour = "EnterEatBehaviour";
         }
 
-        readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
+        readonly StateMachine<string, string>.TriggerWithParameters<float> UpdateTrigger;
         readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         readonly SearchForItemsBehaviour searchForItemsBehaviour;
+        readonly ItemSortingBehaviour itemSortingBehaviour;
         readonly FightBehaviour fightBehaviour;
         readonly EatingBehaviour eatingBehaviour;
 
-        FixerAIConfig m_config;
+        SorterAIConfig m_config;
 
         public SorterAI() : base()
         { }
@@ -82,7 +69,7 @@ namespace RagnarsRokare.MobAI
 
         public SorterAI(MonsterAI instance, MobAIBaseConfig config) : base(instance, State.Idle, config)
         {
-            m_config = config as FixerAIConfig;
+            m_config = config as SorterAIConfig;
             m_containers = new MaxStack<Container>(Intelligence);
 
             if (instance.m_consumeHeal == 0.0f)
@@ -112,11 +99,16 @@ namespace RagnarsRokare.MobAI
             }
             RegisterRPCMethods();
 
-            UpdateTrigger = Brain.SetTriggerParameters<(MonsterAI instance, float dt)>(Trigger.Update);
+            UpdateTrigger = Brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems);
+            itemSortingBehaviour = new ItemSortingBehaviour();
+            itemSortingBehaviour.Configure(this, Brain, State.Sorting);
+            itemSortingBehaviour.MaxSearchTime = m_config.MaxSearchTime;
+            itemSortingBehaviour.SuccessState = State.Idle;
+            itemSortingBehaviour.FailState = State.Idle;
             fightBehaviour = new FightBehaviour();
             fightBehaviour.Configure(this, Brain, State.Fight);
             eatingBehaviour = new EatingBehaviour();
@@ -127,11 +119,13 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.FailState = State.Idle;
             eatingBehaviour.HealPercentageOnConsume = 0.1f;
 
+            
+
             ConfigureRoot();
             ConfigureIdle();
             ConfigureFollow();
             ConfigureSearchForItems();
-            ConfigureAssigned();
+            ConfigureSorting();
             ConfigureFlee();
             ConfigureFight();
             ConfigureHungry();
@@ -186,17 +180,17 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.Idle)
                 .SubstateOf(State.Root)
                 .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
-                .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
+                .PermitIf(UpdateTrigger, State.Sorting, (dt) =>
                 {
-                    if ((m_stuckInIdleTimer += arg.dt) > 300f)
+                    if ((m_stuckInIdleTimer += dt) > 300f)
                     {
                         Common.Dbgl("m_startPosition = HomePosition");
                         m_startPosition = HomePosition;
                         m_stuckInIdleTimer = 0f;
                     }
-                    if ((m_searchForNewAssignmentTimer += arg.dt) < 2f) return false;
+                    if ((m_searchForNewAssignmentTimer += dt) < 10f) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    return AddNewAssignment(arg.instance.transform.position);
+                    return true;
 
                 })
                 .OnEntry(t =>
@@ -235,7 +229,7 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Flee)
                 .SubstateOf(State.Root)
-                .PermitIf(UpdateTrigger, State.Idle, (args) => Common.Alarmed(args.instance, Mathf.Max(1, Awareness - 1)))
+                .PermitIf(UpdateTrigger, State.Idle, (dt) => Common.Alarmed(Instance, Mathf.Max(1, Awareness - 1)))
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Got hurt, flee!");
@@ -252,7 +246,7 @@ namespace RagnarsRokare.MobAI
         private void ConfigureFollow()
         {
             Brain.Configure(State.Follow)
-                .PermitIf(UpdateTrigger, State.Idle, (args) => !(bool)args.instance.GetFollowTarget())
+                .PermitIf(UpdateTrigger, State.Idle, (dt) => !(bool)(Instance as MonsterAI).GetFollowTarget())
                 .OnEntry(t =>
                 {
                     UpdateAiStatus("Follow");
@@ -283,38 +277,15 @@ namespace RagnarsRokare.MobAI
                 });
         }
 
-        private void ConfigureAssigned()
+        private void ConfigureSorting()
         {
-            Brain.Configure(State.Assigned)
+            Brain.Configure(State.Sorting)
                 .SubstateOf(State.Idle)
-                .InitialTransition(State.MoveToAssignment)
+                .InitialTransition(itemSortingBehaviour.StartState)
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus($"uuhhhmm..  checkin' dis over 'ere");
-                    m_assignedTimer = 0;
+                    Common.Dbgl("ItemSortBehaviour Initiated");
                 });
-
-            Brain.Configure(State.MoveToAssignment)
-                .SubstateOf(State.Assigned)
-                .Permit(Trigger.Failed, State.Idle)
-                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => MoveToAssignment(arg.dt))
-                .OnEntry(t =>
-                {
-                    if (Common.GetNView(m_assignment.Peek())?.IsValid() != true)
-                    {
-                        Brain.Fire(Trigger.Failed);
-                        m_assignment.Pop();
-                        return;
-                    }
-                    UpdateAiStatus($"Moving to assignment {m_assignment.Peek().m_name}");
-                    m_closeEnoughTimer = 0;
-                })
-                .OnExit(t =>
-                {
-                    StopMoving();
-                });
-
- 
         }
 
 
@@ -340,14 +311,7 @@ namespace RagnarsRokare.MobAI
             Brain.Fire(Trigger.Follow);
             Brain.Fire(Trigger.TakeDamage);
             Brain.Fire(Trigger.Hungry);
-            Brain.Fire(UpdateTrigger, (monsterAi, dt));
-
-            //Assigned timeout-function 
-            m_assignedTimer += dt;
-            if (m_assignedTimer > m_config.TimeLimitOnAssignment)
-            {
-                Brain.Fire(Trigger.AssignmentTimedOut);
-            }
+            Brain.Fire(UpdateTrigger, dt);
 
             if (Brain.IsInState(State.Follow))
             {
@@ -392,7 +356,7 @@ namespace RagnarsRokare.MobAI
             {
                 Name = "Sorter",
                 AIType = this.GetType(),
-                ConfigType = typeof(FixerAIConfig)
+                ConfigType = typeof(SorterAIConfig)
             };
         }
 
