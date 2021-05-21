@@ -22,8 +22,8 @@ namespace RagnarsRokare.CraftToStack
         public const string ModName = "RagnarsRökare CraftToStackMod";
         public const string ModVersion = "0.2";
 
-        public const string EAQSPluginId = "randyknapp.mods.equipmentandquickslots";
         public const string EpicLootPluginId = "randyknapp.mods.epicloot";
+        public const string EAQSPluginId = "randyknapp.mods.equipmentandquickslots";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> NexusID;
@@ -47,14 +47,16 @@ namespace RagnarsRokare.CraftToStack
 
         void CompatPatchEAQS()
         {
-            Type type = Type.GetType("EquipmentAndQuickSlots.InventoryGui_DoCrafting_Patch, EquipmentAndQuickSlots");
-            if (type != null)
-            {
-                harmony.Patch(
-                    AccessTools.Method(type, "Prefix"),
-                    transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
-                );
-            }
+            Type EAQS_InventoryGui_DoCrafting_Patch = Type.GetType("EquipmentAndQuickSlots.InventoryGui_DoCrafting_Patch, EquipmentAndQuickSlots");
+            harmony.Patch(
+                AccessTools.Method(EAQS_InventoryGui_DoCrafting_Patch, "Prefix"),
+                transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
+            );
+            Type EAQS_Inventory_RemoveItem4_Patch = Type.GetType("EquipmentAndQuickSlots.Inventory_RemoveItem4_Patch, EquipmentAndQuickSlots");
+            harmony.Patch(
+                AccessTools.Method(EAQS_Inventory_RemoveItem4_Patch, "Prefix"),
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(EAQS_Inventory_RemoveItem4_Patch)))
+            );
         }
 
         void CompatPatchEpicLoot()
@@ -208,6 +210,12 @@ namespace RagnarsRokare.CraftToStack
                     return instructions;
                 }
             }
+        }
+
+        static bool EAQS_Inventory_RemoveItem4_Patch(ref bool __result)
+        {
+            __result = true;
+            return false;
         }
 
         [HarmonyPatch(typeof(Inventory), "RemoveItem", argumentTypes: new Type[] { typeof(string), typeof(int) })]
