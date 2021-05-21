@@ -34,12 +34,12 @@ namespace RagnarsRokare.CraftToStack
             harmony.PatchAll();
             NexusID = Config.Bind<int>("General", "NexusID", 982, "Nexus mod ID for updates");
 
-            if (Chainloader.PluginInfos.ContainsKey("randyknapp.mods.equipmentandquickslots"))
+            if (Chainloader.PluginInfos.ContainsKey(EAQSPluginId))
             {
                 CompatPatchEAQS();
             }
 
-            if (Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot"))
+            if (Chainloader.PluginInfos.ContainsKey(EpicLootPluginId))
             {
                 CompatPatchEpicLoot();
             }
