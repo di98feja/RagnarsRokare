@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Configuration;
+using BepInEx.Bootstrap;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
@@ -13,11 +14,16 @@ namespace RagnarsRokare.CraftToStack
 {
     [BepInPlugin(ModId, ModName, ModVersion)]
     [BepInProcess("valheim.exe")]
+    [BepInDependency(EAQSPluginId, BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(EpicLootPluginId, BepInDependency.DependencyFlags.SoftDependency)]
     public class CraftToStack : BaseUnityPlugin
     {
         public const string ModId = "RagnarsRokare.CraftToStack";
         public const string ModName = "RagnarsRökare CraftToStackMod";
         public const string ModVersion = "0.2";
+
+        public const string EAQSPluginId = "randyknapp.mods.equipmentandquickslots";
+        public const string EpicLootPluginId = "randyknapp.mods.epicloot";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> NexusID;
@@ -27,6 +33,40 @@ namespace RagnarsRokare.CraftToStack
             Debug.Log($"Loading {ModName} v{ModVersion}, Barg Bug Bash!");
             harmony.PatchAll();
             NexusID = Config.Bind<int>("General", "NexusID", 982, "Nexus mod ID for updates");
+
+            if (Chainloader.PluginInfos.ContainsKey("randyknapp.mods.equipmentandquickslots"))
+            {
+                CompatPatchEAQS();
+            }
+
+            if (Chainloader.PluginInfos.ContainsKey("randyknapp.mods.epicloot"))
+            {
+                CompatPatchEpicLoot();
+            }
+        }
+
+        void CompatPatchEAQS()
+        {
+            Type type = Type.GetType("EquipmentAndQuickSlots.InventoryGui_DoCrafting_Patch, EquipmentAndQuickSlots");
+            if (type != null)
+            {
+                harmony.Patch(
+                    AccessTools.Method(type, "Prefix"),
+                    transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
+                );
+            }
+        }
+
+        void CompatPatchEpicLoot()
+        {
+            Type type = Type.GetType("EpicLoot.InventoryGui_DoCrafting_Patch, EpicLoot");
+            if (type != null)
+            {
+                harmony.Patch(
+                    AccessTools.Method(type, "Prefix"),
+                    transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
+                );
+            }
         }
 
         [HarmonyPatch(typeof(InventoryGui), "UpdateRecipe")]
@@ -80,7 +120,7 @@ namespace RagnarsRokare.CraftToStack
             // brtrue Label10
             // ret NULL
 
-            static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> originalCIL)
+            public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> originalCIL)
             {
                 var findEmptySlotMethod = typeof(Inventory).GetMethod("HaveEmptySlot", BindingFlags.Public | BindingFlags.Instance);
                 var canAddItemMethod = typeof(Inventory).GetMethod("CanAddItem", new Type[] { typeof(ItemData), typeof(int) });
@@ -173,9 +213,9 @@ namespace RagnarsRokare.CraftToStack
         [HarmonyPatch(typeof(Inventory), "RemoveItem", argumentTypes: new Type[] { typeof(string), typeof(int) })]
         class Inventory_RemoveItem_Patch
         {
-            static bool Prefix(ref Inventory __instance, ref List<ItemDrop.ItemData> ___m_inventory, string name, ref int amount)
+            static bool Prefix(ref Inventory __instance, string name, ref int amount)
             {
-                var sortedInventoryList = ___m_inventory.OrderBy(i => i.m_stack);
+                var sortedInventoryList = __instance.GetAllItems().OrderBy(i => i.m_stack);
                 foreach (ItemDrop.ItemData item in sortedInventoryList)
                 {
                     if (item.m_shared.m_name == name)
