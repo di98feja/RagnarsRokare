@@ -20,7 +20,7 @@ namespace RagnarsRokare.CraftToStack
     {
         public const string ModId = "RagnarsRokare.CraftToStack";
         public const string ModName = "RagnarsRökare CraftToStackMod";
-        public const string ModVersion = "0.2";
+        public const string ModVersion = "0.3";
 
         public const string EAQSPluginId = "randyknapp.mods.equipmentandquickslots";
         public const string EpicLootPluginId = "randyknapp.mods.epicloot";
