@@ -1,5 +1,5 @@
 ﻿{
-    "name": "RagnarsRokare.AutoPickupSelector",
+    "name": "RagnarsRokare_AutoPickupSelector",
     "version_number": "0.4.0",
     "website_url": "https://www.nexusmods.com/valheim/mods/868?tab=description",
     "description": "This mod aims to make it easy to select which items that should be picked up automatically by your character. It replaces the Trophy tab with a clickable list of all materials and trophies that lets you turn autopickup on or off.",
