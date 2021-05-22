@@ -46,7 +46,7 @@ namespace RagnarsRokare.SlaveGreylings
                 }
                 string aiStatus = ___m_nview.GetZDO().GetString(Constants.Z_AiStatus) ?? Traverse.Create(__instance).Method("GetStatusString").GetValue() as string;
                 string str = Localization.instance.Localize(___m_character.GetHoverName());
-                str += Localization.instance.Localize(" ( $hud_tame, " + aiStatus + " )");
+                str += Localization.instance.Localize($" ({aiStatus})");
                 __result = str + Localization.instance.Localize("\n[<color=yellow><b>$KEY_Use</b></color>] $hud_pet" + "\n[<color=yellow>Hold E</color>] to change name");
 
                 return false;

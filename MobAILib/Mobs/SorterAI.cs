@@ -196,7 +196,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_stuckInIdleTimer = 0;
-                    UpdateAiStatus("Nothing to do, bored");
+                    UpdateAiStatus(State.Idle);
                 });
         }
 
@@ -232,7 +232,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle, (dt) => Common.Alarmed(Instance, Mathf.Max(1, Awareness - 1)))
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Got hurt, flee!");
+                    UpdateAiStatus(State.Flee);
                     Instance.Alert();
                 })
                 .OnExit(t =>
@@ -249,7 +249,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle, (dt) => !(bool)(Instance as MonsterAI).GetFollowTarget())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Follow");
+                    UpdateAiStatus(State.Follow);
                     Attacker = null;
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 })

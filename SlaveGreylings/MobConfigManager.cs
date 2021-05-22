@@ -52,7 +52,8 @@ namespace RagnarsRokare.SlaveGreylings
                                 Agressiveness = GreylingsConfig.Agressiveness.Value,
                                 Awareness = GreylingsConfig.Awareness.Value,
                                 Mobility = GreylingsConfig.Mobility.Value,
-                                Intelligence = GreylingsConfig.Intelligence.Value
+                                Intelligence = GreylingsConfig.Intelligence.Value,
+                                AIStateCustomStrings = GreylingsConfig.AIStateDictionary
                             }
                         };
                     }
@@ -74,7 +75,8 @@ namespace RagnarsRokare.SlaveGreylings
                                 Agressiveness = BruteConfig.Agressiveness.Value,
                                 Awareness = BruteConfig.Awareness.Value,
                                 Mobility = BruteConfig.Mobility.Value,
-                                Intelligence = BruteConfig.Intelligence.Value
+                                Intelligence = BruteConfig.Intelligence.Value,
+                                AIStateCustomStrings = BruteConfig.AIStateDictionary
                             }
                         };
                     }
@@ -96,7 +98,8 @@ namespace RagnarsRokare.SlaveGreylings
                                 Agressiveness = GreydwarfConfig.Agressiveness.Value,
                                 Awareness = GreydwarfConfig.Awareness.Value,
                                 Mobility = GreydwarfConfig.Mobility.Value,
-                                Intelligence = GreydwarfConfig.Intelligence.Value
+                                Intelligence = GreydwarfConfig.Intelligence.Value,
+                                AIStateCustomStrings = GreydwarfConfig.AIStateDictionary
                             }
                         };
                     }

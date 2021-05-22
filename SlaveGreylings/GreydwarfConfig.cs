@@ -35,5 +35,29 @@ namespace RagnarsRokare.SlaveGreylings
             Mobility = Config.Bind<int>("General", "Greydwarf_Mobility", 6, "Mobility is used to determine how often and how far the mob moves");
             Intelligence = Config.Bind<int>("General", "Greydwarf_Intelligence", 8, "General intelligence, how much the mob can remember");
         }
+
+        public static Dictionary<string, string> AIStateDictionary { get; } = new Dictionary<string, string>()
+        {
+            {"RR_FIGHTMain","hmm?"},
+            {"RR_FIGHTIdentifyEnemy", "EIIII See {0}!"},
+            {"RR_FIGHTDoneFighting","*looks relieved*"},
+            {"RR_EATHungry", "Is hungry, no work a do"},
+            {"RR_EATHaveFoodItem","*burps*"},
+            {"RR_ISBMoveToContainer", "Heading to that a bin"},
+            {"RR_ISBMoveToStorageContainer", "Heading to that a bin"},
+            {"RR_ISBMoveToGroundItem", "Heading to {0}"},
+            {"RR_ISBPickUpItemFromGround", "Got a {0} from the ground"},
+            {"RR_ISBSearchItemsOnGround", "Look, there is a {0} on da grund"},
+            {"RR_SFISearchItemsOnGround","Look, there is a {0} on da grund"},
+            {"RR_SFISearchForRandomContainer","Look a bin!"},
+            {"RR_SFIMoveToGroundItem","Heading to {0}"},
+            {"RR_SFIPickUpItemFromGround","Got a {0} from the ground"},
+            {"RR_SFIMoveToContainer","Heading to that a bin"},
+            {"RR_SFISearchForItem","Found {0} in this a bin!"},
+            {"Idle", "*looks bored*"},
+            {"Flee", "Ahhh  big hurt!"},
+            {"Follow", "Follow bossa"},
+            {"MoveAwayFrom", "Jajaja!"}
+        };
     }
 }

@@ -202,7 +202,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_stuckInIdleTimer = 0;
-                    UpdateAiStatus("Nothing to do, bored");
+                    UpdateAiStatus(State.Idle);
                 });
         }
 
@@ -238,7 +238,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle, (args) => Common.Alarmed(args.instance, Mathf.Max(1, Awareness - 1)))
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Got hurt, flee!");
+                    UpdateAiStatus(State.Flee);
                     Instance.Alert();
                 })
                 .OnExit(t =>
@@ -255,7 +255,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle, (args) => !(bool)args.instance.GetFollowTarget())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Follow");
+                    UpdateAiStatus(State.Follow);
                     Attacker = null;
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                 })
@@ -291,7 +291,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.AssignmentTimedOut, State.Idle)
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus($"uuhhhmm..  checkin' dis over 'ere");
+                    UpdateAiStatus(State.Assigned);
                     m_assignedTimer = 0;
                 });
 
@@ -307,7 +307,7 @@ namespace RagnarsRokare.MobAI
                         m_assignment.Pop();
                         return;
                     }
-                    UpdateAiStatus($"Moving to assignment {m_assignment.Peek().m_name}");
+                    UpdateAiStatus(State.MoveToAssignment, m_assignment.Peek().m_name);
                     m_closeEnoughTimer = 0;
                 })
                 .OnExit(t =>
@@ -337,13 +337,12 @@ namespace RagnarsRokare.MobAI
                     float health = wnt?.GetHealthPercentage() ?? 1.0f;
                     if (health < 0.9f)
                     {
-                        UpdateAiStatus($"Hum, no goood");
                         m_startPosition = Instance.transform.position;
                         Brain.Fire(Trigger.RepairNeeded);
                     }
                     else
                     {
-                        UpdateAiStatus($"Naah dis {m_assignment.Peek().m_name} goood");
+                        UpdateAiStatus(State.CheckRepairState, m_assignment.Peek().m_name);
                         Brain.Fire(Trigger.RepairDone);
                     }
                 });
@@ -377,7 +376,7 @@ namespace RagnarsRokare.MobAI
                         m_assignment.Pop();
                         return;
                     }
-                    UpdateAiStatus($"Fixin Dis {m_assignment.Peek().m_name}");
+                    UpdateAiStatus(State.RepairAssignment, m_assignment.Peek().m_name);
                     m_repairTimer = 0.0f;
                     hammerAnimationStarted = false;
                 })
@@ -387,7 +386,6 @@ namespace RagnarsRokare.MobAI
                     m_stuckInIdleTimer = 0;
                     Debug.LogWarning($"Trigger:{t.Trigger}");
                     var pieceToRepair = m_assignment.Peek();
-                    UpdateAiStatus($"Dis {m_assignment.Peek().m_name} is goood as new!");
                     WearNTear component = pieceToRepair.GetComponent<WearNTear>();
                     if ((bool)component && component.Repair())
                     {

@@ -97,7 +97,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus($"Heading to that a bin");
+                    m_aiBase.UpdateAiStatus(State.MoveToContainer);
                     m_currentSearchTime = 0;
                 });
 
@@ -107,7 +107,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus($"Heading to that a bin");
+                    m_aiBase.UpdateAiStatus(State.MoveToStorageContainer);
                     m_currentSearchTime = 0;
                 });
 
@@ -198,7 +198,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.GroundItemLost, State.SearchItemsOnGround)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus($"Heading to {m_item.m_itemData.m_shared.m_name}");
+                    m_aiBase.UpdateAiStatus(State.MoveToGroundItem, m_item.m_itemData.m_shared.m_name);
                 });
 
             brain.Configure(State.PickUpItemFromGround)
@@ -213,7 +213,7 @@ namespace RagnarsRokare.MobAI
                         brain.Fire(Trigger.GroundItemLost);
                         return;
                     }
-                    m_aiBase.UpdateAiStatus($"Got a {m_carriedItem.m_shared.m_name} from the ground");
+                    m_aiBase.UpdateAiStatus(State.PickUpItemFromGround, m_carriedItem.m_shared.m_name);
                     m_item.Pickup(aiBase.Character as Humanoid);
                     brain.Fire(Trigger.ItemFound);
                 });
@@ -301,13 +301,12 @@ namespace RagnarsRokare.MobAI
                 if (m_currentSearchTime > MaxSearchTime)
                 {
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
-                    m_aiBase.UpdateAiStatus($"I seen nottin on da ground.");
                     return;
                 }
                 ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, m_itemsDictionary.Keys, m_searchRadius);
                 if (groundItem != null)
                 {
-                    m_aiBase.UpdateAiStatus($"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
+                    m_aiBase.UpdateAiStatus(State.SearchItemsOnGround, groundItem.m_itemData.m_shared.m_name);
                     m_item = groundItem;
                     aiBase.Brain.Fire(Trigger.FoundGroundItem);
                     return;
