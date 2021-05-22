@@ -55,16 +55,22 @@ namespace RagnarsRokare.CraftToStack
         void CompatPatchEAQS()
         {
             Type EAQS_InventoryGui_DoCrafting_Patch = Type.GetType("EquipmentAndQuickSlots.InventoryGui_DoCrafting_Patch, EquipmentAndQuickSlots");
-            harmony.Patch(
-                AccessTools.Method(EAQS_InventoryGui_DoCrafting_Patch, "Prefix"),
-                transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
-            );
+            if (EAQS_InventoryGui_DoCrafting_Patch != null)
+            {
+                harmony.Patch(
+                    AccessTools.Method(EAQS_InventoryGui_DoCrafting_Patch, "Prefix"),
+                    transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
+                );
+            }
 
             Type EAQS_ExtendedInventory = Type.GetType("EquipmentAndQuickSlots.ExtendedInventory, EquipmentAndQuickSlots");
-            harmony.Patch(
-                AccessTools.Method(EAQS_ExtendedInventory, "OverrideRemoveItem", new[] { typeof(string), typeof(int) }),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(Inventory_RemoveItem_Prefix)))
-            );
+            if (EAQS_ExtendedInventory != null)
+            {
+                harmony.Patch(
+                    AccessTools.Method(EAQS_ExtendedInventory, "OverrideRemoveItem", new[] { typeof(string), typeof(int) }),
+                    prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(Inventory_RemoveItem_Prefix)))
+                );
+            }
         }
 
         void CompatPatchEpicLoot()
