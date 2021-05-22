@@ -70,7 +70,8 @@
     <Content Include="Misc\AutoPickupSelectorBanner.png" />
     <Content Include="Misc\AutoPickupSelector_Screenshot.png" />
     <Content Include="Misc\AutoPickupSelector_tile.png" />
-    <Content Include="readme.txt" />
+    <None Include="Misc\manifest.json" />
+    <None Include="readme.md" />
     <Content Include="PieceList.txt" />
   </ItemGroup>
   <ItemGroup>
