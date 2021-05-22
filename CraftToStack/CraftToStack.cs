@@ -38,6 +38,13 @@ namespace RagnarsRokare.CraftToStack
             {
                 CompatPatchEAQS();
             }
+            else
+            {
+                harmony.Patch(
+                    AccessTools.Method(typeof(Inventory), "RemoveItem", new Type[] { typeof(string), typeof(int) }),
+                    prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(Inventory_RemoveItem_Prefix)))
+                );
+            }
 
             if (Chainloader.PluginInfos.ContainsKey(EpicLootPluginId))
             {
@@ -47,12 +54,21 @@ namespace RagnarsRokare.CraftToStack
 
         void CompatPatchEAQS()
         {
-            Type type = Type.GetType("EquipmentAndQuickSlots.InventoryGui_DoCrafting_Patch, EquipmentAndQuickSlots");
-            if (type != null)
+            Type EAQS_InventoryGui_DoCrafting_Patch = Type.GetType("EquipmentAndQuickSlots.InventoryGui_DoCrafting_Patch, EquipmentAndQuickSlots");
+            if (EAQS_InventoryGui_DoCrafting_Patch != null)
             {
                 harmony.Patch(
-                    AccessTools.Method(type, "Prefix"),
+                    AccessTools.Method(EAQS_InventoryGui_DoCrafting_Patch, "Prefix"),
                     transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
+                );
+            }
+
+            Type EAQS_ExtendedInventory = Type.GetType("EquipmentAndQuickSlots.ExtendedInventory, EquipmentAndQuickSlots");
+            if (EAQS_ExtendedInventory != null)
+            {
+                harmony.Patch(
+                    AccessTools.Method(EAQS_ExtendedInventory, "OverrideRemoveItem", new[] { typeof(string), typeof(int) }),
+                    prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(Inventory_RemoveItem_Prefix)))
                 );
             }
         }
@@ -210,27 +226,23 @@ namespace RagnarsRokare.CraftToStack
             }
         }
 
-        [HarmonyPatch(typeof(Inventory), "RemoveItem", argumentTypes: new Type[] { typeof(string), typeof(int) })]
-        class Inventory_RemoveItem_Patch
+        public static bool Inventory_RemoveItem_Prefix(ref Inventory __instance, string name, ref int amount)
         {
-            static bool Prefix(ref Inventory __instance, string name, ref int amount)
+            var sortedInventoryList = __instance.GetAllItems().OrderBy(i => i.m_stack);
+            foreach (ItemDrop.ItemData item in sortedInventoryList)
             {
-                var sortedInventoryList = __instance.GetAllItems().OrderBy(i => i.m_stack);
-                foreach (ItemDrop.ItemData item in sortedInventoryList)
+                if (item.m_shared.m_name == name)
                 {
-                    if (item.m_shared.m_name == name)
+                    int num = Mathf.Min(item.m_stack, amount);
+                    item.m_stack -= num;
+                    amount -= num;
+                    if (amount <= 0)
                     {
-                        int num = Mathf.Min(item.m_stack, amount);
-                        item.m_stack -= num;
-                        amount -= num;
-                        if (amount <= 0)
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
-                return true;
             }
+            return true;
         }
     }
 }
