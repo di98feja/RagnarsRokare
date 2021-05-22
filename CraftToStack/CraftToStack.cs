@@ -22,8 +22,8 @@ namespace RagnarsRokare.CraftToStack
         public const string ModName = "RagnarsRökare CraftToStackMod";
         public const string ModVersion = "0.2";
 
-        public const string EpicLootPluginId = "randyknapp.mods.epicloot";
         public const string EAQSPluginId = "randyknapp.mods.equipmentandquickslots";
+        public const string EpicLootPluginId = "randyknapp.mods.epicloot";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> NexusID;
@@ -37,6 +37,13 @@ namespace RagnarsRokare.CraftToStack
             if (Chainloader.PluginInfos.ContainsKey(EAQSPluginId))
             {
                 CompatPatchEAQS();
+            }
+            else
+            {
+                harmony.Patch(
+                    AccessTools.Method(typeof(Inventory), "RemoveItem", new Type[] { typeof(string), typeof(int) }),
+                    prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(Inventory_RemoveItem_Prefix)))
+                );
             }
 
             if (Chainloader.PluginInfos.ContainsKey(EpicLootPluginId))
@@ -52,10 +59,11 @@ namespace RagnarsRokare.CraftToStack
                 AccessTools.Method(EAQS_InventoryGui_DoCrafting_Patch, "Prefix"),
                 transpiler: new HarmonyMethod(AccessTools.Method(typeof(InventoryGui_DoCrafting_Patch), nameof(InventoryGui_DoCrafting_Patch.Transpiler)))
             );
-            Type EAQS_Inventory_RemoveItem4_Patch = Type.GetType("EquipmentAndQuickSlots.Inventory_RemoveItem4_Patch, EquipmentAndQuickSlots");
+
+            Type EAQS_ExtendedInventory = Type.GetType("EquipmentAndQuickSlots.ExtendedInventory, EquipmentAndQuickSlots");
             harmony.Patch(
-                AccessTools.Method(EAQS_Inventory_RemoveItem4_Patch, "Prefix"),
-                prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(EAQS_Inventory_RemoveItem4_Patch)))
+                AccessTools.Method(EAQS_ExtendedInventory, "OverrideRemoveItem", new[] { typeof(string), typeof(int) }),
+                prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(Inventory_RemoveItem_Prefix)))
             );
         }
 
@@ -212,33 +220,23 @@ namespace RagnarsRokare.CraftToStack
             }
         }
 
-        static bool EAQS_Inventory_RemoveItem4_Patch(ref bool __result)
+        public static bool Inventory_RemoveItem_Prefix(ref Inventory __instance, string name, ref int amount)
         {
-            __result = true;
-            return false;
-        }
-
-        [HarmonyPatch(typeof(Inventory), "RemoveItem", argumentTypes: new Type[] { typeof(string), typeof(int) })]
-        class Inventory_RemoveItem_Patch
-        {
-            static bool Prefix(ref Inventory __instance, string name, ref int amount)
+            var sortedInventoryList = __instance.GetAllItems().OrderBy(i => i.m_stack);
+            foreach (ItemDrop.ItemData item in sortedInventoryList)
             {
-                var sortedInventoryList = __instance.GetAllItems().OrderBy(i => i.m_stack);
-                foreach (ItemDrop.ItemData item in sortedInventoryList)
+                if (item.m_shared.m_name == name)
                 {
-                    if (item.m_shared.m_name == name)
+                    int num = Mathf.Min(item.m_stack, amount);
+                    item.m_stack -= num;
+                    amount -= num;
+                    if (amount <= 0)
                     {
-                        int num = Mathf.Min(item.m_stack, amount);
-                        item.m_stack -= num;
-                        amount -= num;
-                        if (amount <= 0)
-                        {
-                            break;
-                        }
+                        break;
                     }
                 }
-                return true;
             }
+            return true;
         }
     }
 }
