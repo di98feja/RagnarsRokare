@@ -182,7 +182,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Nothing to do, bored");
+                    UpdateAiStatus(State.Idle);
                     m_startPosition = Instance.transform.position;
                 });
         }
@@ -193,7 +193,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle, (args) => !(bool)args.instance.GetFollowTarget())
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Follow");
+                    UpdateAiStatus(State.Follow);
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     m_assignment.Clear();
                     m_containers.Clear();
@@ -226,7 +226,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle, (args) => Common.Alarmed(args.instance, Mathf.Max(1, Awareness-1)))
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Got hurt, flee!");
+                    UpdateAiStatus(State.Flee);
                     Instance.Alert();
                 })
                 .OnExit(t =>
@@ -244,7 +244,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(UpdateTrigger, State.Idle, (args) => (m_shoutedAtTimer += args.dt) >= 1f)
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus("Ahhh Scary!");
+                    UpdateAiStatus(State.MoveAwayFrom);
                     Instance.Alert();
                 })
                 .OnExit(t =>
@@ -267,7 +267,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus($"I'm on it Boss");
+                    UpdateAiStatus(State.Assigned);
                     m_assignedTimer = 0;
                     m_startPosition = Instance.transform.position;
                 })
@@ -285,7 +285,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ItemFound, State.MoveToAssignment)
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus($"Trying to Pickup {searchForItemsBehaviour.FoundItem.m_shared.m_name}");
+                    UpdateAiStatus(State.HaveAssignmentItem, searchForItemsBehaviour.FoundItem.m_shared.m_name);
                     var pickedUpInstance = (Character as Humanoid).PickupPrefab(searchForItemsBehaviour.FoundItem.m_dropPrefab);
                     (Character as Humanoid).EquipItem(pickedUpInstance);
                     m_carrying = pickedUpInstance;
@@ -309,7 +309,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamicIf(UpdateTrigger, (args) => true ? nextState : State.Idle, (arg) => MoveToAssignment(arg.dt))
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus($"Moving to assignment {m_assignment.Peek().TypeOfAssignment.Name}");
+                    UpdateAiStatus(State.MoveToAssignment);
                     m_closeEnoughTimer = 0;
                     if (t.Source == State.HaveAssignmentItem)
                     {
@@ -330,8 +330,8 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.AssignmentFinished, State.DoneWithAssignment)
                 .OnEntry(t =>
                 {
+                    UpdateAiStatus(State.CheckingAssignment, m_assignment.Peek().TypeOfAssignment.Name);
                     StopMoving();
-                    UpdateAiStatus("Checking assignment for task");
                     var needFuel = m_assignment.Peek().NeedFuel;
                     var needOre = m_assignment.Peek().NeedOre;
                     var fetchItems = new List<ItemDrop.ItemData>();
@@ -339,12 +339,10 @@ namespace RagnarsRokare.MobAI
                     if (needFuel != null)
                     {
                         fetchItems.Add(needFuel);
-                        UpdateAiStatus($"Adding {needFuel.m_shared.m_name} to search list");
                     }
                     if (needOre.Any())
                     {
                         fetchItems.AddRange(needOre);
-                        UpdateAiStatus($"Adding {needOre.Join(o => o.m_shared.m_name)} to search list");
                     }
                     if (!fetchItems.Any())
                     {
@@ -370,22 +368,19 @@ namespace RagnarsRokare.MobAI
                     bool isCarryingFuel = m_carrying.m_shared.m_name == needFuel?.m_shared?.m_name;
                     bool isCarryingMatchingOre = needOre?.Any(c => m_carrying.m_shared.m_name == c?.m_shared?.m_name) ?? false;
 
+                    UpdateAiStatus(State.UnloadToAssignment, m_assignment.Peek().TypeOfAssignment.Name);
                     if (isCarryingFuel)
                     {
-                        UpdateAiStatus($"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Fuel");
                         m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else if (isCarryingMatchingOre)
                     {
-                        UpdateAiStatus($"Unload to {m_assignment.Peek().TypeOfAssignment.Name} -> Ore");
-
                         m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else
                     {
-                        UpdateAiStatus($"Dropping {m_carrying.m_shared.m_name} on the ground");
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                     }
                     (Character as Humanoid).UnequipItem(m_carrying, false);
@@ -404,11 +399,11 @@ namespace RagnarsRokare.MobAI
                 {
                     if (m_carrying != null)
                     {
-                        UpdateAiStatus($"Dropping {m_carrying.m_shared.m_name} on the ground");
+                        Common.Dbgl($"Dropping {m_carrying.m_shared.m_name} on the ground");
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                         m_carrying = null;
                     }
-                    UpdateAiStatus($"Done doin worksignment!");
+                    UpdateAiStatus(State.DoneWithAssignment);
                     m_containers.Peek()?.SetInUse(inUse: false);
                     Brain.Fire(Trigger.LeaveAssignment);
                 });

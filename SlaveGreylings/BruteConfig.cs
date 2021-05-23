@@ -36,5 +36,32 @@ namespace RagnarsRokare.SlaveGreylings
             Mobility = Config.Bind<int>("General", "Brute_Mobility", 10, "Mobility is used to determine how often and how far the mob moves");
             Intelligence = Config.Bind<int>("General", "Brute_Intelligence", 5, "General intelligence, how much the mob can remember");
         }
+
+        public static Dictionary<string, string> AIStateDictionary { get; } = new Dictionary<string, string>()
+        {
+            {"RR_FIGHTMain","HUH?"},
+            {"RR_FIGHTIdentifyEnemy", "ME BASH DIS {0}"},
+            {"RR_FIGHTDoneFighting","GUD BASH!"},
+            {"RR_EATHungry", "Is hungry, no work a do"},
+            {"RR_EATHaveFoodItem","*burps*"},
+            {"RR_ISBMoveToContainer", "Heading to that a bin"},
+            {"RR_ISBMoveToStorageContainer", "Heading to that a bin"},
+            {"RR_ISBMoveToGroundItem", "Heading to {0}"},
+            {"RR_ISBPickUpItemFromGround", "Got a {0} from the ground"},
+            {"RR_ISBSearchItemsOnGround", "Look, there is a {0} on da grund"},
+            {"RR_SFISearchItemsOnGround","Look, there is a {0} on da grund"},
+            {"RR_SFISearchForRandomContainer","Look a bin!"},
+            {"RR_SFIMoveToGroundItem","Heading to {0}"},
+            {"RR_SFIPickUpItemFromGround","Got a {0} from the ground"},
+            {"RR_SFIMoveToContainer","Heading to that a bin"},
+            {"RR_SFISearchForItem","Found {0} in this a bin!"},
+            {"Idle", "Nothing to do, bored"},
+            {"Flee", "Takin a short breather"},
+            {"Follow", "Follow punyboss"},
+            {"Assigned", "uuhhhmm..  checkin' dis over 'ere"},
+            {"MoveToAssignment", "Moving to assignment {0}"},
+            {"CheckRepairState","Naah dis {0} goood"},
+            {"RepairAssignment","Fixin Dis {0}"}
+        };
     }
 }

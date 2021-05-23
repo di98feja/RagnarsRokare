@@ -190,8 +190,12 @@ namespace RagnarsRokare.MobAI
 
         public static bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
 
-        public string UpdateAiStatus(string newStatus)
+        public string UpdateAiStatus(string newStatus, string arg = null)
         {
+            if (Config.AIStateCustomStrings.ContainsKey(newStatus))
+            {
+                newStatus = string.Format(Config.AIStateCustomStrings[newStatus], arg ?? string.Empty);
+            }
             newStatus = Localization.instance.Localize(newStatus);
             string currentAiStatus = NView?.GetZDO()?.GetString(Constants.Z_AiStatus);
             if (currentAiStatus != newStatus)
