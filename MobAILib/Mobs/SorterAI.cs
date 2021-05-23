@@ -107,6 +107,7 @@ namespace RagnarsRokare.MobAI
             itemSortingBehaviour = new ItemSortingBehaviour();
             itemSortingBehaviour.Configure(this, Brain, State.Sorting);
             itemSortingBehaviour.MaxSearchTime = m_config.MaxSearchTime;
+
             itemSortingBehaviour.SuccessState = State.Idle;
             itemSortingBehaviour.FailState = State.Idle;
             fightBehaviour = new FightBehaviour();
@@ -190,8 +191,8 @@ namespace RagnarsRokare.MobAI
                     }
                     if ((m_searchForNewAssignmentTimer += dt) < 10f) return false;
                     m_searchForNewAssignmentTimer = 0f;
+                    Common.Dbgl("Execute State.Sorting ");
                     return true;
-
                 })
                 .OnEntry(t =>
                 {
@@ -337,6 +338,13 @@ namespace RagnarsRokare.MobAI
                 fightBehaviour.Update(this, dt);
                 return;
             }
+
+            if (Brain.IsInState(State.Sorting))
+            {
+                itemSortingBehaviour.Update(this, dt);
+                return;
+            }
+            
 
             if (Brain.State == State.Idle)
             {

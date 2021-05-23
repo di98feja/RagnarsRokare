@@ -54,10 +54,10 @@ namespace RagnarsRokare.MobAI
         public string FailState { get; set; }
         public float OpenChestDelay { get; private set; } = 2;
 
-        private Dictionary<string, (Container container, int count, float time)> m_itemsDictionary;  
+        private Dictionary<string, (Container container, int count, float time)> m_itemsDictionary;
+
         private ItemDrop m_item;
         private ItemDrop.ItemData m_carriedItem;
-        private Container m_container;
         private MobAIBase m_aiBase;
         private float m_openChestTimer;
         private float m_currentSearchTime;
@@ -69,14 +69,16 @@ namespace RagnarsRokare.MobAI
         {
             m_aiBase = aiBase;
             m_searchRadius = aiBase.Awareness * 5;
+            m_knownContainers = new MaxStack<Container>(aiBase.Intelligence);
+            m_itemsDictionary = new Dictionary<string, (Container container, int count, float time)>();
 
             brain.Configure(State.Main)
-                .InitialTransition(State.SearchItemsOnGround)
+                .InitialTransition(State.SearchForRandomContainer)
                 .SubstateOf(parentState)
                 .PermitDynamic(Trigger.Failed, () => FailState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("Entered SearchForItemsBehaviour");
+                    Common.Dbgl("Entered ItemSortingBehaviour");
                     m_startPosition = aiBase.Character.transform.position;
                 })
                 .OnExit(t =>
@@ -88,6 +90,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerFound, State.MoveToContainer)
                 .OnEntry(t =>
                 {
+                    Common.Dbgl("Entered SearchForRandomContainer");
                     m_currentSearchTime = 0;
                 });
 
