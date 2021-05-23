@@ -48,7 +48,7 @@ namespace RagnarsRokare.MobAI
         // Output
 
         // Settings
-        public float MaxSearchTime { get; set; } = 60;
+        public float MaxSearchTime { get; set; } = 60f;
         public string StartState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
@@ -91,7 +91,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     Common.Dbgl("Entered SearchForRandomContainer");
-                    m_currentSearchTime = 0;
+                    m_currentSearchTime = 0f;
                 });
 
             brain.Configure(State.MoveToContainer)
@@ -227,18 +227,22 @@ namespace RagnarsRokare.MobAI
         {
             if (aiBase.Brain.IsInState(State.SearchForRandomContainer))
             {
+                Common.Dbgl("Update SearchForContainer");
                 m_currentSearchTime += dt;
                 if (m_currentSearchTime > MaxSearchTime)
                 {
                     aiBase.Brain.Fire(Trigger.Failed);
                     return;
                 }
+                Common.Dbgl("Update SearchForContainer not timed out");
                 Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, m_knownContainers, AcceptedContainerNames, m_searchRadius);
+                Common.Dbgl($"Update SearchForContainer found new container {newContainer.name}");
                 if (newContainer != null)
                 {
                     m_knownContainers.Push(newContainer);
                     m_startPosition = newContainer.transform.position;
                     aiBase.Brain.Fire(Trigger.ContainerFound);
+                    Common.Dbgl("Update SearchForContainer new container not null");
                 }
                 Common.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition);
                 return;

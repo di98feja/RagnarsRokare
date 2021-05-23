@@ -341,6 +341,7 @@ namespace RagnarsRokare.MobAI
 
             if (Brain.IsInState(State.Sorting))
             {
+                Debug.LogWarning($"Trigger itemSortingBehaviour.Update({this.Character.name}, {dt})");
                 itemSortingBehaviour.Update(this, dt);
                 return;
             }
