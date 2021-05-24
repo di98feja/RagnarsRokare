@@ -138,10 +138,14 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     if (m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().CanAddItem(m_carriedItem))
+                    {
                         m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().AddItem(m_carriedItem);
+                    }
                     else
+                    {
                         (aiBase.Character as Humanoid).DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
-                    brain.Fire(Trigger.ItemSorted);
+                    }
+                    brain.Fire(Trigger.ItemSorted); 
                 });
 
             brain.Configure(State.AddContainerItemsToItemDictionary)
@@ -156,6 +160,7 @@ namespace RagnarsRokare.MobAI
                         return;
                     }
                     List<ItemDrop.ItemData> FoundItem = m_knownContainers.Peek().GetInventory().GetAllItems();
+                    Common.Dbgl($"Found Items: {FoundItem.}");
                     if (FoundItem.Any())
                     {
                         Dictionary<string, int> chestInventory = new Dictionary<string, int> { { null, 0 } };
@@ -235,6 +240,7 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
                 Common.Dbgl("Update SearchForContainer not timed out");
+                Common.Dbgl($"Instance: {aiBase.Instance},  m_knownContainers: {m_knownContainers}, AcceptedContainerNames: {AcceptedContainerNames}, m_searchRadius: {m_searchRadius}");
                 Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, m_knownContainers, AcceptedContainerNames, m_searchRadius);
                 Common.Dbgl($"Update SearchForContainer found new container {newContainer.name}");
                 if (newContainer != null)
