@@ -88,7 +88,7 @@ namespace RagnarsRokare.MobAI
 
         public static Container FindRandomNearbyContainer(BaseAI instance, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
         {
-            Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
+            //Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
@@ -97,7 +97,7 @@ namespace RagnarsRokare.MobAI
             containers.AddRange(allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c)));
             if (!containers.Any())
             {
-                Common.Dbgl("No containers found, returning null");
+                //Common.Dbgl("No containers found, returning null");
                 return null;
             }
             // select random piece
