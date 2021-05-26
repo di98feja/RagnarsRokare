@@ -18,6 +18,7 @@ namespace RagnarsRokare.MobAI
             public const string OpenContainer = Prefix + "OpenContainer";
             public const string OpenStorageContainer = Prefix + "OpenStorageContainer";
             public const string AddContainerItemsToItemDictionary = Prefix + "AddContainerItemsToItemDictionary";
+            public const string UnloadIntoStorageContainer = Prefix + "UnloadIntoStorageContainer";
             public const string SearchItemsOnGround = Prefix + "SearchItemsOnGround";
             public const string MoveToGroundItem = Prefix + "MoveToGroundItem";
             public const string PickUpItemFromGround = Prefix + "PickUpItemFromGround";
@@ -135,6 +136,24 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.OpenStorageContainer)
                 .SubstateOf(State.Main)
+                .Permit(Trigger.ContainerOpened, State.UnloadIntoStorageContainer)
+                .OnEntry(t =>
+                {
+                    if (m_knownContainers.Peek() == null)
+                    {
+                        m_knownContainers.Pop();
+                        brain.Fire(Trigger.ContainerNotFound);
+                    }
+                    else
+                    {
+                        m_knownContainers.Peek().SetInUse(inUse: true);
+                        m_openChestTimer = 0f;
+                    }
+                });
+            
+
+            brain.Configure(State.UnloadIntoStorageContainer)
+                .SubstateOf(State.Main)
                 .Permit(Trigger.ItemSorted, State.SearchItemsOnGround)
                 .OnEntry(t =>
                 {
@@ -147,8 +166,10 @@ namespace RagnarsRokare.MobAI
                         (aiBase.Character as Humanoid).DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
                     }
                     Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}");
-                    brain.Fire(Trigger.ItemSorted); 
+                    m_knownContainers.Peek().SetInUse(inUse: false);
+                    brain.Fire(Trigger.ItemSorted);
                 });
+
 
             brain.Configure(State.AddContainerItemsToItemDictionary)
                 .SubstateOf(State.Main)

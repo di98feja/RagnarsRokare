@@ -174,7 +174,7 @@ namespace RagnarsRokare.MobAI
                 return false;
             }
             Vector3 rhs = itemPosition - eyesPosition;
-            var tempRaycastHits = Physics.RaycastAll(eyesPosition, rhs.normalized, rhs.magnitude, LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "viewblock", "vehicle")); //, "terrain"
+            var tempRaycastHits = Physics.RaycastAll(eyesPosition, rhs.normalized, rhs.magnitude, LayerMask.GetMask("Default", "terrain", "static_solid", "Default_small", "piece", "viewblock", "vehicle")); //, "terrain"
             //Debug.Log("#############################################");
             //Debug.Log($"RaycastHit: {item.name} pos: {item.transform.position}");
             //foreach (RaycastHit RaycastHit in tempRaycastHits)
