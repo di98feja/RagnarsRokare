@@ -7,7 +7,6 @@ namespace RagnarsRokare.MobAI
 {
     public class SorterAI : MobAIBase, IMobAIType
     {
-        public MaxStack<Piece> m_assignment = new MaxStack<Piece>(100);
         public MaxStack<Container> m_containers;
 
         // Timers
@@ -82,23 +81,6 @@ namespace RagnarsRokare.MobAI
                 m_startPosition = instance.transform.position;
             }
 
-            var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
-            if (!string.IsNullOrEmpty(loadedAssignments))
-            {
-                var assignmentList = loadedAssignments.Split(',');
-                var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
-                var pieceDict = allPieces.Where(p => Common.GetNView(p)?.IsValid() ?? false).ToDictionary(p => Common.GetOrCreateUniqueId(Common.GetNView(p)));
-                Common.Dbgl($"Loading {assignmentList.Count()} assignments");
-                foreach (var p in assignmentList)
-                {
-                    if (pieceDict.ContainsKey(p))
-                    {
-                        m_assignment.Push(pieceDict[p]);
-                    }
-                }
-            }
-            RegisterRPCMethods();
-
             UpdateTrigger = Brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
@@ -120,8 +102,6 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.FailState = State.Idle;
             eatingBehaviour.HealPercentageOnConsume = 0.1f;
 
-            
-
             ConfigureRoot();
             ConfigureIdle();
             ConfigureFollow();
@@ -132,34 +112,6 @@ namespace RagnarsRokare.MobAI
             ConfigureHungry();
             var graph = new Stateless.Graph.StateGraph(Brain.GetInfo());
             //Debug.Log(graph.ToGraph(new Stateless.Graph.UmlDotGraphStyle()));
-        }
-
-        private void RegisterRPCMethods()
-        {
-            NView.Register(Constants.Z_AddAssignment, (long source, string assignment) =>
-            {
-                if (NView.IsOwner())
-                {
-                    Common.Dbgl($"Saving {m_assignment.Count()} assignments");
-                    Common.Dbgl($"Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
-                    var assignmentsToRemove = m_assignment.Where(p => !Common.GetNView(p).IsValid()).ToList();
-                    foreach (var piece in assignmentsToRemove)
-                    {
-                        m_assignment.Remove(piece);
-                    }
-                    NView.GetZDO().Set(Constants.Z_SavedAssignmentList, string.Join(",", m_assignment.Select(p => p.GetUniqueId())));
-                }
-                else
-                {
-                    Common.Dbgl($"Push new assignment");
-                    var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
-                    var addedPiece = allPieces.Where(p => p.GetUniqueId() == assignment).FirstOrDefault();
-                    if (null != addedPiece && !m_assignment.Contains(addedPiece))
-                    {
-                        m_assignment.Push(addedPiece);
-                    }
-                }
-            });
         }
 
         private void ConfigureRoot()
