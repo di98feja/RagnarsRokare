@@ -29,7 +29,6 @@ namespace RagnarsRokare.SlaveGreylings
             GreydwarfConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             StartCoroutine(nameof(PreloadSFX));
-            MobAIBase.PrintAIStateToDebug = CommonConfig.PrintAIStatusMessageToDebug.Value;
         }
 
         private IEnumerator PreloadSFX()

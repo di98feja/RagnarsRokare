@@ -188,7 +188,7 @@ namespace RagnarsRokare.MobAI
             return null;
         }
 
-        public static bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
+        public bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
 
         public string UpdateAiStatus(string newStatus, string arg = null)
         {

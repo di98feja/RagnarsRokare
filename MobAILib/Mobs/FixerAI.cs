@@ -82,7 +82,7 @@ namespace RagnarsRokare.MobAI
 
         public FixerAI(MonsterAI instance, MobAIBaseConfig config) : base(instance, State.Idle, config)
         {
-            //PrintAIStateToDebug = false;
+            PrintAIStateToDebug = false;
 
             m_config = config as FixerAIConfig;
             m_containers = new MaxStack<Container>(Intelligence);
@@ -386,7 +386,6 @@ namespace RagnarsRokare.MobAI
                 {
                     if (t.Trigger == Trigger.Failed || Common.GetNView<Piece>(m_assignment.Peek())?.IsValid() != true) return;
                     m_stuckInIdleTimer = 0;
-                    Debug.LogWarning($"Trigger:{t.Trigger}");
                     var pieceToRepair = m_assignment.Peek();
                     WearNTear component = pieceToRepair.GetComponent<WearNTear>();
                     if ((bool)component && component.Repair())

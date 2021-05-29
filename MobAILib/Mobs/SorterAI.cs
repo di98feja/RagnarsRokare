@@ -112,6 +112,8 @@ namespace RagnarsRokare.MobAI
             ConfigureHungry();
             var graph = new Stateless.Graph.StateGraph(Brain.GetInfo());
             //Debug.Log(graph.ToGraph(new Stateless.Graph.UmlDotGraphStyle()));
+
+            PrintAIStateToDebug = true;
         }
 
         private void ConfigureRoot()
@@ -135,15 +137,16 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
                 .PermitIf(UpdateTrigger, State.Sorting, (dt) =>
                 {
+                    if (Brain.IsInState(State.Sorting)) return false;
                     if ((m_stuckInIdleTimer += dt) > 300f)
                     {
-                        Common.Dbgl("m_startPosition = HomePosition");
+                        Common.Dbgl("m_startPosition = HomePosition", "Sorter");
                         m_startPosition = HomePosition;
                         m_stuckInIdleTimer = 0f;
                     }
                     if ((m_searchForNewAssignmentTimer += dt) < 10f) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    Common.Dbgl("Execute State.Sorting ");
+                    Common.Dbgl("Execute State.Sorting ", "Sorter");
                     return true;
                 })
                 .OnEntry(t =>
@@ -220,7 +223,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.SearchForItems, searchForItemsBehaviour.StartState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("ConfigureSearchContainers Initiated");
+                    Common.Dbgl("ConfigureSearchContainers Initiated", "Sorter");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
@@ -237,7 +240,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(itemSortingBehaviour.StartState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("ItemSortBehaviour Initiated");
+                    Common.Dbgl("ItemSortBehaviour Initiated", "Sorter");
                 });
         }
 
@@ -247,7 +250,7 @@ namespace RagnarsRokare.MobAI
         {
             if (Brain.State != m_lastState)
             {
-                Common.Dbgl($"State:{Brain.State}");
+                Common.Dbgl($"State:{Brain.State}", "Sorter");
                 m_lastState = Brain.State;
             }
 
