@@ -102,6 +102,15 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.FailState = State.Idle;
             eatingBehaviour.HealPercentageOnConsume = 0.1f;
 
+            string dumpChestId = NView.GetZDO().GetString(Constants.Z_SavedDumpChest);
+            if (!string.IsNullOrEmpty(dumpChestId))
+            {
+                var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
+                var containerPiece = allPieces.Where(p => Common.GetNView(p)?.IsValid() ?? false).FirstOrDefault(p => Common.GetOrCreateUniqueId(Common.GetNView(p)) == dumpChestId);
+                itemSortingBehaviour.DumpContainer = containerPiece?.GetComponent<Container>() ?? containerPiece?.GetComponentInChildren<Container>() ?? containerPiece?.GetComponentInParent<Container>();
+                Common.Dbgl($"Loaded dumpchest {dumpChestId}", "Sorter");
+            }
+
             ConfigureRoot();
             ConfigureIdle();
             ConfigureFollow();
@@ -332,6 +341,17 @@ namespace RagnarsRokare.MobAI
                     (Instance as MonsterAI).ResetPatrolPoint();
                     (Instance as MonsterAI).SetFollowTarget(player.gameObject);
                 }
+            }
+            else if (!(player == null) && command == "AssignDumpContainer")
+            {
+                var hoverObject = player.GetHoverObject();
+                Debug.Log($"hoverPiece:{hoverObject?.name ?? string.Empty}");
+                var container = hoverObject?.GetComponent<Container>() ?? hoverObject?.GetComponentInChildren<Container>() ?? hoverObject?.GetComponentInParent<Container>();
+                Debug.Log($"container:{container?.name ?? string.Empty}");
+                itemSortingBehaviour.DumpContainer = container;
+                string containerId = container == null ? "" : Common.GetOrCreateUniqueId(Common.GetNView(container));
+                NView.GetZDO().Set(Constants.Z_SavedDumpChest, containerId);
+                Common.Dbgl($"Set DumpContainer: {containerId}", "Sorter");
             }
         }
 

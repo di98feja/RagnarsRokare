@@ -53,7 +53,8 @@ namespace RagnarsRokare.MobAI
         public string SuccessState { get; set; }
         public string FailState { get; set; }
         public float OpenChestDelay { get; private set; } = 2;
-        public float PutItemInChestFailedRetryTimeout { get; set; } = 10f;
+        public float PutItemInChestFailedRetryTimeout { get; set; } = 30f;
+        public Container DumpContainer { get; set; }
 
         private Dictionary<string, (Container container, int count, float time)> m_itemsDictionary;
         private Dictionary<string, float> m_putItemInContainerFailTimers;
