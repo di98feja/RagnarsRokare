@@ -86,7 +86,7 @@ namespace RagnarsRokare.MobAI
             return randomAssignment;
         }
 
-        public static Container FindRandomNearbyContainer(BaseAI instance, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
+        public static Container FindRandomNearbyContainer(BaseAI instance, IEnumerable<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
         {
             //Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
             Vector3 position = instance.transform.position;
