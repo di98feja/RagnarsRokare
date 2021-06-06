@@ -136,6 +136,8 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToDumpContainer);
+                    m_container = DumpContainer;
+                    m_currentSearchTimeout = Time.time + MaxSearchTime;
                 });
 
             brain.Configure(State.OpenContainer)
@@ -387,7 +389,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (aiBase.Brain.IsInState(State.MoveToContainer) || aiBase.Brain.IsInState(State.MoveToStorageContainer))
+            if (aiBase.Brain.IsInState(State.MoveToContainer) || aiBase.Brain.IsInState(State.MoveToStorageContainer) || aiBase.Brain.IsInState(State.MoveToDumpContainer))
             {
                 //Common.Dbgl($"State MoveToContainer: {KnownContainers.Peek().name}", "Sorter");
                 if (m_container == null)
@@ -403,33 +405,6 @@ namespace RagnarsRokare.MobAI
                 }
                 if (Time.time > m_currentSearchTimeout)
                 {
-                    aiBase.StopMoving();
-                    aiBase.Brain.Fire(Trigger.ContainerNotFound);
-                }
-                return;
-            }
-
-            if (aiBase.Brain.IsInState(State.MoveToDumpContainer))
-            {
-                //Common.Dbgl($"State MoveToDumpContainer", "Sorter");
-                if (DumpContainer == null)
-                {
-                    aiBase.StopMoving();
-                    DumpContainer = null;
-                    aiBase.Brain.Fire(Trigger.ContainerNotFound);
-                    Common.Dbgl("DumpContainer = null", "Sorter");
-                    return;
-                }
-
-                if (aiBase.MoveAndAvoidFire(DumpContainer.transform.position, dt, 1.5f))
-                {
-                    aiBase.StopMoving();
-                    aiBase.Brain.Fire(Trigger.ContainerIsClose);
-                    Common.Dbgl($"DumpContainer is close", "Sorter");
-                }
-                if (Time.time > m_currentSearchTimeout)
-                {
-                    Common.Dbgl($"Giving up on dumpcontainer", "Sorter");
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                 }
