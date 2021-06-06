@@ -65,6 +65,7 @@ namespace RagnarsRokare.MobAI
         private Dictionary<string, float> m_putItemInContainerFailTimers;
 
         private ItemDrop m_item;
+        private Container m_container;
         private ItemDrop.ItemData m_carriedItem;
         private MobAIBase m_aiBase;
         private float m_openChestTimer;
@@ -114,6 +115,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToContainer);
                     m_currentSearchTimeout = Time.time + MaxSearchTime;
+                    m_container = m_knownContainers.Peek();
                 });
 
             brain.Configure(State.MoveToStorageContainer)
@@ -124,6 +126,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToStorageContainer, m_carriedItem.m_shared.m_name);
                     m_currentSearchTimeout = Time.time + MaxSearchTime;
+                    m_container = m_itemsDictionary[m_carriedItem.m_shared.m_name].container;
                 });
 
             brain.Configure(State.MoveToDumpContainer)
@@ -345,6 +348,13 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.SearchForRandomContainer))
             {
                 //Common.Dbgl("Update SearchForContainer", "Sorter");
+                //Removing null containers
+                m_knownContainers.Remove(null);
+                foreach (string key in m_itemsDictionary.Keys)
+                {
+                    if (m_itemsDictionary[key].container == null)
+                        m_itemsDictionary.Remove(key);
+                }
                 var knownContainers = new List<Container>(m_knownContainers);
                 if (DumpContainer != null)
                 {
@@ -377,53 +387,22 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (aiBase.Brain.IsInState(State.MoveToContainer))
+            if (aiBase.Brain.IsInState(State.MoveToContainer) || aiBase.Brain.IsInState(State.MoveToStorageContainer))
             {
                 //Common.Dbgl($"State MoveToContainer: {KnownContainers.Peek().name}", "Sorter");
-                if (m_knownContainers.Peek() == null)
+                if (m_container == null)
                 {
                     aiBase.StopMoving();
-                    m_knownContainers.Pop();
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
-                    //Common.Dbgl("Container = null", "Sorter");
                     return;
                 }
-                
-                if (aiBase.MoveAndAvoidFire(m_knownContainers.Peek().transform.position, dt, 2f))
+                if (aiBase.MoveAndAvoidFire(m_container.transform.position, dt, 2f))
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.ContainerIsClose);
-                    //Debug.Log($"{KnownContainers.Peek().name} is close");
                 }
                 if (Time.time > m_currentSearchTimeout)
                 {
-                    aiBase.StopMoving();
-                    aiBase.Brain.Fire(Trigger.ContainerNotFound);
-                }
-                return;
-            }
-
-            if (aiBase.Brain.IsInState(State.MoveToStorageContainer))
-            {
-                //Common.Dbgl($"State MoveToContainer: {KnownContainers.Peek().name}", "Sorter");
-                if (m_itemsDictionary[m_carriedItem.m_shared.m_name].container == null)
-                {
-                    aiBase.StopMoving();
-                    m_knownContainers.Pop();
-                    aiBase.Brain.Fire(Trigger.ContainerNotFound);
-                    Common.Dbgl("Container = null", "Sorter");
-                    return;
-                }
-                
-                if (aiBase.MoveAndAvoidFire(m_itemsDictionary[m_carriedItem.m_shared.m_name].container.transform.position, dt, 2f))
-                {
-                    aiBase.StopMoving();
-                    aiBase.Brain.Fire(Trigger.ContainerIsClose);
-                    Common.Dbgl($"{m_knownContainers.Peek().name} is close", "Sorter");
-                }
-                if (Time.time > m_currentSearchTimeout)
-                {
-                    Common.Dbgl($"Giving up on {m_knownContainers.Peek().name}", "Sorter");
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                 }
