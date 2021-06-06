@@ -176,42 +176,11 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    if (m_knownContainers.Peek() == null)
-                    {
-                        brain.Fire(Trigger.ContainerNotFound);
-                        return;
-                    }
-                    List<ItemDrop.ItemData> foundItems = m_knownContainers.Peek().GetInventory().GetAllItems();
-                    if (foundItems.Any())
-                    {
-                        Dictionary<string, int> chestInventory = new Dictionary<string, int>();
-                        foreach (ItemDrop.ItemData item in foundItems)
-                        {
-                            string key = Common.GetPrefabName(item.m_shared.m_name);
-                            Common.Dbgl($"Key: {key}", "Sorter");
-                            if (chestInventory.ContainsKey(key))
-                            {
-                                chestInventory[key] += item.m_stack;
-                            }
-                            else
-                            {
-                                chestInventory.Add(key, item.m_stack);
-                            }
-                        }
-                        foreach (KeyValuePair<string, int> item in chestInventory)
-                        {
-                            if (m_itemsDictionary.ContainsKey(item.Key) && m_itemsDictionary[item.Key].count < item.Value)
-                            {
-                                m_itemsDictionary[item.Key] = (m_knownContainers.Peek(), item.Value, Time.time);
-                            }
-                            else if (!m_itemsDictionary.ContainsKey(item.Key))
-                            {
-                                m_itemsDictionary.Add(item.Key, (m_knownContainers.Peek(), item.Value, Time.time));
-                            }
-                        }
-                    }
-                    m_knownContainers.Peek().SetInUse(inUse: false);
-                    brain.Fire(Trigger.ContainerSearched);
+                    m_container = m_knownContainers.Peek();
+                })
+                .OnExit(t =>
+                {
+                    m_container?.SetInUse(inUse: false);
                 });
 
             brain.Configure(State.UnloadIntoStorageContainer)
@@ -219,34 +188,12 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ItemSorted, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    var mob = (aiBase.Character as Humanoid);
-                    if (m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().CanAddItem(m_carriedItem))
-                    {
-                        Common.Dbgl($"Putting {m_carriedItem.m_shared.m_name} in container", "Sorter");
-                        mob.UnequipItem(m_carriedItem);
-                        m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().MoveItemToThis(mob.GetInventory(), m_carriedItem);
-                    }
-                    else
-                    {
-                        Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", "Sorter");
-                        mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
-                        m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
-                        Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
-                    }
-                    Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", "Sorter");
-                    m_knownContainers.Peek().SetInUse(inUse: false);
-                    m_carriedItem = null;
-                    brain.Fire(Trigger.ItemSorted);
-                                //List<ItemDrop.ItemData> CarriedItem = (aiBase.Character as Humanoid).GetInventory().GetAllItems();
-                                //foreach (ItemDrop.ItemData invItem in CarriedItem)
-                                //if (m_itemsDictionary.Keys.Contains(Common.GetPrefabName(invItem.m_shared.m_name)) && invItem.m_stack > 0)
-                                //{
-                                //    m_carriedItem = invItem;
-                                //    Common.Dbgl($"Already got a {m_carriedItem.m_shared.m_name} here.", "Sorter");
-                                //    brain.Fire(Trigger.ItemFound);
-                                //    return;
-                                //}
-                            });
+                    m_container = m_itemsDictionary[m_carriedItem.m_shared.m_name].container;
+                })
+                .OnExit(t =>
+                {
+                    m_container?.SetInUse(inUse: false);
+                });
 
             brain.Configure(State.GetItemFromDumpContainer)
                 .SubstateOf(State.Main)
@@ -254,35 +201,6 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ItemNotFound, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    if (DumpContainer == null)
-                    {
-                        brain.Fire(Trigger.ItemNotFound);
-                        return;
-                    }
-                    m_carriedItem = null;
-                    foreach (var item in DumpContainer.GetInventory().GetAllItems())
-                    {
-                        if (m_putItemInContainerFailTimers.ContainsKey(item.m_shared.m_name)) continue;
-                        if (m_itemsDictionary.ContainsKey(item.m_shared.m_name))
-                        {
-                            m_carriedItem = item;
-                            (aiBase.Character as Humanoid).GetInventory().MoveItemToThis(DumpContainer.GetInventory(), item);
-                            (aiBase.Character as Humanoid).EquipItem(item);
-                            Common.Invoke<Container>(DumpContainer, "Save");
-                            Common.Invoke<Inventory>(DumpContainer.GetInventory(), "Changed");
-
-                            m_aiBase.UpdateAiStatus(State.GetItemFromDumpContainer, m_carriedItem.m_shared.m_name);
-
-                            brain.Fire(Trigger.ItemFound);
-                            return;
-                        }
-                    }
-                    if (m_carriedItem == null)
-                    {
-                        m_dumpContainerTimer = Time.time + SearchDumpContainerRetryTimeout;
-                        brain.Fire(Trigger.ItemNotFound);
-                        return;
-                    }
                 })
                 .OnExit( t =>
                 {
@@ -305,18 +223,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     Common.Dbgl("PickUpItemFromGround", "Sorter");
-                    m_carriedItem = m_item.m_itemData;
-                    if (m_item == null || Common.GetNView(m_item)?.IsValid() != true)
-                    {
-                        brain.Fire(Trigger.GroundItemLost);
-                        return;
-                    }
-                    m_aiBase.UpdateAiStatus(State.PickUpItemFromGround, m_carriedItem.m_shared.m_name);
-                    m_item.Pickup(aiBase.Character as Humanoid);
-                    (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
-                    brain.Fire(Trigger.ItemFound);
                 });
-
         }
 
         public void Update(MobAIBase aiBase, float dt)
@@ -431,7 +338,125 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
             }
+
+            if (aiBase.Brain.IsInState(State.AddContainerItemsToItemDictionary) || aiBase.Brain.IsInState(State.UnloadIntoStorageContainer))
+            {
+                if (m_container == null)
+                {
+                    aiBase.Brain.Fire(Trigger.ContainerNotFound);
+                    return;
+                }
+                List<ItemDrop.ItemData> foundItems = m_container.GetInventory().GetAllItems();
+                if (foundItems.Any())
+                {
+                    Dictionary<string, int> chestInventory = new Dictionary<string, int>();
+                    foreach (ItemDrop.ItemData item in foundItems)
+                    {
+                        string key = Common.GetPrefabName(item.m_shared.m_name);
+                        Common.Dbgl($"Key: {key}", "Sorter");
+                        if (chestInventory.ContainsKey(key))
+                        {
+                            chestInventory[key] += item.m_stack;
+                        }
+                        else
+                        {
+                            chestInventory.Add(key, item.m_stack);
+                        }
+                    }
+                    foreach (KeyValuePair<string, int> item in chestInventory)
+                    {
+                        if (m_itemsDictionary.ContainsKey(item.Key) && m_itemsDictionary[item.Key].count < item.Value)
+                        {
+                            m_itemsDictionary[item.Key] = (m_knownContainers.Peek(), item.Value, Time.time);
+                        }
+                        else if (!m_itemsDictionary.ContainsKey(item.Key))
+                        {
+                            m_itemsDictionary.Add(item.Key, (m_knownContainers.Peek(), item.Value, Time.time));
+                        }
+                    }
+                }
+                aiBase.Brain.Fire(Trigger.ContainerSearched);
+            }
+
+            if (aiBase.Brain.IsInState(State.UnloadIntoStorageContainer))
+            {
+                var mob = (aiBase.Character as Humanoid);
+                if (m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().CanAddItem(m_carriedItem))
+                {
+                    Common.Dbgl($"Putting {m_carriedItem.m_shared.m_name} in container", "Sorter");
+                    mob.UnequipItem(m_carriedItem);
+                    m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().MoveItemToThis(mob.GetInventory(), m_carriedItem);
+                }
+                else
+                {
+                    Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", "Sorter");
+                    mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
+                    m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
+                    Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
+                }
+                Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", "Sorter");
+                m_knownContainers.Peek().SetInUse(inUse: false);
+                m_carriedItem = null;
+                aiBase.Brain.Fire(Trigger.ItemSorted);
+                //List<ItemDrop.ItemData> CarriedItem = (aiBase.Character as Humanoid).GetInventory().GetAllItems();
+                //foreach (ItemDrop.ItemData invItem in CarriedItem)
+                //if (m_itemsDictionary.Keys.Contains(Common.GetPrefabName(invItem.m_shared.m_name)) && invItem.m_stack > 0)
+                //{
+                //    m_carriedItem = invItem;
+                //    Common.Dbgl($"Already got a {m_carriedItem.m_shared.m_name} here.", "Sorter");
+                //    brain.Fire(Trigger.ItemFound);
+                //    return;
+                //}
+            }
+
+            if (aiBase.Brain.IsInState(State.GetItemFromDumpContainer))
+            {
+                if (DumpContainer == null)
+                {
+                    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                    return;
+                }
+                m_carriedItem = null;
+                foreach (var item in DumpContainer.GetInventory().GetAllItems())
+                {
+                    if (m_putItemInContainerFailTimers.ContainsKey(item.m_shared.m_name)) continue;
+                    if (m_itemsDictionary.ContainsKey(item.m_shared.m_name))
+                    {
+                        m_carriedItem = item;
+                        (aiBase.Character as Humanoid).GetInventory().MoveItemToThis(DumpContainer.GetInventory(), item);
+                        (aiBase.Character as Humanoid).EquipItem(item);
+                        Common.Invoke<Container>(DumpContainer, "Save");
+                        Common.Invoke<Inventory>(DumpContainer.GetInventory(), "Changed");
+
+                        m_aiBase.UpdateAiStatus(State.GetItemFromDumpContainer, m_carriedItem.m_shared.m_name);
+
+                        aiBase.Brain.Fire(Trigger.ItemFound);
+                        return;
+                    }
+                }
+                if (m_carriedItem == null)
+                {
+                    m_dumpContainerTimer = Time.time + SearchDumpContainerRetryTimeout;
+                    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                    return;
+                }
+            }
+
+            if (aiBase.Brain.IsInState(State.PickUpItemFromGround))
+            {
+                m_carriedItem = m_item.m_itemData;
+                if (m_item == null || Common.GetNView(m_item)?.IsValid() != true)
+                {
+                    aiBase.Brain.Fire(Trigger.GroundItemLost);
+                    return;
+                }
+                m_aiBase.UpdateAiStatus(State.PickUpItemFromGround, m_carriedItem.m_shared.m_name);
+                m_item.Pickup(aiBase.Character as Humanoid);
+                (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
+                aiBase.Brain.Fire(Trigger.ItemFound);
+            }
         }
+
 
         private void UpdatePutItemInContainerFailTimers()
         {
