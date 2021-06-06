@@ -146,16 +146,8 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    if (m_knownContainers.Peek() == null)
-                    {
-                        m_knownContainers.Pop();
-                        brain.Fire(Trigger.ContainerNotFound);
-                    }
-                    else
-                    {
-                        m_knownContainers.Peek().SetInUse(inUse: true);
-                        m_openChestTimer = 0f;
-                    }
+                    m_knownContainers.Peek().SetInUse(inUse: true);
+                    m_openChestTimer = 0f;
                 });
 
             brain.Configure(State.OpenStorageContainer)
@@ -163,16 +155,8 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerOpened, State.UnloadIntoStorageContainer)
                 .OnEntry(t =>
                 {
-                    if (m_knownContainers.Peek() == null)
-                    {
-                        m_knownContainers.Pop();
-                        brain.Fire(Trigger.ContainerNotFound);
-                    }
-                    else
-                    {
-                        m_knownContainers.Peek().SetInUse(inUse: true);
-                        m_openChestTimer = 0f;
-                    }
+                    m_itemsDictionary[m_carriedItem.m_shared.m_name].container.SetInUse(inUse: true);
+                    m_openChestTimer = 0f;
                 });
 
 
@@ -182,51 +166,9 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    if (DumpContainer == null)
-                    {
-                        brain.Fire(Trigger.ContainerNotFound);
-                    }
-                    else
-                    {
-                        DumpContainer.SetInUse(inUse: true);
-                        m_openChestTimer = 0f;
-                    }
+                    DumpContainer.SetInUse(inUse: true);
+                    m_openChestTimer = 0f;
                 });
-
-            brain.Configure(State.UnloadIntoStorageContainer)
-                .SubstateOf(State.Main)
-                .Permit(Trigger.ItemSorted, State.SearchForRandomContainer)
-                .OnEntry(t =>
-                {
-                    var mob = (aiBase.Character as Humanoid);
-                    if (m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().CanAddItem(m_carriedItem))
-                    {
-                        Common.Dbgl($"Putting {m_carriedItem.m_shared.m_name} in container", "Sorter");
-                        mob.UnequipItem(m_carriedItem);
-                        m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().MoveItemToThis(mob.GetInventory(), m_carriedItem);
-                    }
-                    else
-                    {
-                        Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", "Sorter");
-                        mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
-                        m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
-                        Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
-                    }
-                    Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", "Sorter");
-                    m_knownContainers.Peek().SetInUse(inUse: false);
-                    m_carriedItem = null;
-                    brain.Fire(Trigger.ItemSorted);
-                    //List<ItemDrop.ItemData> CarriedItem = (aiBase.Character as Humanoid).GetInventory().GetAllItems();
-                    //foreach (ItemDrop.ItemData invItem in CarriedItem)
-                    //if (m_itemsDictionary.Keys.Contains(Common.GetPrefabName(invItem.m_shared.m_name)) && invItem.m_stack > 0)
-                    //{
-                    //    m_carriedItem = invItem;
-                    //    Common.Dbgl($"Already got a {m_carriedItem.m_shared.m_name} here.", "Sorter");
-                    //    brain.Fire(Trigger.ItemFound);
-                    //    return;
-                    //}
-                });
-
 
             brain.Configure(State.AddContainerItemsToItemDictionary)
                 .SubstateOf(State.Main)
@@ -271,6 +213,40 @@ namespace RagnarsRokare.MobAI
                     m_knownContainers.Peek().SetInUse(inUse: false);
                     brain.Fire(Trigger.ContainerSearched);
                 });
+
+            brain.Configure(State.UnloadIntoStorageContainer)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.ItemSorted, State.SearchForRandomContainer)
+                .OnEntry(t =>
+                {
+                    var mob = (aiBase.Character as Humanoid);
+                    if (m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().CanAddItem(m_carriedItem))
+                    {
+                        Common.Dbgl($"Putting {m_carriedItem.m_shared.m_name} in container", "Sorter");
+                        mob.UnequipItem(m_carriedItem);
+                        m_itemsDictionary[m_carriedItem.m_shared.m_name].container.GetInventory().MoveItemToThis(mob.GetInventory(), m_carriedItem);
+                    }
+                    else
+                    {
+                        Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", "Sorter");
+                        mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
+                        m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
+                        Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
+                    }
+                    Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", "Sorter");
+                    m_knownContainers.Peek().SetInUse(inUse: false);
+                    m_carriedItem = null;
+                    brain.Fire(Trigger.ItemSorted);
+                                //List<ItemDrop.ItemData> CarriedItem = (aiBase.Character as Humanoid).GetInventory().GetAllItems();
+                                //foreach (ItemDrop.ItemData invItem in CarriedItem)
+                                //if (m_itemsDictionary.Keys.Contains(Common.GetPrefabName(invItem.m_shared.m_name)) && invItem.m_stack > 0)
+                                //{
+                                //    m_carriedItem = invItem;
+                                //    Common.Dbgl($"Already got a {m_carriedItem.m_shared.m_name} here.", "Sorter");
+                                //    brain.Fire(Trigger.ItemFound);
+                                //    return;
+                                //}
+                            });
 
             brain.Configure(State.GetItemFromDumpContainer)
                 .SubstateOf(State.Main)
@@ -401,7 +377,11 @@ namespace RagnarsRokare.MobAI
                 if (aiBase.MoveAndAvoidFire(m_container.transform.position, dt, 2f))
                 {
                     aiBase.StopMoving();
-                    aiBase.Brain.Fire(Trigger.ContainerIsClose);
+                    if (!m_container.IsInUse())
+                    {
+                        aiBase.Brain.Fire(Trigger.ContainerIsClose);
+                        return;
+                    }
                 }
                 if (Time.time > m_currentSearchTimeout)
                 {
@@ -439,10 +419,16 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.OpenContainer) || aiBase.Brain.IsInState(State.OpenStorageContainer) || aiBase.Brain.IsInState(State.OpenDumpContainer))
             {
+                if (m_container == null)
+                {
+                    aiBase.Brain.Fire(Trigger.ContainerNotFound);
+                    return;
+                }
                 if ((m_openChestTimer += dt) > OpenChestDelay)
                 {
                     //Debug.Log("Open Container");
                     aiBase.Brain.Fire(Trigger.ContainerOpened);
+                    return;
                 }
             }
         }
