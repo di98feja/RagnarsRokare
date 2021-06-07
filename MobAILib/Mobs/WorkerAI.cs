@@ -185,7 +185,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(State.Idle);
-                    m_startPosition = Instance.transform.position;
+                    //m_startPosition = Instance.transform.position;
                 });
         }
 
