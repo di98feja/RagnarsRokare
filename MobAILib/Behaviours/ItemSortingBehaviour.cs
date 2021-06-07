@@ -281,11 +281,13 @@ namespace RagnarsRokare.MobAI
                 if (groundItem != null)
                 {
                     m_item = groundItem;
+                    m_startPosition = groundItem.transform.position;
                     aiBase.Brain.Fire(Trigger.FoundGroundItem);
                     return;
                 }
-                if (Time.time > m_dumpContainerTimer)
+                if (Time.time > m_dumpContainerTimer && DumpContainer != null)
                 {
+                    m_startPosition = DumpContainer.transform.position;
                     aiBase.Brain.Fire(Trigger.SearchDumpContainer);
                     return;
                 }
