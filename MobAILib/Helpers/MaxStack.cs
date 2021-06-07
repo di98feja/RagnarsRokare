@@ -28,6 +28,12 @@ namespace RagnarsRokare.MobAI
             MaxSize = maxSize;
         }
 
+        public MaxStack(IEnumerable<T> items)
+        {
+            m_list = new LinkedList<T>(items);
+            MaxSize = items.Count();
+        }
+
         public void Push(T item)
         {
             m_list.AddFirst(item);
