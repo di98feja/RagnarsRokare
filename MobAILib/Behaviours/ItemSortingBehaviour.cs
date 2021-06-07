@@ -84,7 +84,7 @@ namespace RagnarsRokare.MobAI
             m_knownContainersTimer = new Dictionary<string, float>();
             m_itemsDictionary = new Dictionary<string, IEnumerable<(Container container, int count)>>();
             m_putItemInContainerFailTimers = new Dictionary<string, float>();
-            
+
 
             brain.Configure(State.Main)
                 .InitialTransition(State.SearchForRandomContainer)
@@ -206,10 +206,10 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                 })
-                .OnExit( t =>
-                {
-                    DumpContainer?.SetInUse(inUse: false);
-                });
+                .OnExit(t =>
+               {
+                   DumpContainer?.SetInUse(inUse: false);
+               });
 
             brain.Configure(State.MoveToGroundItem)
                 .SubstateOf(State.Main)
@@ -249,7 +249,7 @@ namespace RagnarsRokare.MobAI
                     }
                 }
                 m_itemsDictionary = newItemsDict;
-                }
+
                 foreach (Container container in m_knownContainers)
                 {
                     if (m_knownContainersTimer.ContainsKey(Common.GetOrCreateUniqueId(Common.GetNView(container))) && m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(container))] < Time.time)
@@ -412,7 +412,7 @@ namespace RagnarsRokare.MobAI
                         }
                         else if (!m_itemsDictionary.ContainsKey(item.Key))
                         {
-                            m_itemsDictionary.Add(item.Key, new List<(Container,int)> { (m_container, item.Value) });
+                            m_itemsDictionary.Add(item.Key, new List<(Container, int)> { (m_container, item.Value) });
                             Debug.Log($"Added {item.Key} to dict");
                         }
                     }
