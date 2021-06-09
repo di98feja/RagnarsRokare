@@ -106,6 +106,7 @@ namespace RagnarsRokare.MobAI
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ContainerFound, State.MoveToContainer)
                 .Permit(Trigger.FoundGroundItem, State.MoveToGroundItem)
+                .Permit(Trigger.FoundPickable, State.MoveToPickable)
                 .Permit(Trigger.SearchDumpContainer, State.MoveToDumpContainer)
                 .OnEntry(t =>
                 {
@@ -229,7 +230,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.GroundItemLost, State.SearchForRandomContainer)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.gameObject.name);
+                    m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.name);
                 });
 
             brain.Configure(State.PickUpItemFromGround)
@@ -299,10 +300,11 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
                 Pickable pickable = Common.GetNearbyPickable(m_aiBase.Instance, m_itemsDictionary.Keys.Where(k => !m_putItemInContainerFailTimers.ContainsKey(k)), m_searchRadius);
-                if (groundItem != null)
+                if (pickable != null)
                 {
                     m_pickable = pickable;
                     m_startPosition = pickable.transform.position;
+                    Debug.Log($"Found pickable: {m_pickable.GetHoverName()}");
                     aiBase.Brain.Fire(Trigger.FoundPickable);
                     return;
                 }
@@ -371,7 +373,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.MoveToPickable))
             {
-                if (m_pickable == null || m_item?.GetComponent<ZNetView>()?.IsValid() != true)
+                if (m_pickable == null || m_pickable?.GetComponent<ZNetView>()?.IsValid() != true)
                 {
                     m_pickable = null;
                     aiBase.StopMoving();
@@ -379,7 +381,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
-                if (aiBase.MoveAndAvoidFire(m_item.transform.position, dt, 1.5f))
+                if (aiBase.MoveAndAvoidFire(m_pickable.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
                     Debug.Log("Pickable is close");
@@ -389,7 +391,7 @@ namespace RagnarsRokare.MobAI
                 if (Time.time > m_currentSearchTimeout)
                 {
                     Common.Dbgl($"Giving up on {m_pickable.gameObject.name}", "Sorter");
-                    m_item = null;
+                    m_pickable = null;
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                 }
