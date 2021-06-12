@@ -128,6 +128,20 @@ namespace RagnarsRokare.MobAI
             return containers.RandomOrDefault();
         }
 
+        public static Container FindClosestContainer(Vector3 position, float containerSearchRadius)
+        {
+            var pieceList = new List<Piece>();
+            Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
+            var containers = pieceList?.Select(p => p.gameObject.GetComponentInChildren<Container>()).ToList();
+            containers.AddRange(pieceList?.Select(p => p.gameObject.GetComponent<Container>()));
+            if (!containers.Any())
+            {
+                return null;
+            }
+            // select closest
+            return containers.OrderBy(c => Vector3.Distance(position, c.transform.position)).FirstOrDefault();
+        }
+
         public static string GetPrefabName(string name)
         {
             char[] anyOf = new char[] { '(', ' ' };
