@@ -34,22 +34,26 @@ namespace RagnarsRokare.MobAI
 
         public static Pickable GetNearbyPickable(BaseAI instance, IEnumerable<string> acceptedNames, int range = 10)
         {
-            Debug.Log("GetNearbyPickable");
+            if (!acceptedNames.Any())
+            {
+                return null;
+            }
+            //Debug.Log("GetNearbyPickable");
             Vector3 position = instance.transform.position;
             Pickable ClosestObject = null;
-            foreach (Collider collider in Physics.OverlapSphere(position, range, LayerMask.GetMask(new string[] { "Default", /*"terrain",*/ "static_solid", "Default_small", "piece", "viewblock", "vehicle",  "item" })))
+            foreach (Collider collider in Physics.OverlapSphere(position, range, LayerMask.GetMask(new string[] { "Default_small", "piece", "item" })))
             {
-                Pickable pickable = collider.transform?.GetComponentInParent<Pickable>();
-                if (pickable?.GetComponent<ZNetView>()?.IsValid() != true)
+                Pickable pickable = collider?.transform?.GetComponentInParent<Pickable>();
+                if (pickable == null || pickable?.GetComponent<ZNetView>()?.IsValid() != true)
                 {
                     continue;
                 }
-                if (pickable?.transform?.position != null && CanSeeTarget(instance, pickable.gameObject) && (ClosestObject == null || Vector3.Distance(position, pickable.transform.position) < Vector3.Distance(position, ClosestObject.transform.position))) //acceptedNames.Contains(pickable.m_itemPrefab?.GetComponent<ItemDrop.ItemData>().m_shared.m_name) &&  (acceptedNames.Contains(pickable.gameObject.name)) && 
+                if (pickable?.transform?.position != null && CanSeeTarget(instance, pickable.gameObject) && acceptedNames.Contains(Common.GetPrefabName(pickable.gameObject.name)) && (ClosestObject == null || Vector3.Distance(position, pickable.transform.position) < Vector3.Distance(position, ClosestObject.transform.position))) //  
                 {
                     ClosestObject = pickable;
                 }
             }
-            Debug.Log($"Pickable detekted: {ClosestObject.name} containing {ClosestObject.m_itemPrefab.name}.");
+            //Debug.Log($"Pickable detekted: {ClosestObject?.gameObject.name} containing {ClosestObject?.m_itemPrefab.name} in {acceptedNames.Join()}.");
             return ClosestObject;
         }
 
