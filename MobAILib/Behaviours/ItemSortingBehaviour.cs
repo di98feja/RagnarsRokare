@@ -111,7 +111,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     //Common.Dbgl("Entered SearchForRandomContainer", "Sorter");
-                    m_currentSearchTimeout = Time.time + MaxSearchTime;
+                    m_currentSearchTimeout = Time.time + 2f;  //Delay before search initiates.
                 });
 
             brain.Configure(State.MoveToContainer)
@@ -222,6 +222,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToGroundItem, m_item.m_itemData.m_shared.m_name);
+                    m_currentSearchTimeout = Time.time + MaxSearchTime;
                 });
 
             brain.Configure(State.MoveToPickable)
@@ -231,6 +232,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.name);
+                    m_currentSearchTimeout = Time.time + MaxSearchTime;
                 });
 
             brain.Configure(State.PickUpItemFromGround)
@@ -249,6 +251,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.SearchForRandomContainer))
             {
+                if (m_currentSearchTimeout > Time.time) return;
                 //Common.Dbgl("Update SearchForContainer", "Sorter");
                 //Removing null containers
                 m_knownContainers.Remove(null);
@@ -299,7 +302,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.FoundGroundItem);
                     return;
                 }
-                Pickable pickable = Common.GetNearbyPickable(m_aiBase.Instance, m_itemsDictionary.Keys.Where(k => !m_putItemInContainerFailTimers.ContainsKey(k)), m_searchRadius);
+                Pickable pickable = Common.GetNearbyPickable(m_aiBase.Instance, m_aiBase.m_trainedAssignments, m_searchRadius);
                 if (pickable != null)
                 {
                     m_pickable = pickable;
