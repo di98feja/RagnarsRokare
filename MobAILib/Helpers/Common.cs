@@ -44,10 +44,7 @@ namespace RagnarsRokare.MobAI
                 {
                     continue;
                 }
-                //Debug.Log($"Pickable detekted: {pickable.name} containing {pickable.m_itemPrefab.GetComponent<ItemDrop.ItemData>().m_shared.m_name}.");
-                //Debug.Log($"Found at : {pickable?.transform?.position} and is visible: {CanSeeTarget(instance, pickable.gameObject)}.");
-                //Debug.Log($"and is among acceptedNames: {acceptedNames.Contains("item_"+pickable.m_itemPrefab.name)} : {acceptedNames.Join()}.");
-                if (pickable?.transform?.position != null && CanSeeTarget(instance, pickable.gameObject) && (ClosestObject == null || Vector3.Distance(position, pickable.transform.position) < Vector3.Distance(position, ClosestObject.transform.position))) //acceptedNames.Contains(pickable.m_itemPrefab?.GetComponent<ItemDrop.ItemData>().m_shared.m_name) && 
+                if (pickable?.transform?.position != null && CanSeeTarget(instance, pickable.gameObject) && (ClosestObject == null || Vector3.Distance(position, pickable.transform.position) < Vector3.Distance(position, ClosestObject.transform.position))) //acceptedNames.Contains(pickable.m_itemPrefab?.GetComponent<ItemDrop.ItemData>().m_shared.m_name) &&  (acceptedNames.Contains(pickable.gameObject.name)) && 
                 {
                     ClosestObject = pickable;
                 }

@@ -81,6 +81,8 @@ namespace RagnarsRokare.MobAI
                 m_startPosition = instance.transform.position;
             }
 
+            RegisterRPCMethods();
+
             UpdateTrigger = Brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
@@ -101,6 +103,8 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.SuccessState = State.Idle;
             eatingBehaviour.FailState = State.Idle;
             eatingBehaviour.HealPercentageOnConsume = 0.1f;
+
+            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());
 
             string dumpChestId = NView.GetZDO().GetString(Constants.Z_SavedDumpChest);
             if (!string.IsNullOrEmpty(dumpChestId))
@@ -123,6 +127,20 @@ namespace RagnarsRokare.MobAI
             //Debug.Log(graph.ToGraph(new Stateless.Graph.UmlDotGraphStyle()));
 
             PrintAIStateToDebug = true;
+        }
+
+        private void RegisterRPCMethods()
+        {
+            NView.Register<string, string>(Constants.Z_updateTrainedAssignments, (long source, string uniqueID, string trainedAssignments) =>
+            {
+                if (NView.IsOwner()) return;
+                if (UniqueID == uniqueID)
+                {
+                    m_trainedAssignments.Clear();
+                    m_trainedAssignments.AddRange(trainedAssignments.Split());
+                    Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, "A worker learned a new skill.");
+                }
+            });
         }
 
         private void ConfigureRoot()
