@@ -104,7 +104,8 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.FailState = State.Idle;
             eatingBehaviour.HealPercentageOnConsume = 0.1f;
 
-            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());
+            char[] delimiterChars = { ' ', ','};
+            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(delimiterChars));
 
             string dumpChestId = NView.GetZDO().GetString(Constants.Z_SavedDumpChest);
             if (!string.IsNullOrEmpty(dumpChestId))
