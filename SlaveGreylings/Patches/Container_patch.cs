@@ -12,7 +12,6 @@ namespace RagnarsRokare.SlaveGreylings
         {
             public static void Postfix(Container __instance, bool hold)
             {
-                Debug.Log($"Interact, hold={hold}");
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.gameObject.name);

@@ -129,14 +129,14 @@ namespace RagnarsRokare.MobAI
         {
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
-            var containers = pieceList?.Select(p => p.gameObject.GetComponentInChildren<Container>()).ToList();
-            containers.AddRange(pieceList?.Select(p => p.gameObject.GetComponent<Container>()));
+            var containers = pieceList.Select(p => p.gameObject.GetComponentInChildren<Container>()).Where(p => p is Container).ToList();
+            containers.AddRange(pieceList.Select(p => p.gameObject.GetComponent<Container>()).Where(p => p is Container));
             if (!containers.Any())
             {
                 return null;
             }
             // select closest
-            return containers.OrderBy(c => Vector3.Distance(position, c.transform.position)).FirstOrDefault();
+            return containers.OrderBy(c => Vector3.Distance(position, c.gameObject.transform.position)).FirstOrDefault();
         }
 
         public static string GetPrefabName(string name)

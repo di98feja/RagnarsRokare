@@ -28,7 +28,7 @@ namespace RagnarsRokare.SlaveGreylings
         {
             if (clip == null) return;
             GameObject tempGO = new GameObject("TempAudio");
-            tempGO.transform.position = pos; 
+            tempGO.transform.position = pos;
             AudioSource aSource = tempGO.AddComponent<AudioSource>();
             aSource.clip = clip;
             aSource.reverbZoneMix = 0.1f;
@@ -43,14 +43,15 @@ namespace RagnarsRokare.SlaveGreylings
     [HarmonyPatch(typeof(PlayerController), "FixedUpdate")]
     static class PlayerController_FixedUpdate_Patch
     {
+        private static float m_KeyDelay = 3.0f;
         private static float m_callHomeKeyTimer = 0f;
-        private static float m_callHomeKeyDelay = 5.0f;
         private static KeyCode m_callHomeKey;
+        private static float m_updateSignFromContainerKeyTimer = 0f;
+        private static KeyCode m_updateSignFromContainerKey;
 
         static PlayerController_FixedUpdate_Patch()
         {
-            var configValue = CommonConfig.CallHomeCommandKey.Value;
-            if (Enum.TryParse(configValue, out KeyCode key))
+            if (Enum.TryParse(CommonConfig.CallHomeCommandKey.Value, out KeyCode key))
             {
                 m_callHomeKey = key;
             }
@@ -58,14 +59,21 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 m_callHomeKey = KeyCode.Home;
             }
+            if (Enum.TryParse(CommonConfig.UpdateSignFromContainerKey.Value, out key))
+            {
+                m_updateSignFromContainerKey = key;
+            }
+            else
+            {
+                m_updateSignFromContainerKey = KeyCode.Insert;
+            }
         }
 
         static void Postfix(ZNetView ___m_nview)
         {
-            if (Time.time - m_callHomeKeyTimer < m_callHomeKeyDelay) return;
-            if (Input.GetKey(m_callHomeKey))
+            if (Time.time - m_callHomeKeyTimer > m_KeyDelay && Input.GetKey(m_callHomeKey))
             {
-                Common.Dbgl($"CallHome command");
+                Common.Dbgl($"CallHome command", "SlaveGreylings");
                 m_callHomeKeyTimer = Time.time;
                 ___m_nview.InvokeRPC(ZNetView.Everybody, Constants.Z_CallHomeCommand, Player.m_localPlayer.transform.position);
 
@@ -81,6 +89,12 @@ namespace RagnarsRokare.SlaveGreylings
                         MobManager.AliveMobs[uniqueId].Follow(Player.m_localPlayer);
                     }
                 }
+            }
+            else if (Time.time - m_updateSignFromContainerKeyTimer > m_KeyDelay && Input.GetKey(m_updateSignFromContainerKey))
+            {
+                Common.Dbgl($"UpdateSignFormContainer command", "SlaveGreylings");
+                m_updateSignFromContainerKeyTimer = Time.time;
+                SlaveGreylings.UpdateSignFromContainer();
             }
         }
     }
