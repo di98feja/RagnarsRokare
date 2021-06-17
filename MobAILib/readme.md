@@ -87,6 +87,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###
+- Version 0.2.1
+Removed [BepInProcess("valheim.exe")] to be compatible with dedicated servers
+
 - Version 0.2.0  
 Added base mob attributes to control behaviours.  
 Line of sight required for containers and assignments.  
