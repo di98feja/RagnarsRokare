@@ -9,7 +9,6 @@ using UnityEngine.Networking;
 
 namespace RagnarsRokare.SlaveGreylings
 {
-    [BepInProcess("valheim.exe")]
     [BepInPlugin(ModId, ModName, ModVersion)]
     public partial class SlaveGreylings : BaseUnityPlugin
     {
