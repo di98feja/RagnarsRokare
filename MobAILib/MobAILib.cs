@@ -4,7 +4,6 @@ using System.Reflection;
 
 namespace RagnarsRokare.MobAI
 {
-    [BepInProcess("valheim.exe")]
     [BepInPlugin(ModId, ModName, ModVersion)]
     public partial class MobAILib : BaseUnityPlugin
     {
