@@ -113,7 +113,7 @@ namespace RagnarsRokare.MobAI
 
         public static Container FindRandomNearbyContainer(BaseAI instance, IEnumerable<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
         {
-            //Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()}");
+            //Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()} within {containerSearchRadius}", "Sorter");
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
@@ -141,6 +141,20 @@ namespace RagnarsRokare.MobAI
             }
             // select closest
             return containers.OrderBy(c => Vector3.Distance(position, c.gameObject.transform.position)).FirstOrDefault();
+        }
+
+        public static Sign FindClosestSign(Vector3 position, float searchRadius) 
+        {
+            var pieceList = new List<Piece>();
+            Piece.GetAllPiecesInRadius(position, searchRadius, pieceList);
+            var matchingpieces = pieceList.Select(p => p.gameObject.GetComponentInChildren<Sign>()).Where(p => p is Sign).ToList();
+            matchingpieces.AddRange(pieceList.Select(p => p.gameObject.GetComponent<Sign>()).Where(p => p is Sign));
+            if (!matchingpieces.Any())
+            {
+                return null;
+            }
+            // select closest
+            return matchingpieces.OrderBy(c => Vector3.Distance(position, c.gameObject.transform.position)).FirstOrDefault();
         }
 
         public static string GetPrefabName(string name)

@@ -89,7 +89,6 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    Debug.LogWarning("Exiting EatingBehaviour");
                 });
 
             brain.Configure(State.SearchForFood)

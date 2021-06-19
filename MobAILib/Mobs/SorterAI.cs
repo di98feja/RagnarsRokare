@@ -23,6 +23,7 @@ namespace RagnarsRokare.MobAI
         public float RoarTimeout { get; private set; } = 10;
         public float RepairMinDist { get; private set; } = 2.0f;
         public float AdjustAssignmentStackSizeTime { get; private set; } = 60;
+        public float FleeTimeout { get; private set; } = 10f;
 
         public class State
         {
@@ -59,6 +60,7 @@ namespace RagnarsRokare.MobAI
         readonly EatingBehaviour eatingBehaviour;
 
         SorterAIConfig m_config;
+        private float m_fleeTimer;
 
         public SorterAI() : base()
         { }
@@ -213,9 +215,10 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Flee)
                 .SubstateOf(State.Root)
-                .PermitIf(UpdateTrigger, State.Idle, (dt) => Common.Alarmed(Instance, Mathf.Max(1, Awareness - 1)))
+                .PermitIf(UpdateTrigger, State.Idle, (dt) => (m_fleeTimer += dt ) > FleeTimeout && Common.Alarmed(Instance, Mathf.Max(1, Awareness - 1)))
                 .OnEntry(t =>
                 {
+                    m_fleeTimer = 0f;
                     UpdateAiStatus(State.Flee);
                     Instance.Alert();
                 })
@@ -223,6 +226,7 @@ namespace RagnarsRokare.MobAI
                 {
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     Attacker = null;
+
                     StopMoving();
                 });
         }
@@ -274,6 +278,7 @@ namespace RagnarsRokare.MobAI
 
 
         private string m_lastState = "";
+
         public override void UpdateAI(float dt)
         {
             if (Brain.State != m_lastState)

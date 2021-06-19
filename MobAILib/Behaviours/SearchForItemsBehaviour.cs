@@ -73,6 +73,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.Timeout, () => FailState)
                 .OnEntry(t =>
                 {
+                    m_currentSearchTime = 0f;
                     Common.Dbgl("Entered SearchForItemsBehaviour");
                 })
                 .OnExit(t =>
@@ -114,7 +115,7 @@ namespace RagnarsRokare.MobAI
                             return;
                         }
                     }
-                    
+
                     Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames, m_searchRadius);
                     if (nearbyChest != null)
                     {
