@@ -11,10 +11,20 @@ namespace RagnarsRokare.MobAI
         public MaxStack<Assignment> m_assignment;
         public MaxStack<Container> m_containers;
         public ItemDrop.ItemData m_carrying;
+
+        // Timers
+        private float m_closeEnoughTimer;
+        private float m_searchForNewAssignmentTimer;
+        private float m_shoutedAtTimer;
+        private float m_fleeTimer;
         public float m_assignedTimer;
+        private float m_triggerTimer;
 
         // Management
         private Vector3 m_startPosition;
+
+        // Settings
+        public float FleeTimeout { get; private set; } = 10f;
 
         private class State
         {
@@ -58,13 +68,9 @@ namespace RagnarsRokare.MobAI
 
         private readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         private readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
-        private float m_triggerTimer;
         private readonly SearchForItemsBehaviour searchForItemsBehaviour;
         private readonly FightBehaviour fightBehaviour;
         private readonly EatingBehaviour eatingBehaviour;
-        private float m_closeEnoughTimer;
-        private float m_searchForNewAssignmentTimer;
-        private float m_shoutedAtTimer;
 
         public WorkerAIConfig m_config { get; set; }
 
@@ -138,7 +144,7 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Root)
                 .InitialTransition(State.Idle)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, Awareness)))
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Flee) && !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, Awareness)))
                 .PermitIf(Trigger.Follow, State.Follow, () => !Brain.IsInState(State.Follow) && (bool)(Instance as MonsterAI).GetFollowTarget());
         }
 
@@ -225,9 +231,10 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Flee)
                 .SubstateOf(State.Root)
-                .PermitIf(UpdateTrigger, State.Idle, (args) => Common.Alarmed(args.instance, Mathf.Max(1, Awareness-1)))
+                .PermitIf(UpdateTrigger, State.Idle, (args) => (m_fleeTimer += args.dt) > FleeTimeout && !Common.Alarmed(args.instance, Mathf.Max(1, Awareness-1)))
                 .OnEntry(t =>
                 {
+                    m_fleeTimer = 0f;
                     UpdateAiStatus(State.Flee);
                     Instance.Alert();
                 })

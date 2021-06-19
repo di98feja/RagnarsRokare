@@ -21,6 +21,7 @@ namespace RagnarsRokare.MobAI
         private float m_lastSuccessfulFindAssignment;
         private float m_lastFailedFindAssignment;
         private float m_stuckInIdleTimer;
+        private float m_fleeTimer;
 
         // Management
         public Vector3 m_startPosition;
@@ -31,6 +32,7 @@ namespace RagnarsRokare.MobAI
         public float RoarTimeout { get; private set; } = 10;
         public float RepairMinDist { get; private set; } = 2.0f;
         public float AdjustAssignmentStackSizeTime { get; private set; } = 60;
+        public float FleeTimeout { get; private set; } = 10f;
 
         public class State
         {
@@ -237,9 +239,10 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Flee)
                 .SubstateOf(State.Root)
-                .PermitIf(UpdateTrigger, State.Idle, (args) => Common.Alarmed(args.instance, Mathf.Max(1, Awareness - 1)))
+                .PermitIf(UpdateTrigger, State.Idle, (args) => (m_fleeTimer += args.dt) > FleeTimeout && !Common.Alarmed(args.instance, Mathf.Max(1, Awareness - 1)))
                 .OnEntry(t =>
                 {
+                    m_fleeTimer = 0f;
                     UpdateAiStatus(State.Flee);
                     Instance.Alert();
                 })

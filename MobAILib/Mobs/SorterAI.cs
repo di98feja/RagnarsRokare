@@ -13,6 +13,7 @@ namespace RagnarsRokare.MobAI
         private float m_searchForNewAssignmentTimer;
         private float m_triggerTimer;
         private float m_stuckInIdleTimer;
+        private float m_fleeTimer;
 
         // Management
         public Vector3 m_startPosition;
@@ -60,7 +61,6 @@ namespace RagnarsRokare.MobAI
         readonly EatingBehaviour eatingBehaviour;
 
         SorterAIConfig m_config;
-        private float m_fleeTimer;
 
         public SorterAI() : base()
         { }
@@ -150,7 +150,7 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Root)
                 .InitialTransition(State.Idle)
-                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, Awareness)))
+                .PermitIf(Trigger.TakeDamage, State.Fight, () => !Brain.IsInState(State.Flee) && !Brain.IsInState(State.Fight) && (TimeSinceHurt < 20.0f || Common.Alarmed(Instance, Awareness)))
                 .PermitIf(Trigger.Follow, State.Follow, () => !Brain.IsInState(State.Follow) && (bool)(Instance as MonsterAI).GetFollowTarget());
         }
 
@@ -215,7 +215,7 @@ namespace RagnarsRokare.MobAI
         {
             Brain.Configure(State.Flee)
                 .SubstateOf(State.Root)
-                .PermitIf(UpdateTrigger, State.Idle, (dt) => (m_fleeTimer += dt ) > FleeTimeout && Common.Alarmed(Instance, Mathf.Max(1, Awareness - 1)))
+                .PermitIf(UpdateTrigger, State.Idle, (dt) => (m_fleeTimer += dt ) > FleeTimeout && !Common.Alarmed(Instance, Mathf.Max(1, Awareness - 1)))
                 .OnEntry(t =>
                 {
                     m_fleeTimer = 0f;
