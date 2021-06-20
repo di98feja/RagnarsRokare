@@ -11,7 +11,7 @@ namespace RagnarsRokare.MobAI
         private class State
         {
             public const string Main = Prefix + "Main";
-            public const string SearchForRandomContainer = Prefix + "SearchForRandomContainer";
+            public const string FindRandomTask = Prefix + "SearchForRandomContainer";
             public const string OpenContainer = Prefix + "OpenContainer";
             public const string OpenStorageContainer = Prefix + "OpenStorageContainer";
             public const string AddContainerItemsToItemDictionary = Prefix + "AddContainerItemsToItemDictionary";
@@ -26,6 +26,8 @@ namespace RagnarsRokare.MobAI
             public const string OpenDumpContainer = Prefix + "OpenDumpContainer";
             public const string LookForNearbySign = Prefix + "LookForNearbySign";
             public const string ReadNearbySign = Prefix + "ReadNearbySign";
+            public const string LookForNearbyStorageSign = Prefix + "LookForNearbyStorageSign";
+            public const string ReadNearbyStorageSign = Prefix + "ReadNearbyStorageSign";
         }
 
         private class Trigger
@@ -52,7 +54,7 @@ namespace RagnarsRokare.MobAI
         }
 
         // Input
-        public string[] AcceptedContainerNames { get; set; }
+        public string[] AcceptedContainerNames { get; set; } = new string[] { };
 
         // Output
 
@@ -62,11 +64,11 @@ namespace RagnarsRokare.MobAI
         public string StartState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public float OpenChestDelay { get; private set; } = 2;
+        public float OpenChestDelay { get; private set; } = 1;
         public float PutItemInChestFailedRetryTimeout { get; set; } = 120f;
         public float SearchDumpContainerRetryTimeout { get; set; } = 60f;
         public Container DumpContainer { get; set; }
-        public float ReadSignDelay { get; private set; } = 2;
+        public float ReadSignDelay { get; private set; } = 1;
 
         private Dictionary<string, IEnumerable<(Container container, int count)>> m_itemsDictionary;
         private Dictionary<string, float> m_putItemInContainerFailTimers;
@@ -98,7 +100,7 @@ namespace RagnarsRokare.MobAI
 
 
             brain.Configure(State.Main)
-                .InitialTransition(State.SearchForRandomContainer)
+                .InitialTransition(State.FindRandomTask)
                 .SubstateOf(parentState)
                 .PermitDynamic(Trigger.Failed, () => FailState)
                 .OnEntry(t =>
@@ -110,7 +112,7 @@ namespace RagnarsRokare.MobAI
                 {
                 });
 
-            brain.Configure(State.SearchForRandomContainer)
+            brain.Configure(State.FindRandomTask)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ContainerFound, State.MoveToContainer)
                 .Permit(Trigger.FoundGroundItem, State.MoveToGroundItem)
@@ -125,7 +127,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.MoveToContainer)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ContainerIsClose, State.LookForNearbySign)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToContainer);
@@ -135,8 +137,8 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.MoveToStorageContainer)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.ContainerIsClose, State.OpenStorageContainer)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerIsClose, State.LookForNearbyStorageSign)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToStorageContainer, m_carriedItem.m_shared.m_name);
@@ -147,7 +149,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.MoveToDumpContainer)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ContainerIsClose, State.OpenDumpContainer)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToDumpContainer);
@@ -157,18 +159,22 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.LookForNearbySign)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .Permit(Trigger.NearbySignFound, State.ReadNearbySign)
                 .Permit(Trigger.NearbySignNotFound, State.OpenContainer)
-                .OnEntry(t =>
-                {
+                .OnEntry(t => { });
 
-                });
+            brain.Configure(State.LookForNearbyStorageSign)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
+                .Permit(Trigger.NearbySignFound, State.ReadNearbyStorageSign)
+                .Permit(Trigger.NearbySignNotFound, State.OpenStorageContainer)
+                .OnEntry(t => { });
 
             brain.Configure(State.OpenContainer)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ContainerOpened, State.AddContainerItemsToItemDictionary)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_knownContainers.Peek().SetInUse(inUse: true);
@@ -188,7 +194,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.OpenDumpContainer)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ContainerOpened, State.GetItemFromDumpContainer)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     DumpContainer.SetInUse(inUse: true);
@@ -197,19 +203,30 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.ReadNearbySign)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .Permit(Trigger.NearbySignNotFound, State.OpenContainer)
-                .Permit(Trigger.SignHasBeenRead, State.SearchForRandomContainer)
+                .Permit(Trigger.SignHasBeenRead, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_readNearbySignTimer = 0f;
                     m_aiBase.UpdateAiStatus(State.ReadNearbySign);
                 });
 
+            brain.Configure(State.ReadNearbyStorageSign)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
+                .Permit(Trigger.NearbySignNotFound, State.OpenStorageContainer)
+                .Permit(Trigger.SignHasBeenRead, State.OpenStorageContainer)
+                .OnEntry(t =>
+                {
+                    m_readNearbySignTimer = 0f;
+                    m_aiBase.UpdateAiStatus(State.ReadNearbyStorageSign);
+                });
+
             brain.Configure(State.AddContainerItemsToItemDictionary)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.ContainerSearched, State.SearchForRandomContainer)
-                .Permit(Trigger.ContainerNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ContainerSearched, State.FindRandomTask)
+                .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_container = m_knownContainers.Peek();
@@ -221,7 +238,7 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.UnloadIntoStorageContainer)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.ItemSorted, State.SearchForRandomContainer)
+                .Permit(Trigger.ItemSorted, State.FindRandomTask)
                 .Permit(Trigger.ContainerIsFull, State.MoveToStorageContainer)
                 .OnEntry(t =>
                 {
@@ -235,7 +252,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.GetItemFromDumpContainer)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ItemFound, State.MoveToStorageContainer)
-                .Permit(Trigger.ItemNotFound, State.SearchForRandomContainer)
+                .Permit(Trigger.ItemNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                 })
@@ -247,7 +264,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.MoveToGroundItem)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.GroundItemIsClose, State.PickUpItemFromGround)
-                .Permit(Trigger.GroundItemLost, State.SearchForRandomContainer)
+                .Permit(Trigger.GroundItemLost, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToGroundItem, m_item.m_itemData.m_shared.m_name);
@@ -256,8 +273,8 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.MoveToPickable)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.GroundItemIsClose, State.SearchForRandomContainer)
-                .Permit(Trigger.GroundItemLost, State.SearchForRandomContainer)
+                .Permit(Trigger.GroundItemIsClose, State.FindRandomTask)
+                .Permit(Trigger.GroundItemLost, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.name);
@@ -267,7 +284,7 @@ namespace RagnarsRokare.MobAI
             brain.Configure(State.PickUpItemFromGround)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.ItemFound, State.MoveToStorageContainer)
-                .Permit(Trigger.GroundItemLost, State.SearchForRandomContainer)
+                .Permit(Trigger.GroundItemLost, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     Common.Dbgl("PickUpItemFromGround", "Sorter");
@@ -278,45 +295,23 @@ namespace RagnarsRokare.MobAI
         {
             UpdatePutItemInContainerFailTimers();
 
-            if (aiBase.Brain.IsInState(State.SearchForRandomContainer))
+            if (aiBase.Brain.IsInState(State.FindRandomTask))
             {
                 if (m_currentSearchTimeout > Time.time) return;
-                //Common.Dbgl("Update SearchForContainer", "Sorter");
-                //Removing null containers
                 m_knownContainers.Remove(null);
-                var newItemsDict = new Dictionary<string, IEnumerable<(Container, int)>>();
-                foreach (string key in m_itemsDictionary.Keys)
-                {
-                    var containersForItem = m_itemsDictionary[key].Where(c => c.container != null);
-                    if (m_itemsDictionary[key].Count() > 0)
-                    {
-                        newItemsDict.Add(key, containersForItem);
-                    }
-                }
-                m_itemsDictionary = newItemsDict;
-
-                foreach (Container container in m_knownContainers)
-                {
-                    if (m_knownContainersTimer.ContainsKey(Common.GetOrCreateUniqueId(Common.GetNView(container))) && m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(container))] < Time.time)
-                    {
-                        m_knownContainers.Remove(container);
-                        m_knownContainersTimer.Remove(Common.GetOrCreateUniqueId(Common.GetNView(container)));
-                        Common.Dbgl("Remove timeout containers from known containers.");
-                        return;
-                    }
-                }
-                var knownContainers = new List<Container>(m_knownContainers);
+                RemoveNullContainers();
+                RemoveTimeoutedContainers();
+                var knownContainers = m_knownContainers.ToList();
                 if (DumpContainer != null)
                 {
                     knownContainers.Add(DumpContainer);
                 }
                 Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers, AcceptedContainerNames, m_searchRadius);
-                //Common.Dbgl($"Update SearchForContainer found new container {newContainer?.name}", "Sorter");
                 if (newContainer != null)
                 {
                     m_knownContainers.Push(newContainer);
                     m_knownContainersTimer.Add(Common.GetOrCreateUniqueId(Common.GetNView(newContainer)), Time.time + RememberChestTime);
-                    Common.Dbgl($"Update SearchForContainer new container with timeout at :{m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(newContainer))]}");
+                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(newContainer))]}", "Sorter");
                     m_startPosition = newContainer.transform.position;
                     aiBase.Brain.Fire(Trigger.ContainerFound);
                     aiBase.StopMoving();
@@ -336,7 +331,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = pickable;
                     m_startPosition = pickable.transform.position;
-                    Debug.Log($"Found pickable: {m_pickable.GetHoverName()}");
+                    Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", "Sorter");
                     aiBase.Brain.Fire(Trigger.FoundPickable);
                     return;
                 }
@@ -347,13 +342,13 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.SearchDumpContainer);
                     return;
                 }
+
                 Common.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition);
                 return;
             }
 
             if (aiBase.Brain.IsInState(State.MoveToContainer) || aiBase.Brain.IsInState(State.MoveToStorageContainer) || aiBase.Brain.IsInState(State.MoveToDumpContainer))
             {
-                //Common.Dbgl($"State MoveToContainer: {KnownContainers.Peek().name}", "Sorter");
                 if (m_container == null)
                 {
                     aiBase.StopMoving();
@@ -383,14 +378,14 @@ namespace RagnarsRokare.MobAI
                 {
                     m_item = null;
                     aiBase.StopMoving();
-                    Debug.Log("GroundItem = null");
+                    Common.Dbgl("GroundItem = null", "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
                 if (aiBase.MoveAndAvoidFire(m_item.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
-                    Debug.Log("GroundItem is close");
+                    Common.Dbgl("GroundItem is close", "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemIsClose);
                 }
                 if (Time.time > m_currentSearchTimeout)
@@ -409,14 +404,14 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = null;
                     aiBase.StopMoving();
-                    Debug.Log("Pickable = null");
+                    Common.Dbgl("Pickable = null", "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
                 if (aiBase.MoveAndAvoidFire(m_pickable.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
-                    Debug.Log("Pickable is close");
+                    Common.Dbgl("Pickable is close", "Sorter");
                     m_pickable.Interact((aiBase.Character as Humanoid), false);
                     aiBase.Brain.Fire(Trigger.GroundItemIsClose);
                 }
@@ -430,7 +425,7 @@ namespace RagnarsRokare.MobAI
                 return;
             }
 
-            if (aiBase.Brain.IsInState(State.LookForNearbySign))
+            if (aiBase.Brain.IsInState(State.LookForNearbySign) || aiBase.Brain.IsInState(State.LookForNearbyStorageSign))
             {
                 if (m_container == null)
                 {
@@ -459,18 +454,18 @@ namespace RagnarsRokare.MobAI
                 }
                 if ((m_openChestTimer += dt) > OpenChestDelay)
                 {
-                    Debug.Log("Open Container");
+                    Common.Dbgl("Open Container", "Sorter");
                     aiBase.Brain.Fire(Trigger.ContainerOpened);
                     if (m_knownContainersTimer.ContainsKey(Common.GetOrCreateUniqueId(Common.GetNView(m_container))))
                     {
                         m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(m_container))] = Time.time + RememberChestTime;
-                        Debug.Log($"Updated timeout for {m_container.name}");
+                        Common.Dbgl($"Updated timeout for {m_container.name}", "Sorter");
                     }
                     return;
                 }
             }
 
-            if (aiBase.Brain.IsInState(State.ReadNearbySign))
+            if (aiBase.Brain.IsInState(State.ReadNearbySign) || aiBase.Brain.IsInState(State.ReadNearbyStorageSign))
             {
                 if (m_container == null)
                 {
@@ -495,6 +490,7 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
                 Common.Dbgl($"Deciphered {itemsOnSign.Length} items from nearbySign:{string.Join(",",itemsOnSign.Select(i => i.m_shared.m_name))}", "Sorter");
+                RemoveContainerFromItemsDict(m_container);
                 AddItemsToDictionary(itemsOnSign.ToDictionary(i => i.m_shared.m_name, e => 1000));
                 aiBase.Brain.Fire(Trigger.SignHasBeenRead);
                 return;
@@ -614,9 +610,52 @@ namespace RagnarsRokare.MobAI
             }
         }
 
-        private void AddItemsToDictionary(Dictionary<string, int> chestInventory)
+        private void RemoveTimeoutedContainers()
         {
-            foreach (KeyValuePair<string, int> item in chestInventory)
+            var activeContainers = new MaxStack<Container>(m_knownContainers);
+            foreach (Container container in m_knownContainers)
+            {
+                if (m_knownContainersTimer.ContainsKey(Common.GetOrCreateUniqueId(Common.GetNView(container))) && m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(container))] < Time.time)
+                {
+                    activeContainers.Remove(container);
+                    m_knownContainersTimer.Remove(Common.GetOrCreateUniqueId(Common.GetNView(container)));
+                    Common.Dbgl("Remove timeout containers from known containers.", "Sorter");
+                }
+            }
+        }
+
+        private void RemoveContainerFromItemsDict(Container container)
+        {
+            var newItemsDict = new Dictionary<string, IEnumerable<(Container, int)>>();
+            foreach (string key in m_itemsDictionary.Keys)
+            {
+                var containersForItem = m_itemsDictionary[key].Where(c => c.container != null);
+                containersForItem = containersForItem.Where(c => c.container != container);
+                if (containersForItem.Count() > 0)
+                {
+                    newItemsDict.Add(key, containersForItem);
+                }
+            }
+            m_itemsDictionary = newItemsDict;
+        }
+
+        private void RemoveNullContainers()
+        {
+            var newItemsDict = new Dictionary<string, IEnumerable<(Container, int)>>();
+            foreach (string key in m_itemsDictionary.Keys)
+            {
+                var containersForItem = m_itemsDictionary[key].Where(c => c.container != null);
+                if (m_itemsDictionary[key].Count() > 0)
+                {
+                    newItemsDict.Add(key, containersForItem);
+                }
+            }
+            m_itemsDictionary = newItemsDict;
+        }
+
+        private void AddItemsToDictionary(Dictionary<string, int> items)
+        {
+            foreach (KeyValuePair<string, int> item in items)
             {
                 if (m_itemsDictionary.ContainsKey(item.Key))
                 {
@@ -632,12 +671,12 @@ namespace RagnarsRokare.MobAI
                         m_itemsDictionary[item.Key] = m_itemsDictionary[item.Key].Append((m_container, item.Value));
                     }
                     m_itemsDictionary[item.Key] = m_itemsDictionary[item.Key].OrderByDescending(c => c.count);
-                    Debug.Log($"{item.Key} exists in {m_itemsDictionary[item.Key].Count()} containers");
+                    Common.Dbgl($"{item.Key} exists in {m_itemsDictionary[item.Key].Count()} containers", "Sorter");
                 }
                 else if (!m_itemsDictionary.ContainsKey(item.Key))
                 {
                     m_itemsDictionary.Add(item.Key, new List<(Container, int)> { (m_container, item.Value) });
-                    Debug.Log($"Added {item.Key} to dict");
+                    Common.Dbgl($"Added {item.Key} to dict", "Sorter");
                 }
             }
         }
