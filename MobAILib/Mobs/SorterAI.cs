@@ -104,7 +104,7 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.SearchForItemsState = State.SearchForItems;
             eatingBehaviour.SuccessState = State.Idle;
             eatingBehaviour.FailState = State.Idle;
-            eatingBehaviour.HealPercentageOnConsume = 0.1f;
+            eatingBehaviour.HealPercentageOnConsume = 0.2f;
 
             char[] delimiterChars = { ' ', ','};
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(delimiterChars));

@@ -125,13 +125,14 @@ namespace RagnarsRokare.MobAI
             {
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
-                    string interactName = Common.GetPrefabName(__instance.gameObject.name);
-                    if (mob.m_trainedAssignments.Contains(interactName))
+                    string interactName = __instance.GetHoverName();
+                    string prefabName = Common.GetPrefabName(__instance.gameObject.name);
+                    if (mob.m_trainedAssignments.Contains(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");
                         return;
                     }
-                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.m_trainedAssignments.Contains(interactName))
+                    if (Vector3.Distance(mob.Character.transform.position, __instance.transform.position) < 5 && !mob.m_trainedAssignments.Contains(prefabName))
                     {
                         if (mob.learningTask == interactName)
                         {
@@ -161,7 +162,7 @@ namespace RagnarsRokare.MobAI
                         }
                         if (mob.learningRate == 5)
                         {
-                            mob.m_trainedAssignments.Add(interactName);
+                            mob.m_trainedAssignments.Add(prefabName);
                             mob.NView.GetZDO().Set(Constants.Z_trainedAssignments, mob.m_trainedAssignments.Join());
                             mob.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
                             Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Have now learned how to operate {interactName}.");

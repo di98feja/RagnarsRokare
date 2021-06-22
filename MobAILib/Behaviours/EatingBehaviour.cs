@@ -56,7 +56,7 @@ namespace RagnarsRokare.MobAI
         // Settings
         public string SuccessState;
         public string FailState;
-        public float HealPercentageOnConsume;
+        public float HealPercentageOnConsume { get; set; }
         public string SearchForItemsState;
         public string StartState { get { return State.Hungry; } }
         public float HungryTimeout { get; set; } = 500;

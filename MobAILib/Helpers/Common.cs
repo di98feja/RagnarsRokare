@@ -32,29 +32,22 @@ namespace RagnarsRokare.MobAI
             return ClosestObject;
         }
 
-        public static Pickable GetNearbyPickable(BaseAI instance, IEnumerable<string> acceptedNames, int range = 10)
+        public static Pickable GetNearbyPickable(BaseAI instance, IEnumerable<string> acceptedPickables, int range = 10, IEnumerable<string> acceptedItemNames = null)
         {
-            if (!acceptedNames.Any())
+            if (!acceptedPickables.Any())
             {
                 return null;
             }
-            //Debug.Log("GetNearbyPickable");
-            Vector3 position = instance.transform.position;
-            Pickable ClosestObject = null;
-            foreach (Collider collider in Physics.OverlapSphere(position, range, LayerMask.GetMask(new string[] { "Default_small", "piece", "item" })))
-            {
-                Pickable pickable = collider?.transform?.GetComponentInParent<Pickable>();
-                if (pickable == null || pickable?.GetComponent<ZNetView>()?.IsValid() != true)
-                {
-                    continue;
-                }
-                if (pickable?.transform?.position != null && CanSeeTarget(instance, pickable.gameObject) && acceptedNames.Contains(Common.GetPrefabName(pickable.gameObject.name)) && (ClosestObject == null || Vector3.Distance(position, pickable.transform.position) < Vector3.Distance(position, ClosestObject.transform.position))) //  
-                {
-                    ClosestObject = pickable;
-                }
-            }
-            //Debug.Log($"Pickable detekted: {ClosestObject?.gameObject.name} containing {ClosestObject?.m_itemPrefab.name} in {acceptedNames.Join()}.");
-            return ClosestObject;
+            return Physics.OverlapSphere(instance.transform.position, range, LayerMask.GetMask(new string[] { "Default_small", "piece", "item" }))
+                .Select(c => c.transform?.GetComponentInParent<Pickable>())
+                .Where(p => p != null)
+                .Where(p => p.GetComponent<ZNetView>()?.IsValid() ?? false)
+                .Where(p => acceptedPickables.Contains(GetPrefabName(p.gameObject.name)))
+                .Where(p => p.transform?.position != null)
+                .Where(p => CanSeeTarget(instance, p.gameObject))
+                .Where(p => acceptedItemNames?.Contains(p.m_itemPrefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_name) ?? true)
+                .OrderBy(p => Vector3.Distance(instance.transform.position, p.transform.position))
+                .FirstOrDefault();
         }
 
         public static ItemDrop GetClosestItem(BaseAI instance, int range = 10)
