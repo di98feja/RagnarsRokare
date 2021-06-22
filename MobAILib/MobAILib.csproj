@@ -77,6 +77,7 @@
     <Compile Include="Config\SorterAIConfig.cs" />
     <Compile Include="Config\MobAIBaseConfig.cs" />
     <Compile Include="Helpers\Assignment.cs" />
+    <Compile Include="Helpers\ContainerComparer.cs" />
     <Compile Include="Helpers\ItemDataComparer.cs" />
     <Compile Include="MobAILib.cs" />
     <Compile Include="Mobs\ExampleAI.cs" />

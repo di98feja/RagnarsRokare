@@ -1,4 +1,6 @@
-﻿namespace RagnarsRokare
+﻿using System.Collections.Generic;
+
+namespace RagnarsRokare
 {
     public static class Constants
     {
@@ -16,5 +18,6 @@
         public const string Z_SavedAssignmentList = "RR_SavedAssignmentList";
         public const string Z_SavedFoodPosition = "RR_SavedFoodPosition";
         public const string Z_SavedDumpChest = "RR_SavedDumpChest";
+        public const string Z_SorterItemDict = "RR_SorterItemDict ";
     }
 }

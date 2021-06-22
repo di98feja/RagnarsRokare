@@ -32,5 +32,16 @@ namespace RagnarsRokare.MobAI
         {
             return Common.GetNView(p)?.GetZDO().GetString(RagnarsRokare.Constants.Z_UniqueId);
         }
+
+        public static Container GetContainer(this Piece p)
+        {
+            var container = p.gameObject.GetComponent<Container>();
+            if ((bool)container)
+            {
+                return container;
+            }
+            return  p.gameObject.GetComponentInChildren<Container>();
+
+        }
     }
 }

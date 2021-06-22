@@ -111,8 +111,7 @@ namespace RagnarsRokare.MobAI
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject)); //&& CanSeeTarget(instance, p.gameObject)
-            var containers = allcontainerPieces?.Select(p => p.gameObject.GetComponentInChildren<Container>()).Where(c => !knownContainers.Contains(c)).ToList(); 
-            containers.AddRange(allcontainerPieces?.Select(p => p.gameObject.GetComponent<Container>()).Where(c => !knownContainers.Contains(c)));
+            var containers = allcontainerPieces?.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList(); 
             if (!containers.Any())
             {
                 //Common.Dbgl("No containers found, returning null");
@@ -126,8 +125,7 @@ namespace RagnarsRokare.MobAI
         {
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
-            var containers = pieceList.Select(p => p.gameObject.GetComponentInChildren<Container>()).Where(p => p is Container).ToList();
-            containers.AddRange(pieceList.Select(p => p.gameObject.GetComponent<Container>()).Where(p => p is Container));
+            var containers = pieceList.Select(p => p.GetContainer()).Where(p => p is Container).ToList();
             if (!containers.Any())
             {
                 return null;

@@ -1,6 +1,8 @@
 ﻿using Stateless;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEngine;
 
 namespace RagnarsRokare.MobAI
@@ -11,7 +13,7 @@ namespace RagnarsRokare.MobAI
         private class State
         {
             public const string Main = Prefix + "Main";
-            public const string FindRandomTask = Prefix + "SearchForRandomContainer";
+            public const string FindRandomTask = Prefix + "FindRandomTask";
             public const string OpenContainer = Prefix + "OpenContainer";
             public const string OpenStorageContainer = Prefix + "OpenStorageContainer";
             public const string AddContainerItemsToItemDictionary = Prefix + "AddContainerItemsToItemDictionary";
@@ -93,15 +95,41 @@ namespace RagnarsRokare.MobAI
         private float m_readNearbySignTimer;
         private float m_pickableTimer;
 
+        public void SaveItemDictionary()
+        {
+            string serializedDict = string.Join("#", m_itemsDictionary.Select(d => $"{d.Key}|{string.Join(",", d.Value.Select(c => $"{Common.GetOrCreateUniqueId(Common.GetNView(c.container))};{c.count}"))}"));
+            m_aiBase.NView.GetZDO().Set(Constants.Z_SorterItemDict, serializedDict);
+        }
+
+        public void LoadItemDictionary()
+        {
+            var serializedDict = m_aiBase.NView.GetZDO().GetString(Constants.Z_SorterItemDict);
+            if (string.IsNullOrEmpty(serializedDict)) return;
+
+            var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
+            var containers = allPieces
+                .Where(p => Common.GetNView(p)?.IsValid() ?? false)
+                .Select(p => p.GetContainer())
+                .Where(c => (bool)c)
+                .ToDictionary(p => Common.GetOrCreateUniqueId(Common.GetNView(p)));
+            m_itemsDictionary = serializedDict.Split('#').ToDictionary(d => d.Split('|').First(), d => d.Split('|').Last().Split(',').Select(c => (containers[c.Split(';').First()], Convert.ToInt32(c.Split(';').Last()))));
+            Common.Dbgl($"Loaded {m_itemsDictionary.Count} items","Sorter");
+        }
+
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
             m_searchRadius = aiBase.Awareness * 5;
             m_knownContainers = new MaxStack<Container>(aiBase.Intelligence);
             m_knownContainersTimer = new Dictionary<string, float>();
-            m_itemsDictionary = new Dictionary<string, IEnumerable<(Container container, int count)>>();
             m_putItemInContainerFailTimers = new Dictionary<string, float>();
 
+            LoadItemDictionary();
+            foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container)).Distinct(new Helpers.ContainerComparer()))
+            {
+                m_knownContainers.Push(container);
+                m_knownContainersTimer.Add(Common.GetOrCreateUniqueId(Common.GetNView(container)), Time.time + RememberChestTime);
+            }
 
             brain.Configure(State.Main)
                 .InitialTransition(State.FindRandomTask)
@@ -238,6 +266,7 @@ namespace RagnarsRokare.MobAI
                 .OnExit(t =>
                 {
                     m_container?.SetInUse(inUse: false);
+                    SaveItemDictionary();
                 });
 
             brain.Configure(State.UnloadIntoStorageContainer)
