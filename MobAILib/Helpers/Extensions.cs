@@ -41,7 +41,6 @@ namespace RagnarsRokare.MobAI
                 return container;
             }
             return  p.gameObject.GetComponentInChildren<Container>();
-
         }
     }
 }

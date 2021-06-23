@@ -253,5 +253,16 @@ namespace RagnarsRokare.MobAI
             Invoke<MonsterAI>(mob.Instance, "LookAt", position);
             return false;
         }
+
+        public static Container GetContainerById(string uniqueId)
+        {
+            var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
+            return allPieces
+                .Where(p => GetNView(p)?.IsValid() ?? false)
+                .Select(p => p.GetContainer())
+                .Where(c => (bool)c)
+                .Where(p => GetOrCreateUniqueId(GetNView(p)) == uniqueId)
+                .SingleOrDefault();
+        }
     }
 }

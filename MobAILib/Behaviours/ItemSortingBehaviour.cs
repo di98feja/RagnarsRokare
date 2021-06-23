@@ -134,11 +134,9 @@ namespace RagnarsRokare.MobAI
             m_putItemInContainerFailTimers = new Dictionary<string, float>();
 
             LoadItemDictionary();
-            Debug.Log("1");
 
             foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container))?.Distinct(new Helpers.ContainerComparer()))
             {
-                Debug.Log("2");
                 m_knownContainers.Push(container);
                 m_knownContainersTimer.Add(Common.GetOrCreateUniqueId(Common.GetNView(container)), Time.time + RememberChestTime);
             }
@@ -334,7 +332,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.name);
-                    m_pickableTimer = Time.time + 0.5f;
+                    m_pickableTimer = Time.time + 0.6f;
                 });
 
             brain.Configure(State.PickUpItemFromGround)
