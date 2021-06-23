@@ -13,7 +13,7 @@ namespace RagnarsRokare.MobAI
             {
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
-                    string interactName = __instance.GetHoverName();
+                    string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
                     string prefabName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
                     if (mob.m_trainedAssignments.Contains(prefabName))
                     {
