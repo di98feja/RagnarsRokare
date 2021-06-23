@@ -14,7 +14,8 @@ namespace RagnarsRokare.MobAI
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
-                    if (mob.m_trainedAssignments.Contains(interactName))
+                    string prefabName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
+                    if (mob.m_trainedAssignments.Contains(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");
                         return;
@@ -49,7 +50,7 @@ namespace RagnarsRokare.MobAI
                         }
                         if (mob.learningRate == 5)
                         {
-                            mob.m_trainedAssignments.Add(interactName);
+                            mob.m_trainedAssignments.Add(prefabName);
                             mob.NView.GetZDO().Set(Constants.Z_trainedAssignments, mob.m_trainedAssignments.Join());
                             mob.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
                             Debug.Log($"{interactName} learned.");
@@ -69,8 +70,9 @@ namespace RagnarsRokare.MobAI
             {
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
-                    string interactName = Common.GetPrefabName(__instance.gameObject.name);
-                    if (mob.m_trainedAssignments.Contains(interactName))
+                    string interactName = __instance.GetHoverName();
+                    string prefabName = Common.GetPrefabName(__instance.gameObject.name);
+                    if (mob.m_trainedAssignments.Contains(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");
                         return;
@@ -105,7 +107,7 @@ namespace RagnarsRokare.MobAI
                         }
                         if (mob.learningRate == 5)
                         {
-                            mob.m_trainedAssignments.Add(interactName);
+                            mob.m_trainedAssignments.Add(prefabName);
                             mob.NView.GetZDO().Set(Constants.Z_trainedAssignments, mob.m_trainedAssignments.Join());
                             mob.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_updateTrainedAssignments, mob.UniqueID, mob.m_trainedAssignments.Join());
                             Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Have now learned how to operate {interactName}.");
