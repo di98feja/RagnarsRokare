@@ -71,33 +71,33 @@ namespace RagnarsRokare.MobAI
         public float OpenChestDelay { get; private set; } = 1;
         public float PutItemInChestFailedRetryTimeout { get; set; } = 120f;
         public float SearchDumpContainerRetryTimeout { get; set; } = 60f;
-        public Container DumpContainer { get; set; }
+        public StorageContainer DumpContainer { get; set; }
         public float ReadSignDelay { get; private set; } = 1;
 
-        private Dictionary<string, IEnumerable<(Container container, int count)>> m_itemsDictionary;
+        private Dictionary<string, IEnumerable<(StorageContainer container, int count)>> m_itemsDictionary;
         private Dictionary<string, float> m_putItemInContainerFailTimers;
 
         private ItemDrop m_item;
         private Pickable m_pickable;
-        private Container m_container;
+        private StorageContainer m_container;
         private Sign m_nearbySign;
         private ItemDrop.ItemData m_carriedItem;
         private MobAIBase m_aiBase;
         private float m_openChestTimer;
         private float m_currentSearchTimeout;
         private int m_searchRadius;
-        private MaxStack<Container> m_knownContainers;
+        private MaxStack<StorageContainer> m_knownContainers;
         private Dictionary<string, float> m_knownContainersTimer;
         private Vector3 m_startPosition;
         private Vector3 m_lastPickupPosition;
         private float m_dumpContainerTimer;
-        private MaxStack<(Container container, int count)> m_itemStorageStack;
+        private MaxStack<(StorageContainer container, int count)> m_itemStorageStack;
         private float m_readNearbySignTimer;
         private float m_pickableTimer;
 
         public void SaveItemDictionary()
         {
-            string serializedDict = string.Join("#", m_itemsDictionary.Select(d => $"{d.Key}|{string.Join(",", d.Value.Select(c => $"{Common.GetOrCreateUniqueId(Common.GetNView(c.container))};{c.count}"))}"));
+            string serializedDict = string.Join("#", m_itemsDictionary.Select(d => $"{d.Key}|{string.Join(",", d.Value.Select(c => $"{c.container.UniqueId};{c.count}"))}"));
             m_aiBase.NView.GetZDO().Set(Constants.Z_SorterItemDict, serializedDict);
         }
 
@@ -105,13 +105,13 @@ namespace RagnarsRokare.MobAI
         {
             if (!m_aiBase.NView.IsValid())
             {
-                m_itemsDictionary = new Dictionary<string, IEnumerable<(Container container, int count)>>();
+                m_itemsDictionary = new Dictionary<string, IEnumerable<(StorageContainer container, int count)>>();
                 return;
             }
             var serializedDict = m_aiBase.NView.GetZDO().GetString(Constants.Z_SorterItemDict);
             if (string.IsNullOrEmpty(serializedDict))
             {
-                m_itemsDictionary = new Dictionary<string, IEnumerable<(Container container, int count)>>();
+                m_itemsDictionary = new Dictionary<string, IEnumerable<(StorageContainer container, int count)>>();
                 return;
             }
 
@@ -120,7 +120,8 @@ namespace RagnarsRokare.MobAI
                 .Where(p => Common.GetNView(p)?.IsValid() ?? false)
                 .Select(p => p.GetContainer())
                 .Where(c => (bool)c)
-                .ToDictionary(p => Common.GetOrCreateUniqueId(Common.GetNView(p)));
+                .Select(c => new StorageContainer(c))
+                .ToDictionary(p => p.UniqueId);
             m_itemsDictionary = serializedDict.Split('#').ToDictionary(d => d.Split('|').First(), d => d.Split('|').Last().Split(',').Select(c => (containers[c.Split(';').First()], Convert.ToInt32(c.Split(';').Last()))));
             Common.Dbgl($"Loaded {m_itemsDictionary.Count} items","Sorter");
         }
@@ -129,17 +130,18 @@ namespace RagnarsRokare.MobAI
         {
             m_aiBase = aiBase;
             m_searchRadius = aiBase.Awareness * 5;
-            m_knownContainers = new MaxStack<Container>(aiBase.Intelligence);
+            m_knownContainers = new MaxStack<StorageContainer>(aiBase.Intelligence);
             m_knownContainersTimer = new Dictionary<string, float>();
             m_putItemInContainerFailTimers = new Dictionary<string, float>();
 
-            LoadItemDictionary();
+            //LoadItemDictionary();
+            m_itemsDictionary = new Dictionary<string, IEnumerable<(StorageContainer container, int count)>>();
 
-            foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container))?.Distinct(new Helpers.ContainerComparer()))
-            {
-                m_knownContainers.Push(container);
-                m_knownContainersTimer.Add(Common.GetOrCreateUniqueId(Common.GetNView(container)), Time.time + RememberChestTime);
-            }
+            //foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container))?.Distinct(new Helpers.StorageContainerComparer()))
+            //{
+            //    m_knownContainers.Push(container);
+            //    m_knownContainersTimer.Add(container.UniqueId, Time.time + RememberChestTime);
+            //}
 
             brain.Configure(State.Main)
                 .InitialTransition(State.FindRandomTask)
@@ -220,7 +222,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
-                    m_knownContainers.Peek().SetInUse(inUse: true);
+                    m_knownContainers.Peek().Container.SetInUse(inUse: true);
                     m_openChestTimer = 0f;
                 });
 
@@ -229,7 +231,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerOpened, State.UnloadIntoStorageContainer)
                 .OnEntry(t =>
                 {
-                    m_itemStorageStack.Peek().container.SetInUse(inUse: true);
+                    m_itemStorageStack.Peek().container.Container.SetInUse(inUse: true);
                     m_openChestTimer = 0f;
                 });
 
@@ -240,7 +242,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ContainerNotFound, State.FindRandomTask)
                 .OnEntry(t =>
                 {
-                    DumpContainer.SetInUse(inUse: true);
+                    DumpContainer.Container.SetInUse(inUse: true);
                     m_openChestTimer = 0f;
                 });
 
@@ -276,7 +278,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    m_container?.SetInUse(inUse: false);
+                    m_container?.Container.SetInUse(inUse: false);
                     SaveItemDictionary();
                 });
 
@@ -290,7 +292,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    m_container?.SetInUse(inUse: false);
+                    m_container?.Container.SetInUse(inUse: false);
                 });
 
             brain.Configure(State.GetItemFromDumpContainer)
@@ -302,7 +304,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                {
-                   DumpContainer?.SetInUse(inUse: false);
+                   DumpContainer?.Container.SetInUse(inUse: false);
                });
 
             brain.Configure(State.MoveToGroundItem)
@@ -360,7 +362,7 @@ namespace RagnarsRokare.MobAI
                     Debug.LogWarning("resume store item task!");
                     m_carriedItem = m_item.m_itemData;
                     (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
-                    m_itemStorageStack = new MaxStack<(Container container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]); 
+                    m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]); 
                     aiBase.Brain.Fire(Trigger.ItemFound);
                     return;
                 }
@@ -369,12 +371,13 @@ namespace RagnarsRokare.MobAI
                 {
                     knownContainers.Add(DumpContainer);
                 }
-                Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers, AcceptedContainerNames, m_searchRadius);
+                Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers.Select(kc => kc.Container), AcceptedContainerNames, m_searchRadius);
                 if (newContainer != null)
                 {
-                    m_knownContainers.Push(newContainer);
-                    m_knownContainersTimer.Add(Common.GetOrCreateUniqueId(Common.GetNView(newContainer)), Time.time + RememberChestTime);
-                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(newContainer))]}", "Sorter");
+                    var storageContainer = new StorageContainer(newContainer);
+                    m_knownContainers.Push(storageContainer);
+                    m_knownContainersTimer.Add(storageContainer.UniqueId, Time.time + RememberChestTime);
+                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{m_knownContainersTimer[storageContainer.UniqueId]}", "Sorter");
                     m_startPosition = newContainer.transform.position;
                     aiBase.Brain.Fire(Trigger.ContainerFound);
                     aiBase.StopMoving();
@@ -402,7 +405,7 @@ namespace RagnarsRokare.MobAI
 
                 if (Time.time > m_dumpContainerTimer && DumpContainer != null)
                 {
-                    m_startPosition = DumpContainer.transform.position;
+                    m_startPosition = DumpContainer.Container.transform.position;
                     aiBase.Brain.Fire(Trigger.SearchDumpContainer);
                     return;
                 }
@@ -426,10 +429,10 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
                 }
-                if (aiBase.MoveAndAvoidFire(m_container.transform.position, dt, 2f))
+                if (aiBase.MoveAndAvoidFire(m_container.Container.transform.position, dt, 2f))
                 {
                     aiBase.StopMoving();
-                    if (!m_container.IsInUse())
+                    if (!m_container.Container.IsInUse())
                     {
                         aiBase.Brain.Fire(Trigger.ContainerIsClose);
                         return;
@@ -520,12 +523,12 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.LookForNearbySign) || aiBase.Brain.IsInState(State.LookForNearbyStorageSign))
             {
-                if (m_container == null)
+                if (m_container?.Container == null)
                 {
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
                 }
-                m_nearbySign = Common.FindClosestSign(m_container.transform.position, 1.5f);
+                m_nearbySign = Common.FindClosestSign(m_container.Container.transform.position, 1.5f);
                 if ((bool)m_nearbySign)
                 {
                     aiBase.Brain.Fire(Trigger.NearbySignFound);
@@ -540,7 +543,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.OpenContainer) || aiBase.Brain.IsInState(State.OpenStorageContainer) || aiBase.Brain.IsInState(State.OpenDumpContainer))
             {
-                if (m_container == null)
+                if (m_container?.Container == null)
                 {
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
@@ -549,10 +552,10 @@ namespace RagnarsRokare.MobAI
                 {
                     Common.Dbgl("Open Container", "Sorter");
                     aiBase.Brain.Fire(Trigger.ContainerOpened);
-                    if (m_knownContainersTimer.ContainsKey(Common.GetOrCreateUniqueId(Common.GetNView(m_container))))
+                    if (m_knownContainersTimer.ContainsKey(m_container.UniqueId))
                     {
-                        m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(m_container))] = Time.time + RememberChestTime;
-                        Common.Dbgl($"Updated timeout for {m_container.name}", "Sorter");
+                        m_knownContainersTimer[m_container.UniqueId] = Time.time + RememberChestTime;
+                        Common.Dbgl($"Updated timeout for {m_container.Container.name}", "Sorter");
                     }
                     return;
                 }
@@ -560,7 +563,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.ReadNearbySign) || aiBase.Brain.IsInState(State.ReadNearbyStorageSign))
             {
-                if (m_container == null)
+                if (m_container?.Container == null)
                 {
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
@@ -591,12 +594,12 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.AddContainerItemsToItemDictionary))
             {
-                if (m_container == null)
+                if (m_container?.Container == null)
                 {
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
                 }
-                List<ItemDrop.ItemData> foundItems = m_container.GetInventory().GetAllItems();
+                List<ItemDrop.ItemData> foundItems = m_container.Container.GetInventory().GetAllItems();
                 if (foundItems.Any())
                 {
                     Dictionary<string, int> chestInventory = new Dictionary<string, int>();
@@ -621,14 +624,14 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.UnloadIntoStorageContainer))
             {
                 var mob = (aiBase.Character as Humanoid);
-                m_container.SetInUse(inUse: false);
+                m_container.Container.SetInUse(inUse: false);
                 Common.Dbgl($"Unload {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", "Sorter");
 
-                if (m_container.GetInventory().CanAddItem(m_carriedItem))
+                if (m_container.Container.GetInventory().CanAddItem(m_carriedItem))
                 {
                     Common.Dbgl($"Putting {m_carriedItem.m_shared.m_name} in container", "Sorter");
                     mob.UnequipItem(m_carriedItem);
-                    m_container.GetInventory().MoveItemToThis(mob.GetInventory(), m_carriedItem);
+                    m_container.Container.GetInventory().MoveItemToThis(mob.GetInventory(), m_carriedItem);
                 }
                 else if (m_itemStorageStack.Count() > 1)
                 {
@@ -653,27 +656,27 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.GetItemFromDumpContainer))
             {
-                if (DumpContainer == null)
+                if (DumpContainer?.Container == null)
                 {
                     aiBase.Brain.Fire(Trigger.ItemNotFound);
                     return;
                 }
                 m_carriedItem = null;
-                foreach (var item in DumpContainer.GetInventory().GetAllItems())
+                foreach (var item in DumpContainer.Container.GetInventory().GetAllItems())
                 {
                     if (m_putItemInContainerFailTimers.ContainsKey(item.m_shared.m_name)) continue;
                     if (m_itemsDictionary.ContainsKey(item.m_shared.m_name))
                     {
                         m_carriedItem = item;
-                        (aiBase.Character as Humanoid).GetInventory().MoveItemToThis(DumpContainer.GetInventory(), item);
+                        (aiBase.Character as Humanoid).GetInventory().MoveItemToThis(DumpContainer.Container.GetInventory(), item);
                         (aiBase.Character as Humanoid).EquipItem(item);
                         Common.Invoke<Container>(DumpContainer, "Save");
-                        Common.Invoke<Inventory>(DumpContainer.GetInventory(), "Changed");
+                        Common.Invoke<Inventory>(DumpContainer.Container.GetInventory(), "Changed");
 
                         m_aiBase.UpdateAiStatus(State.GetItemFromDumpContainer, m_carriedItem.m_shared.m_name);
 
                         var itemContainers = m_itemsDictionary[item.m_shared.m_name];
-                        m_itemStorageStack = new MaxStack<(Container container, int count)>(itemContainers);
+                        m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(itemContainers);
                         aiBase.Brain.Fire(Trigger.ItemFound);
                         return;
                     }
@@ -695,7 +698,7 @@ namespace RagnarsRokare.MobAI
                 }
                 m_carriedItem = m_item.m_itemData;
                 m_aiBase.UpdateAiStatus(State.PickUpItemFromGround, m_carriedItem.m_shared.m_name);
-                m_itemStorageStack = new MaxStack<(Container container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
+                m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
                 Common.Dbgl($"Pickup {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", "Sorter");
                 m_item.Pickup(aiBase.Character as Humanoid);
                 (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
@@ -712,25 +715,25 @@ namespace RagnarsRokare.MobAI
 
         private void RemoveTimeoutedContainers()
         {
-            var activeContainers = new MaxStack<Container>(m_knownContainers);
-            foreach (Container container in m_knownContainers)
+            var activeContainers = new MaxStack<StorageContainer>(m_knownContainers);
+            foreach (StorageContainer container in m_knownContainers)
             {
-                if (m_knownContainersTimer.ContainsKey(Common.GetOrCreateUniqueId(Common.GetNView(container))) && m_knownContainersTimer[Common.GetOrCreateUniqueId(Common.GetNView(container))] < Time.time)
+                if (m_knownContainersTimer.ContainsKey(container.UniqueId) && m_knownContainersTimer[container.UniqueId] < Time.time)
                 {
                     activeContainers.Remove(container);
-                    m_knownContainersTimer.Remove(Common.GetOrCreateUniqueId(Common.GetNView(container)));
+                    m_knownContainersTimer.Remove(m_container.UniqueId);
                     Common.Dbgl("Remove timeout containers from known containers.", "Sorter");
                 }
             }
         }
 
-        private void RemoveContainerFromItemsDict(Container container)
+        private void RemoveContainerFromItemsDict(StorageContainer container)
         {
-            var newItemsDict = new Dictionary<string, IEnumerable<(Container, int)>>();
+            var newItemsDict = new Dictionary<string, IEnumerable<(StorageContainer, int)>>();
             foreach (string key in m_itemsDictionary.Keys)
             {
-                var containersForItem = m_itemsDictionary[key].Where(c => c.container != null);
-                containersForItem = containersForItem.Where(c => c.container != container);
+                var containersForItem = m_itemsDictionary[key].Where(c => c.container.Container != null);
+                containersForItem = containersForItem.Where(c => c.container.UniqueId != container.UniqueId);
                 if (containersForItem.Count() > 0)
                 {
                     newItemsDict.Add(key, containersForItem);
@@ -741,10 +744,10 @@ namespace RagnarsRokare.MobAI
 
         private void RemoveNullContainers()
         {
-            var newItemsDict = new Dictionary<string, IEnumerable<(Container, int)>>();
+            var newItemsDict = new Dictionary<string, IEnumerable<(StorageContainer, int)>>();
             foreach (string key in m_itemsDictionary.Keys)
             {
-                var containersForItem = m_itemsDictionary[key].Where(c => c.container != null);
+                var containersForItem = m_itemsDictionary[key].Where(c => c.container.Container != null);
                 if (m_itemsDictionary[key].Count() > 0)
                 {
                     newItemsDict.Add(key, containersForItem);
@@ -759,11 +762,10 @@ namespace RagnarsRokare.MobAI
             {
                 if (m_itemsDictionary.ContainsKey(item.Key))
                 {
-                    string currentContainerId = Common.GetOrCreateUniqueId(Common.GetNView(m_container));
-                    var containerExists = m_itemsDictionary[item.Key].Any(s => Common.GetOrCreateUniqueId(Common.GetNView(s.container)) == currentContainerId);
+                    var containerExists = m_itemsDictionary[item.Key].Any(s => s.container.UniqueId == m_container.UniqueId);
                     if (containerExists)
                     {
-                        var container = m_itemsDictionary[item.Key].First(s => Common.GetOrCreateUniqueId(Common.GetNView(s.container)) == currentContainerId);
+                        var container = m_itemsDictionary[item.Key].First(s => s.container.UniqueId == m_container.UniqueId);
                         container.count = item.Value;
                     }
                     else
@@ -775,7 +777,7 @@ namespace RagnarsRokare.MobAI
                 }
                 else if (!m_itemsDictionary.ContainsKey(item.Key))
                 {
-                    m_itemsDictionary.Add(item.Key, new List<(Container, int)> { (m_container, item.Value) });
+                    m_itemsDictionary.Add(item.Key, new List<(StorageContainer, int)> { (m_container, item.Value) });
                     Common.Dbgl($"Added {item.Key} to dict", "Sorter");
                 }
             }

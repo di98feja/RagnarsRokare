@@ -77,8 +77,9 @@
     <Compile Include="Config\SorterAIConfig.cs" />
     <Compile Include="Config\MobAIBaseConfig.cs" />
     <Compile Include="Helpers\Assignment.cs" />
-    <Compile Include="Helpers\ContainerComparer.cs" />
+    <Compile Include="Helpers\StorageContainerComparer.cs" />
     <Compile Include="Helpers\ItemDataComparer.cs" />
+    <Compile Include="Helpers\StorageContainer.cs" />
     <Compile Include="MobAILib.cs" />
     <Compile Include="Mobs\ExampleAI.cs" />
     <Compile Include="Mobs\SorterAI.cs" />
@@ -98,6 +99,7 @@
     <Compile Include="MobManager.cs" />
     <Compile Include="Patches\Assignments_Patch.cs" />
     <Compile Include="Patches\Character_patch.cs" />
+    <Compile Include="Patches\ZoneSystem_patch.cs" />
     <Compile Include="Patches\Humanoid_patch.cs" />
     <Compile Include="Patches\MonsterAI_patch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

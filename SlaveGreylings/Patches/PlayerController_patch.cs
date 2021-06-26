@@ -2,6 +2,7 @@
 using RagnarsRokare.MobAI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -21,6 +22,7 @@ namespace RagnarsRokare.SlaveGreylings
 
         public static void RPC_CallHome(long sender, Vector3 position)
         {
+            Debug.LogWarning($"AliveMobs:{MobManager.AliveMobs.Count}:{string.Join(",",MobManager.AliveMobs.Values.Select(m => m.HasInstance() ? m.NView?.GetZDO()?.GetString(Constants.Z_GivenName) : "no instance")) ?? "unknown"}");
             PlayClipAt(SlaveGreylings.CallHomeSfx, position);
         }
 
