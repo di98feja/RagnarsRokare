@@ -18,6 +18,8 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public ZDOID ZDOId { get; set; }
+
         public bool HasInstance()
         {
             return m_instance != null;
@@ -37,6 +39,7 @@ namespace RagnarsRokare.MobAI
         public MobAIBase(BaseAI instance, string initState, MobAIBaseConfig config)
         {
             m_instance = instance;
+            ZDOId = NView.GetZDO().m_uid;
             Config = config;
             Brain = new StateMachine<string, string>(() => CurrentAIState, s => CurrentAIState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
