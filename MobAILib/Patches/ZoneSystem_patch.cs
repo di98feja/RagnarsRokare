@@ -92,9 +92,6 @@ namespace RagnarsRokare.MobAI
                     }
                     objs.Clear();
                 }
-
-                //var availablePeers = typeof(ZNet).GetField("m_peers", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(ZNet.instance) as IEnumerable<ZNetPeer>;
-
             }
 
             public static IEnumerable<Vector2i> OrphanedZonesWithAIMobs()
@@ -125,17 +122,19 @@ namespace RagnarsRokare.MobAI
 
             public static IEnumerable<Vector2i> GetActiveZonesAroundPosition(Vector3 position)
             {
-                int areaSize = ZoneSystem.instance.m_activeArea;
-                var zone = ZoneSystem.instance.GetZone(position);
-                for (int i = zone.y - areaSize; i <= zone.y + areaSize; i++)
+                if (position != Vector3.zero)
                 {
-                    for (int j = zone.x - areaSize; j <= zone.x + areaSize; j++)
+                    int areaSize = ZoneSystem.instance.m_activeArea;
+                    var zone = ZoneSystem.instance.GetZone(position);
+                    for (int i = zone.y - areaSize; i <= zone.y + areaSize; i++)
                     {
-                        yield return new Vector2i(j, i);
+                        for (int j = zone.x - areaSize; j <= zone.x + areaSize; j++)
+                        {
+                            yield return new Vector2i(j, i);
+                        }
                     }
                 }
             }
         }
-
     }
 }

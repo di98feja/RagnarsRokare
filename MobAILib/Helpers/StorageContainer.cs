@@ -1,16 +1,21 @@
-﻿namespace RagnarsRokare.MobAI
+﻿using UnityEngine;
+
+namespace RagnarsRokare.MobAI
 {
     public class StorageContainer
     {
-        public StorageContainer(Container container)
+        public StorageContainer(Container container, float timeStamp)
         {
             m_container = container;
-            UniqueId = Common.GetOrCreateUniqueId(Common.GetNView(container));
+            Timestamp = timeStamp;
+            UniqueId = Common.GetOrCreateUniqueId(Common.GetNView(m_container));
+            Position = container.transform.position;
         }
 
-        public StorageContainer(string containerUniqueId)
+        public StorageContainer(string uniqueId, float timeStamp)
         {
-            UniqueId = containerUniqueId;
+            Timestamp = timeStamp;
+            UniqueId = uniqueId;
         }
 
         private Container m_container = null;
@@ -21,13 +26,15 @@
             {
                 if (m_container == null)
                 {
-                    Common.GetContainerById(UniqueId);
+                    m_container = Common.GetContainerById(UniqueId);
+                    Position = m_container?.transform.position ?? Vector3.zero;
                 }
                 return m_container;
             } 
         }
 
-        public string UniqueId { get; }
-        public ZNetView NView { get { return Common.GetNView(Container); } }
+        public Vector3 Position { get; set; }
+        public string UniqueId { get; set; }
+        public float Timestamp { get; set; }
     }
 }

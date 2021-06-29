@@ -87,8 +87,7 @@ namespace RagnarsRokare.MobAI
         private float m_currentSearchTimeout;
         private int m_searchRadius;
         private MaxStack<StorageContainer> m_knownContainers;
-        private Dictionary<string, float> m_knownContainersTimer;
-        private Vector3 m_startPosition;
+       private Vector3 m_startPosition;
         private Vector3 m_lastPickupPosition;
         private float m_dumpContainerTimer;
         private MaxStack<(StorageContainer container, int count)> m_itemStorageStack;
@@ -120,9 +119,9 @@ namespace RagnarsRokare.MobAI
                 .Where(p => Common.GetNView(p)?.IsValid() ?? false)
                 .Select(p => p.GetContainer())
                 .Where(c => (bool)c)
-                .Select(c => new StorageContainer(c))
+                .Select(c => new StorageContainer(c, Time.time + RememberChestTime))
                 .ToDictionary(p => p.UniqueId);
-            m_itemsDictionary = serializedDict.Split('#').ToDictionary(d => d.Split('|').First(), d => d.Split('|').Last().Split(',').Select(c => (containers[c.Split(';').First()], Convert.ToInt32(c.Split(';').Last()))));
+            m_itemsDictionary = serializedDict.Split('#').ToDictionary(d => d.Split('|').First(), d => d.Split('|').Last().Split(',').Where(c => (containers.ContainsKey(c.Split(';').First()))).Select(c => (containers[c.Split(';').First()], Convert.ToInt32(c.Split(';').Last()))));
             Common.Dbgl($"Loaded {m_itemsDictionary.Count} items","Sorter");
         }
 
@@ -131,17 +130,13 @@ namespace RagnarsRokare.MobAI
             m_aiBase = aiBase;
             m_searchRadius = aiBase.Awareness * 5;
             m_knownContainers = new MaxStack<StorageContainer>(aiBase.Intelligence);
-            m_knownContainersTimer = new Dictionary<string, float>();
             m_putItemInContainerFailTimers = new Dictionary<string, float>();
 
-            //LoadItemDictionary();
-            m_itemsDictionary = new Dictionary<string, IEnumerable<(StorageContainer container, int count)>>();
-
-            //foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container))?.Distinct(new Helpers.StorageContainerComparer()))
-            //{
-            //    m_knownContainers.Push(container);
-            //    m_knownContainersTimer.Add(container.UniqueId, Time.time + RememberChestTime);
-            //}
+            LoadItemDictionary();
+            foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container))?.Distinct(new Helpers.StorageContainerComparer()))
+            {
+                m_knownContainers.Push(container);
+            }
 
             brain.Configure(State.Main)
                 .InitialTransition(State.FindRandomTask)
@@ -354,7 +349,6 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.FindRandomTask))
             {
                 if (m_currentSearchTimeout > Time.time) return;
-                m_knownContainers.Remove(null);
                 RemoveNullContainers();
                 RemoveTimeoutedContainers();
                 if (HaveItemInInventory(m_item?.m_itemData))
@@ -367,18 +361,18 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
                 var knownContainers = m_knownContainers.ToList();
-                if (DumpContainer != null)
+                if (DumpContainer != null && !knownContainers.Contains(DumpContainer))
                 {
                     knownContainers.Add(DumpContainer);
                 }
                 Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers.Select(kc => kc.Container), AcceptedContainerNames, m_searchRadius);
                 if (newContainer != null)
                 {
-                    var storageContainer = new StorageContainer(newContainer);
+                    var storageContainer = new StorageContainer(newContainer, Time.time + RememberChestTime);
                     m_knownContainers.Push(storageContainer);
-                    m_knownContainersTimer.Add(storageContainer.UniqueId, Time.time + RememberChestTime);
-                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{m_knownContainersTimer[storageContainer.UniqueId]}", "Sorter");
-                    m_startPosition = newContainer.transform.position;
+                    Debug.Log($"Found container {storageContainer.UniqueId}");
+                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{storageContainer.Timestamp}", "Sorter");
+                    m_startPosition = storageContainer.Position;
                     aiBase.Brain.Fire(Trigger.ContainerFound);
                     aiBase.StopMoving();
                     //Common.Dbgl("Update SearchForContainer new container not null", "Sorter");
@@ -405,7 +399,7 @@ namespace RagnarsRokare.MobAI
 
                 if (Time.time > m_dumpContainerTimer && DumpContainer != null)
                 {
-                    m_startPosition = DumpContainer.Container.transform.position;
+                    m_startPosition = DumpContainer.Position;
                     aiBase.Brain.Fire(Trigger.SearchDumpContainer);
                     return;
                 }
@@ -429,7 +423,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
                 }
-                if (aiBase.MoveAndAvoidFire(m_container.Container.transform.position, dt, 2f))
+                if (aiBase.MoveAndAvoidFire(m_container.Position, dt, 2f))
                 {
                     aiBase.StopMoving();
                     if (!m_container.Container.IsInUse())
@@ -528,7 +522,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
                 }
-                m_nearbySign = Common.FindClosestSign(m_container.Container.transform.position, 1.5f);
+                m_nearbySign = Common.FindClosestSign(m_container.Position, 1.5f);
                 if ((bool)m_nearbySign)
                 {
                     aiBase.Brain.Fire(Trigger.NearbySignFound);
@@ -545,18 +539,17 @@ namespace RagnarsRokare.MobAI
             {
                 if (m_container?.Container == null)
                 {
+                    m_knownContainers.Remove(m_container);
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     return;
                 }
                 if ((m_openChestTimer += dt) > OpenChestDelay)
                 {
                     Common.Dbgl("Open Container", "Sorter");
+                    m_container.Timestamp = Time.time + RememberChestTime;
+                    Debug.Log($"m_container.Timestamp = {m_container.Timestamp}, m_knownContainers.Timestamp:{m_knownContainers.Where(c => c.UniqueId == m_container.UniqueId).SingleOrDefault()?.Timestamp}");
+                    Common.Dbgl($"Updated timeout for {m_container.Container.name}", "Sorter");
                     aiBase.Brain.Fire(Trigger.ContainerOpened);
-                    if (m_knownContainersTimer.ContainsKey(m_container.UniqueId))
-                    {
-                        m_knownContainersTimer[m_container.UniqueId] = Time.time + RememberChestTime;
-                        Common.Dbgl($"Updated timeout for {m_container.Container.name}", "Sorter");
-                    }
                     return;
                 }
             }
@@ -716,13 +709,12 @@ namespace RagnarsRokare.MobAI
         private void RemoveTimeoutedContainers()
         {
             var activeContainers = new MaxStack<StorageContainer>(m_knownContainers);
-            foreach (StorageContainer container in m_knownContainers)
+            foreach (StorageContainer container in activeContainers)
             {
-                if (m_knownContainersTimer.ContainsKey(container.UniqueId) && m_knownContainersTimer[container.UniqueId] < Time.time)
+                if (container.Timestamp < Time.time)
                 {
-                    activeContainers.Remove(container);
-                    m_knownContainersTimer.Remove(m_container.UniqueId);
-                    Common.Dbgl("Remove timeout containers from known containers.", "Sorter");
+                    m_knownContainers.Remove(container);
+                    Common.Dbgl($"Container {container.UniqueId} timeouted", "Sorter");
                 }
             }
         }
@@ -748,9 +740,16 @@ namespace RagnarsRokare.MobAI
             foreach (string key in m_itemsDictionary.Keys)
             {
                 var containersForItem = m_itemsDictionary[key].Where(c => c.container.Container != null);
-                if (m_itemsDictionary[key].Count() > 0)
+                if (containersForItem.Count() > 0)
                 {
                     newItemsDict.Add(key, containersForItem);
+                }
+                foreach (var nullContainer in m_itemsDictionary[key].Where(c => c.container.Container == null))
+                {
+                    if (m_knownContainers.Contains(nullContainer.container))
+                    {
+                        m_knownContainers.Remove(nullContainer.container);
+                    }
                 }
             }
             m_itemsDictionary = newItemsDict;
