@@ -26,7 +26,9 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
                 m_AIupdateTimer = 0f;
-                var mobZDOs = MobManager.AliveMobs.Values.Select(m => ZDOMan.instance.GetZDO(m.ZDOId));
+                var mobZDOs = MobManager.AliveMobs.Values
+                    .Where(m => ZDOMan.instance.GetZDO(m.ZDOId) != null)
+                    .Select(m => ZDOMan.instance.GetZDO(m.ZDOId));
                 if (!mobZDOs.Any()) return;
 
                 foreach (var mob in mobZDOs)
@@ -99,16 +101,22 @@ namespace RagnarsRokare.MobAI
 
             public static IEnumerable<Vector2i> OrphanedZonesWithAIMobs()
             {
-                var mobZDOs = MobManager.AliveMobs.Values.Select(m => ZDOMan.instance.GetZDO(m.ZDOId));
-                //Debug.Log($"Num mobs:{mobZDOs.Count()}");
-                var allActiveZones = AllActiveZones();
-                //Debug.Log($"Num active zones:{allActiveZones.Count()}");
-                var orphanedMobs = mobZDOs.Where(m => !allActiveZones.Contains(ZoneSystem.instance.GetZone(m.GetPosition())));
-                //Debug.Log($"orphanedMobs:{string.Join(",", orphanedMobs.Select(z => z.GetString(Constants.Z_GivenName)))}");
-
-                foreach (var orphan in orphanedMobs)
+                if (MobManager.AliveMobs.Any())
                 {
-                    yield return ZoneSystem.instance.GetZone(orphan.GetPosition());
+                    var mobZDOs = MobManager.AliveMobs.Values
+                        .Where(m => ZDOMan.instance.GetZDO(m.ZDOId) != null)
+                        .Select(m => ZDOMan.instance.GetZDO(m.ZDOId))
+                        .Where(m => m.IsValid());
+                    //Debug.Log($"Num mobs:{mobZDOs.Count()}");
+                    var allActiveZones = AllActiveZones();
+                    //Debug.Log($"Num active zones:{allActiveZones.Count()}");
+                    var orphanedMobs = mobZDOs.Where(m => !allActiveZones.Contains(ZoneSystem.instance.GetZone(m.GetPosition())));
+                    //Debug.Log($"orphanedMobs:{string.Join(",", orphanedMobs.Select(z => z.GetString(Constants.Z_GivenName)))}");
+
+                    foreach (var orphan in orphanedMobs)
+                    {
+                        yield return ZoneSystem.instance.GetZone(orphan.GetPosition());
+                    }
                 }
             }
 
