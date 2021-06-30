@@ -15,6 +15,7 @@ namespace RagnarsRokare.MobAI
 
             static void Postfix(ref ZoneSystem __instance)
             {
+                if (!CommonConfig.RoamingAI.Value) return;
                 if (ZNet.GetConnectionStatus() != ZNet.ConnectionStatus.Connected)
                 {
                     return;
@@ -49,6 +50,7 @@ namespace RagnarsRokare.MobAI
         {
             static void Prefix(float ___m_sendTimer, float dt)
             {
+                if (!CommonConfig.RoamingAI.Value) return;
                 if (___m_sendTimer + dt > 0.05f)
                 {
                     ZoneWorkloadManager.DistributeOrphanedZones();
@@ -61,6 +63,7 @@ namespace RagnarsRokare.MobAI
         {
             static void Postfix(ZDOMan __instance, ref List<ZDO> distantSectorObjects)
             {
+                if (!CommonConfig.RoamingAI.Value) return;
                 if (distantSectorObjects == null) return;
                 //Debug.Log($"Filling sectorObjects with orphanedZones");
                 foreach (var zone in ZoneWorkloadManager.OrphanedZonesWithAIMobs())
