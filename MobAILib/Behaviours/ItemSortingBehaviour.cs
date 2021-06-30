@@ -684,7 +684,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.PickUpItemFromGround))
             {
-                if (m_item == null || Common.GetNView(m_item)?.IsValid() != true)
+                if (m_item == null || Common.GetNView(m_item)?.IsValid() != true || Common.GetNView(m_item)?.HasOwner() != true)
                 {
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
