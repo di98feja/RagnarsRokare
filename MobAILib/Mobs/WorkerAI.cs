@@ -91,6 +91,10 @@ namespace RagnarsRokare.MobAI
             m_containers = new MaxStack<Container>(Intelligence);
             m_carrying = null;
             m_assignedTimer = 0f;
+            if (m_startPosition == Vector3.zero)
+            {
+                m_startPosition = instance.transform.position;
+            }
 
             RegisterRPCMethods();
 
