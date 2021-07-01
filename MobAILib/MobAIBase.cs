@@ -178,6 +178,7 @@ namespace RagnarsRokare.MobAI
         {
             if (AvoidFire(dt)) return false;
 
+            running = Vector3.Distance(Character.transform.position, destination) > 10;
             return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
         }
 

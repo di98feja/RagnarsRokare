@@ -73,8 +73,8 @@ namespace RagnarsRokare.SlaveGreylings
                     {
                         tameable.m_fedDuration = mobInfo.PreTameFeedDuration;
                         ai.m_consumeItems.Clear();
-                        Debug.Log($"Mob:{__instance.name}");
-                        Debug.Log($"consumeItem = {string.Join(",",mobInfo.PreTameConsumables?.Select(i => i.m_itemData.m_dropPrefab))?? string.Empty}");
+                        //Debug.Log($"Mob:{__instance.name}");
+                        //Debug.Log($"consumeItem = {string.Join(",",mobInfo.PreTameConsumables?.Select(i => i.m_itemData.m_dropPrefab))?? string.Empty}");
                         ai.m_consumeItems.AddRange(mobInfo.PreTameConsumables);
                     }
                 }
