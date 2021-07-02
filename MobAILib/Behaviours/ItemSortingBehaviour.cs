@@ -521,6 +521,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.StopMoving();
                     Common.Dbgl("Pickable dropped item not found", "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
+                    return;
                 }
                 //m_item = m_pickable.m_itemPrefab.GetComponent<ItemDrop>();
                 Common.Dbgl($"m_item:{m_item?.name ?? "is null"}");
