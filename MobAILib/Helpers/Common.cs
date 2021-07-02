@@ -43,25 +43,25 @@ namespace RagnarsRokare.MobAI
                 .Where(p => p != null)
                 .Where(p => p.GetComponent<ZNetView>()?.IsValid() ?? false)
                 .Where(p => acceptedPickables.Contains(GetPrefabName(p.gameObject.name)))
+                .Where(p => !string.IsNullOrEmpty(p.GetHoverText()))
                 .Where(p => p.transform?.position != null)
-                .Where(p => CanSeeTarget(instance, p.gameObject))
+                //.Where(p => CanSeeTarget(instance, p.gameObject))
                 .Where(p => acceptedItemNames?.Contains(p.m_itemPrefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_name) ?? true)
                 .OrderBy(p => Vector3.Distance(instance.transform.position, p.transform.position))
                 .FirstOrDefault();
         }
 
-        public static ItemDrop GetClosestItem(BaseAI instance, int range = 10)
+        public static ItemDrop GetClosestItem(BaseAI instance, int range = 10, string itemName = null, bool mustBeVisible = true)
         {
             Vector3 position = instance.transform.position;
             ItemDrop ClosestObject = null;
             foreach (Collider collider in Physics.OverlapSphere(position, range, LayerMask.GetMask(new string[] { "item" })))
             {
                 ItemDrop item = collider.transform?.GetComponentInParent<ItemDrop>();
-                if (item?.GetComponent<ZNetView>()?.IsValid() != true)
-                {
-                    continue;
-                }
-                if (item?.transform?.position != null && CanSeeTarget(instance, item.gameObject) && (ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
+                if (item?.GetComponent<ZNetView>()?.IsValid() != true || item?.transform?.position == null) continue;
+                if (mustBeVisible && !CanSeeTarget(instance, item.gameObject)) continue;
+                if (!string.IsNullOrEmpty(itemName) && item.m_itemData.m_shared.m_name != itemName) continue;
+                if ((ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
                 {
                     ClosestObject = item;
                 }
@@ -218,7 +218,7 @@ namespace RagnarsRokare.MobAI
                 return false;
             }
             Vector3 rhs = itemPosition - eyesPosition;
-            var tempRaycastHits = Physics.RaycastAll(eyesPosition, rhs.normalized, rhs.magnitude, LayerMask.GetMask("Default", /*"terrain",*/ "static_solid", "Default_small", "piece", "viewblock", "vehicle")); //, "terrain"
+            var tempRaycastHits = Physics.RaycastAll(eyesPosition, rhs.normalized, rhs.magnitude, LayerMask.GetMask("Default", /*"terrain",*/ "static_solid", "Default_small", "piece", "viewblock", "vehicle", "item")); //, "terrain"
             //Debug.Log("#############################################");
             //Debug.Log($"RaycastHit: {item.name} pos: {item.transform.position}");
             //foreach (RaycastHit RaycastHit in tempRaycastHits)

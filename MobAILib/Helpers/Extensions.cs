@@ -42,5 +42,27 @@ namespace RagnarsRokare.MobAI
             }
             return  p.gameObject.GetComponentInChildren<Container>();
         }
+
+        public static IEnumerable<string> SplitBySqBrackets(this string input)
+        {
+            if (string.IsNullOrEmpty(input)) yield break;
+
+            var counter = new Stack<int>();
+            for (int i = 0; i < input.Length; i++)
+            {
+                if (input[i] == '[')
+                {
+                    counter.Push(i);
+                }
+                else if (input[i] == ']')
+                {
+                    var start = counter.Pop();
+                    if (counter.Count == 0)
+                    {
+                        yield return input.Substring(start + 1, i - start - 1);
+                    }
+                }
+            }
+        }
     }
 }

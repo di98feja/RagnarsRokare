@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
@@ -9,7 +10,14 @@ namespace RagnarsRokare.MobAI
             m_container = container;
             Timestamp = timeStamp;
             UniqueId = Common.GetOrCreateUniqueId(Common.GetNView(m_container));
-            Position = container.transform.position;
+            m_position = container.transform.position;
+        }
+
+        public StorageContainer(string uniqueId, Vector3 position)
+        {
+            UniqueId = uniqueId;
+            m_position = position;
+            Timestamp = 0f;
         }
 
         public StorageContainer(string uniqueId, float timeStamp)
@@ -19,22 +27,74 @@ namespace RagnarsRokare.MobAI
         }
 
         private Container m_container = null;
+        private Vector3 m_position = Vector3.zero;
 
-        public Container Container 
+        public Container Container
         {
             get
             {
                 if (m_container == null)
                 {
                     m_container = Common.GetContainerById(UniqueId);
-                    Position = m_container?.transform.position ?? Vector3.zero;
                 }
                 return m_container;
-            } 
+            }
         }
 
-        public Vector3 Position { get; set; }
+        public Vector3 Position
+        {
+            get
+            {
+                if (m_position == Vector3.zero)
+                {
+                    m_position = Container?.transform.position ?? Vector3.zero;
+                }
+                return m_position;
+            }
+        }
         public string UniqueId { get; set; }
         public float Timestamp { get; set; }
+
+        public string Serialize()
+        {
+            var currentCulture = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+                return $"[{nameof(UniqueId)}:{UniqueId}][{nameof(m_position)}:{m_position.x.ToString(System.Globalization.CultureInfo.InvariantCulture)} {m_position.y} {m_position.z}]";
+            }
+            finally
+            {
+                System.Globalization.CultureInfo.CurrentCulture = currentCulture;
+            }
+        }
+
+        public static StorageContainer DeSerialize(string s)
+        {
+            var currentCulture = System.Globalization.CultureInfo.CurrentCulture;
+            try
+            {
+                System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.InvariantCulture;
+                Debug.Log($"Deserialize:{s}");
+                var parts = s.SplitBySqBrackets();
+                var uniqueId = parts.Where(p => p.Split(':')[0] == nameof(UniqueId)).Select(p => p.Split(':')[1]).Single();
+                var position = parts.Where(p => p.Split(':')[0] == nameof(m_position))
+                    .Select(p => p.Split(':')[1].Split(' '))
+                    .Select(p => new Vector3(float.Parse(p[0]), float.Parse(p[1]), float.Parse(p[2])))
+                    .Single();
+
+                Debug.Log($"Pos:{position}");
+                return new StorageContainer(uniqueId, position);
+            }
+            catch (System.Exception)
+            {
+                Debug.Log($"Failed to deserialize");
+                return null;
+            }
+            finally
+            {
+                System.Globalization.CultureInfo.CurrentCulture = currentCulture;
+            }
+        }
     }
 }

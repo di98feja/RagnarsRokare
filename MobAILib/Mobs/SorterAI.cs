@@ -109,12 +109,9 @@ namespace RagnarsRokare.MobAI
             char[] delimiterChars = { ' ', ','};
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(delimiterChars));
 
-            string dumpChestId = NView.GetZDO().GetString(Constants.Z_SavedDumpChest);
-            if (!string.IsNullOrEmpty(dumpChestId))
-            {
-                itemSortingBehaviour.DumpContainer = new StorageContainer(dumpChestId, 0f);
-                Common.Dbgl($"Loaded dumpchest {dumpChestId}", "Sorter");
-            }
+            string serializedDumpChest = NView.GetZDO().GetString(Constants.Z_SavedDumpChest);
+            itemSortingBehaviour.DumpContainer = StorageContainer.DeSerialize(serializedDumpChest);
+            Common.Dbgl($"Loaded dumpchest {serializedDumpChest}", "Sorter");
 
             ConfigureRoot();
             ConfigureIdle();
@@ -367,13 +364,18 @@ namespace RagnarsRokare.MobAI
             else if (!(player == null) && command == "AssignDumpContainer")
             {
                 var hoverObject = player.GetHoverObject();
-                Debug.Log($"hoverPiece:{hoverObject?.name ?? string.Empty}");
                 var container = hoverObject?.GetComponent<Container>() ?? hoverObject?.GetComponentInChildren<Container>() ?? hoverObject?.GetComponentInParent<Container>();
-                Debug.Log($"container:{container?.name ?? string.Empty}");
-                itemSortingBehaviour.DumpContainer = new StorageContainer(container, 0f);
-                string containerId = container == null ? "" : Common.GetOrCreateUniqueId(Common.GetNView(container));
-                NView.GetZDO().Set(Constants.Z_SavedDumpChest, containerId);
-                Common.Dbgl($"Set DumpContainer: {containerId}", "Sorter");
+                if (container == null)
+                {
+                    itemSortingBehaviour.DumpContainer = null;
+                    NView.GetZDO().Set(Constants.Z_SavedDumpChest, string.Empty);
+                }
+                else
+                {
+                    itemSortingBehaviour.DumpContainer = new StorageContainer(container, 0f);
+                    NView.GetZDO().Set(Constants.Z_SavedDumpChest, itemSortingBehaviour.DumpContainer.Serialize());
+                    Common.Dbgl($"Set DumpContainer: {itemSortingBehaviour.DumpContainer.Serialize()}", "Sorter");
+                }
             }
         }
 

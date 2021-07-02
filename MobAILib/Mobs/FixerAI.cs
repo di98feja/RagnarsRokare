@@ -400,23 +400,13 @@ namespace RagnarsRokare.MobAI
 
         public bool MoveToAssignment(float dt)
         {
-            if (m_assignment == null)
-            {
-                Debug.Log("FixerAI movetoAssignment: m_assignment is null");
-            }
-            else if (m_assignment.Peek() == null)
-            {
-                Debug.Log("FixerAI movetoAssignment.Peek(): returns null");
-            }
-            else if (m_assignment.Peek().GetComponent<ZNetView>() == null)
-            {
-                Debug.Log("FixerAI movetoAssignment.Peek().GetComponent: returns null");
-            }
-
-            bool assignmentIsInvalid = m_assignment.Peek()?.GetComponent<ZNetView>()?.IsValid() != true;
+            bool assignmentIsInvalid = m_assignment.Peek() == null || m_assignment.Peek().GetComponent<ZNetView>()?.IsValid() != true;
             if (assignmentIsInvalid)
             {
-                m_assignment.Pop();
+                if (m_assignment.Any())
+                {
+                    m_assignment.Pop();
+                }
                 return true;
             }
             if ((m_roarTimer += dt) > RoarTimeout)
