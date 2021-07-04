@@ -100,6 +100,8 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - Version 0.3.0-preRelease
 Added SorterAI and ItemSortingBehaviour
 Added configurable strings for AIState messages
+Added RoamingAI: mobs do not need a player near to be active
+Added Pickable interaction, can be taught to Sorters
 
 - Version 0.2.0  
 Added base mob attributes to control behaviours.  
