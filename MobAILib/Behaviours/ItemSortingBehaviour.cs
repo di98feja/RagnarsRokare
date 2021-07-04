@@ -97,7 +97,7 @@ namespace RagnarsRokare.MobAI
         public void SaveItemDictionary()
         {
             var serializedDict = string.Join(string.Empty, m_itemsDictionary.Select(d => $"[{d.Key}:{string.Join("", d.Value.Select(c => $"[{c.container.Serialize()};{c.count}]").ToArray())}]").ToArray());
-            Debug.Log($"save:{serializedDict}");
+            //Debug.Log($"save:{serializedDict}");
             m_aiBase.NView.GetZDO().Set(Constants.Z_SorterItemDict, serializedDict);
         }
 
@@ -375,7 +375,6 @@ namespace RagnarsRokare.MobAI
                 {
                     var storageContainer = new StorageContainer(newContainer, Time.time + RememberChestTime);
                     m_knownContainers.Push(storageContainer);
-                    Debug.Log($"Found container {storageContainer.UniqueId}");
                     Common.Dbgl($"Update FindRandomTask new container with timeout at :{storageContainer.Timestamp}", "Sorter");
                     m_startPosition = storageContainer.Position;
                     aiBase.Brain.Fire(Trigger.ContainerFound);
@@ -561,7 +560,6 @@ namespace RagnarsRokare.MobAI
                 {
                     Common.Dbgl("Open Container", "Sorter");
                     m_container.Timestamp = Time.time + RememberChestTime;
-                    Debug.Log($"m_container.Timestamp = {m_container.Timestamp}, m_knownContainers.Timestamp:{m_knownContainers.Where(c => c.UniqueId == m_container.UniqueId).SingleOrDefault()?.Timestamp}");
                     Common.Dbgl($"Updated timeout for {m_container.Container.name}", "Sorter");
                     aiBase.Brain.Fire(Trigger.ContainerOpened);
                     return;

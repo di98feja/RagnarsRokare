@@ -77,7 +77,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus(State.Main);
                     m_startPosition = aiBase.Instance.transform.position;
-                    m_viewRange = m_awarenessLevel * 5f;
+                    m_viewRange = m_awarenessLevel ;
                     m_circleTargetDistance = m_mobilityLevel * 2 - m_agressionLevel;
                     m_searchTargetMovement = m_mobilityLevel;
                 })
@@ -181,7 +181,7 @@ namespace RagnarsRokare.MobAI
             {
                 m_searchTimer -= dt;
                 Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_circleTargetDistance, true);
-                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_viewRange - 5)
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_circleTargetDistance + 1)
                 {
                     return;
                 }

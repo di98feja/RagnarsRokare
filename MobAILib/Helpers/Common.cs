@@ -38,7 +38,7 @@ namespace RagnarsRokare.MobAI
             {
                 return null;
             }
-            return Physics.OverlapSphere(instance.transform.position, range, LayerMask.GetMask(new string[] { "Default_small", "piece", "item" }))
+            return Physics.OverlapSphere(instance.transform.position, range, LayerMask.GetMask(new string[] { "Default_small", "piece", "item", "piece_nonsolid" }))
                 .Select(c => c.transform?.GetComponentInParent<Pickable>())
                 .Where(p => p != null)
                 .Where(p => p.GetComponent<ZNetView>()?.IsValid() ?? false)
