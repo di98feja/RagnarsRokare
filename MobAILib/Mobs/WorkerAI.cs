@@ -113,8 +113,6 @@ namespace RagnarsRokare.MobAI
             eatingBehaviour.FailState = State.Idle;
             eatingBehaviour.HealPercentageOnConsume = 0.2f;
 
-            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split());
-
             ConfigureRoot();
             ConfigureFlee();
             ConfigureFollow();

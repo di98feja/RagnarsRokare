@@ -169,6 +169,15 @@ namespace RagnarsRokare.MobAI
                     }
                 }
             });
+            NView.Register<string, string>(Constants.Z_updateTrainedAssignments, (long source, string uniqueID, string trainedAssignments) =>
+            {
+                if (NView.IsOwner()) return;
+                if (UniqueID == uniqueID)
+                {
+                    m_trainedAssignments.Clear();
+                    m_trainedAssignments.AddRange(trainedAssignments.Split());
+                }
+            });
         }
 
         private void ConfigureRoot()
@@ -192,6 +201,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
+                    if (Brain.IsInState(State.Hungry)) return false;
                     if ((m_stuckInIdleTimer += arg.dt) > 300f)
                     {
                         Common.Dbgl("m_startPosition = HomePosition");
