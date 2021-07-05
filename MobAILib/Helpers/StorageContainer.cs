@@ -35,7 +35,14 @@ namespace RagnarsRokare.MobAI
             {
                 if (m_container == null)
                 {
-                    m_container = Common.GetContainerById(UniqueId);
+                    try
+                    {
+                        m_container = Common.GetContainerById(UniqueId);
+                    }
+                    catch (System.Exception)
+                    {
+                        Common.Dbgl($"Failed GetContainerById({UniqueId})");
+                    }
                 }
                 return m_container;
             }
@@ -47,7 +54,7 @@ namespace RagnarsRokare.MobAI
             {
                 if (m_position == Vector3.zero)
                 {
-                    m_position = Container?.transform.position ?? Vector3.zero;
+                    m_position = Container?.transform?.position ?? Vector3.zero;
                 }
                 return m_position;
             }

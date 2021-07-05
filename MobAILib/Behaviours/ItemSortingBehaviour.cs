@@ -21,6 +21,7 @@ namespace RagnarsRokare.MobAI
             public const string MoveToGroundItem = Prefix + "MoveToGroundItem";
             public const string MoveToPickable = Prefix + "MoveToPickable";
             public const string PickUpItemFromGround = Prefix + "PickUpItemFromGround";
+            public const string PickUpAnotherItemFromGround = Prefix + "PickUpItemAnotherFromGround";
             public const string MoveToDumpContainer = Prefix + "MoveToDumpContainer";
             public const string MoveToContainer = Prefix + "MoveToContainer";
             public const string MoveToStorageContainer = Prefix + "MoveToStorageContainer";
@@ -339,11 +340,19 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.PickUpItemFromGround)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.ItemFound, State.MoveToStorageContainer)
+                .Permit(Trigger.ItemFound, State.PickUpAnotherItemFromGround)
                 .Permit(Trigger.GroundItemLost, State.FindRandomTask)
                 .OnEntry(t =>
                 {
                     Common.Dbgl("PickUpItemFromGround", "Sorter");
+                });
+            brain.Configure(State.PickUpAnotherItemFromGround)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.ItemFound, State.MoveToGroundItem)
+                .Permit(Trigger.ItemNotFound, State.MoveToStorageContainer)
+                .OnEntry(t =>
+                {
+                    Common.Dbgl("PickUpAnotherItemFromGround", "Sorter");
                 });
         }
 
@@ -430,6 +439,11 @@ namespace RagnarsRokare.MobAI
                 if (aiBase.MoveAndAvoidFire(m_container.Position, dt, 2f))
                 {
                     aiBase.StopMoving();
+                    if (m_container.Container == null)
+                    {
+                        Common.Dbgl($"Is near container {m_container.UniqueId} but it is still null");
+                        return;
+                    }
                     if (!m_container.Container.IsInUse())
                     {
                         aiBase.Brain.Fire(Trigger.ContainerIsClose);
@@ -632,12 +646,13 @@ namespace RagnarsRokare.MobAI
                 var mob = (aiBase.Character as Humanoid);
                 m_container.Container.SetInUse(inUse: false);
                 Common.Dbgl($"Unload {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", "Sorter");
+                var itemToStore = (aiBase.Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault(i => i.m_shared.m_name == m_carriedItem.m_shared.m_name);
 
-                if (m_container.Container.GetInventory().CanAddItem(m_carriedItem))
+                if (m_container.Container.GetInventory().CanAddItem(itemToStore))
                 {
-                    Common.Dbgl($"Putting {m_carriedItem.m_shared.m_name} in container", "Sorter");
+                    Common.Dbgl($"Putting {itemToStore.m_stack} {itemToStore.m_shared.m_name} in container", "Sorter");
                     mob.UnequipItem(m_carriedItem);
-                    m_container.Container.GetInventory().MoveItemToThis(mob.GetInventory(), m_carriedItem);
+                    m_container.Container.GetInventory().MoveItemToThis(mob.GetInventory(), itemToStore);
                 }
                 else if (m_itemStorageStack.Count() > 1)
                 {
@@ -711,6 +726,29 @@ namespace RagnarsRokare.MobAI
                 (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
                 m_lastPickupPosition = aiBase.Character.transform.position;
                 aiBase.Brain.Fire(Trigger.ItemFound);
+            }
+
+            if (aiBase.Brain.IsInState(State.PickUpAnotherItemFromGround))
+            {
+                var existingInventoryItem = (aiBase.Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault(i => i.m_shared.m_name == m_carriedItem.m_shared.m_name);
+                if (existingInventoryItem.m_stack >= existingInventoryItem.m_shared.m_maxStackSize)
+                {
+                    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                    return;
+                }
+                var anotherItem = Common.GetClosestItem(aiBase.Instance, m_searchRadius, m_carriedItem.m_shared.m_name);
+                if ((bool)anotherItem)
+                {
+                    m_item = anotherItem;
+                    m_aiBase.UpdateAiStatus(State.PickUpAnotherItemFromGround, m_carriedItem.m_shared.m_name);
+                    aiBase.Brain.Fire(Trigger.ItemFound);
+                    return;
+                }
+                else
+                {
+                    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                    return;
+                }
             }
         }
 
