@@ -15,6 +15,11 @@ namespace RagnarsRokare.MobAI
                 {
                     string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
                     string prefabName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
+                    if (mob.GetType().Name != "Worker")
+                    {
+                        Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Can not operate the {interactName}!");
+                        return;
+                    }
                     if (mob.m_trainedAssignments.Contains(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");
@@ -72,6 +77,11 @@ namespace RagnarsRokare.MobAI
                 {
                     string interactName = __instance.GetHoverName();
                     string prefabName = Common.GetPrefabName(__instance.gameObject.name);
+                    if (mob.GetType().Name != "Worker")
+                    {
+                        Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Can not operate the {interactName}!");
+                        return;
+                    }
                     if (mob.m_trainedAssignments.Contains(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");
