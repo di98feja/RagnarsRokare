@@ -67,7 +67,6 @@ namespace RagnarsRokare.MobAI
             {
                 if (!CommonConfig.RoamingAI.Value) return;
                 if (distantSectorObjects == null) return;
-                //Debug.Log($"Filling sectorObjects with orphanedZones");
                 foreach (var zone in ZoneWorkloadManager.OrphanedZonesWithAIMobs())
                 {
                     typeof(ZDOMan).GetMethod("FindObjects", BindingFlags.Instance | BindingFlags.NonPublic).Invoke(ZDOMan.instance, new object[] { zone, distantSectorObjects });
@@ -79,9 +78,9 @@ namespace RagnarsRokare.MobAI
         {
             public static void DistributeOrphanedZones()
             {
-                var orphanedZones = OrphanedZonesWithAIMobs();
+                var orphanedZones = OrphanedZonesWithAIMobs().Distinct();
                 if (!orphanedZones.Any()) return;
-                //Debug.Log($"orphanedZones:{string.Join(",", orphanedZones.Select(z => z.ToString()))}");
+                Debug.Log($"orphanedZones:{string.Join(",", orphanedZones.Select(z => z.ToString()))}");
 
                 var parent = (long)typeof(ZDOMan).GetField("m_myid", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(ZDOMan.instance);
                 var objs = new List<ZDO>();
@@ -123,10 +122,13 @@ namespace RagnarsRokare.MobAI
             public static IEnumerable<Vector2i> AllActiveZones()
             {
                 var activeZones = GetActiveZonesAroundPosition(ZNet.instance.GetReferencePosition());
-                foreach (var peer in typeof(ZNet).GetField("m_peers", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(ZNet.instance) as IEnumerable<ZNetPeer>)
+                //Debug.Log($"my pos: {ZNet.instance.GetReferencePosition()}, my active zones:{string.Join(",", activeZones.Select(z => z.ToString()))}");
+                var otherPlayers = new List<ZNet.PlayerInfo>();
+                ZNet.instance.GetOtherPublicPlayers(otherPlayers);
+                foreach (var peer in otherPlayers)
                 {
-                    if (peer.m_refPos == Vector3.zero) continue;
-                    activeZones = activeZones.Union(GetActiveZonesAroundPosition(peer.m_refPos));
+                    activeZones = activeZones.Union(GetActiveZonesAroundPosition(peer.m_position));
+                    //Debug.Log($"peer pos: {peer.m_position}, peer active zones:{string.Join(",", GetActiveZonesAroundPosition(peer.m_position).Select(z => z.ToString()))}");
                 }
                 return activeZones;
             }

@@ -34,7 +34,7 @@ namespace RagnarsRokare.SlaveGreylings
             Mobility = Config.Bind<int>("General", "Greyling_Mobility", 5, "Mobility is used to determine how often and how far the mob moves");
             Intelligence = Config.Bind<int>("General", "Greyling_Intelligence", 3, "General intelligence, how much the mob can remember");
 
-            WorkableAssignments = new HashSet<string>(RagnarsRokare.MobAI.Assignment.AssignmentTypes.Select(a => a.PieceName));
+            WorkableAssignments = new HashSet<string>(MobAI.Assignment.AssignmentTypes.Select(a => a.PieceName));
         }
         public static Dictionary<string, string> AIStateDictionary { get; } = new Dictionary<string, string>()
         {
