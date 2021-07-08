@@ -1,5 +1,6 @@
 ﻿using BepInEx.Configuration;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace RagnarsRokare.SlaveGreylings
 {
@@ -32,6 +33,8 @@ namespace RagnarsRokare.SlaveGreylings
             Agressiveness = Config.Bind<int>("General", "Greyling_Agressiveness", 2, "Agressivness determines how to behave when fighting and when to give up and flee");
             Mobility = Config.Bind<int>("General", "Greyling_Mobility", 5, "Mobility is used to determine how often and how far the mob moves");
             Intelligence = Config.Bind<int>("General", "Greyling_Intelligence", 3, "General intelligence, how much the mob can remember");
+
+            WorkableAssignments = new HashSet<string>(RagnarsRokare.MobAI.Assignment.AssignmentTypes.Select(a => a.PieceName));
         }
         public static Dictionary<string, string> AIStateDictionary { get; } = new Dictionary<string, string>()
         {
@@ -62,5 +65,7 @@ namespace RagnarsRokare.SlaveGreylings
             {"UnloadToAssignment","Stuffin dis {0} full"},
             {"DoneWithAssignment", "Done doin worksignment!"}
         };
+
+        public static HashSet<string> WorkableAssignments { get; set; }
     }
 }

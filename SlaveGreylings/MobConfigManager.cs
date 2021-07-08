@@ -53,7 +53,8 @@ namespace RagnarsRokare.SlaveGreylings
                                 Awareness = GreylingsConfig.Awareness.Value,
                                 Mobility = GreylingsConfig.Mobility.Value,
                                 Intelligence = GreylingsConfig.Intelligence.Value,
-                                AIStateCustomStrings = GreylingsConfig.AIStateDictionary
+                                AIStateCustomStrings = GreylingsConfig.AIStateDictionary,
+                                WorkableAssignments = GreylingsConfig.WorkableAssignments
                             }
                         };
                     }

@@ -25,5 +25,7 @@ namespace RagnarsRokare.MobAI
         public int Intelligence { get; set; } = 5;
 
         public Dictionary<string,string> AIStateCustomStrings { get; set; }
+
+        public HashSet<string> WorkableAssignments { get; set; }
     }
 }

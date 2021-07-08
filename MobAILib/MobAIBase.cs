@@ -57,6 +57,10 @@ namespace RagnarsRokare.MobAI
         public int Agressiveness { get { return Config.Agressiveness; } }
         public int Mobility { get { return Config.Mobility; } }
         public int Intelligence { get { return Config.Intelligence; } }
+        public bool CanWorkAssignment(string assignmentName)
+        {
+            return Config.WorkableAssignments?.Contains(assignmentName) ?? false;
+        }
         #endregion
 
         public Character Character
@@ -179,6 +183,13 @@ namespace RagnarsRokare.MobAI
         {
             if (AvoidFire(dt)) return false;
 
+            //Debug.Log($"PathfindingLayers:{Pathfinding.instance.m_layers}, {Pathfinding.instance.m_layers.value}");
+            //var bit = 1;
+            //for (int i = 0; i < 32; i++)
+            //{
+            //    Debug.Log($"layer {bit}:{LayerMask.LayerToName(i)}:{((Pathfinding.instance.m_layers.value & bit) == bit ? "1":"0")}");
+            //    bit <<= 1;
+            //}
             running = Vector3.Distance(Character.transform.position, destination) > 10;
             return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
         }
@@ -197,7 +208,7 @@ namespace RagnarsRokare.MobAI
 
         public string UpdateAiStatus(string newStatus, string arg = null)
         {
-            if (Config.AIStateCustomStrings.ContainsKey(newStatus))
+            if (Config.AIStateCustomStrings?.ContainsKey(newStatus) ?? false)
             {
                 newStatus = string.Format(Config.AIStateCustomStrings[newStatus], arg ?? string.Empty);
             }
