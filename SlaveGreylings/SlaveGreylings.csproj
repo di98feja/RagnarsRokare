@@ -95,6 +95,7 @@
     <Compile Include="CommonConfig.cs" />
     <Compile Include="GreylingConfig.cs" />
     <Compile Include="MobConfigManager.cs" />
+    <Compile Include="Patches\Minimap_patch.cs" />
     <Compile Include="Patches\Sign_patch.cs" />
     <Compile Include="Patches\Container_patch.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
