@@ -201,6 +201,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
+                    if (Brain.IsInState(State.Assigned)) return false;
                     if (Brain.IsInState(State.Hungry)) return false;
                     if ((m_stuckInIdleTimer += arg.dt) > 300f)
                     {
@@ -313,13 +314,13 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.MoveToAssignment)
                 .SubstateOf(State.Assigned)
                 .Permit(Trigger.Failed, State.Idle)
-                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => MoveToAssignment(arg.dt))
+                .PermitIf(UpdateTrigger, State.TurnToFaceAssignment, (arg) => MoveToAssignment(arg.dt))
                 .OnEntry(t =>
                 {
                     if (Common.GetNView(m_assignment.Peek())?.IsValid() != true)
                     {
-                        Brain.Fire(Trigger.Failed);
                         m_assignment.Pop();
+                        Brain.Fire(Trigger.Failed);
                         return;
                     }
                     UpdateAiStatus(State.MoveToAssignment, m_assignment.Peek().m_name);
@@ -343,8 +344,8 @@ namespace RagnarsRokare.MobAI
                 {
                     if (Common.GetNView(m_assignment.Peek())?.IsValid() != true)
                     {
-                        Brain.Fire(Trigger.Failed);
                         m_assignment.Pop();
+                        Brain.Fire(Trigger.Failed);
                         return;
                     }
                     NView.InvokeRPC(ZNetView.Everybody, Constants.Z_AddAssignment, m_assignment.Peek().GetUniqueId());
@@ -387,8 +388,8 @@ namespace RagnarsRokare.MobAI
                 {
                     if (Common.GetNView(m_assignment.Peek())?.IsValid() != true)
                     {
-                        Brain.Fire(Trigger.Failed);
                         m_assignment.Pop();
+                        Brain.Fire(Trigger.Failed);
                         return;
                     }
                     UpdateAiStatus(State.RepairAssignment, m_assignment.Peek().m_name);

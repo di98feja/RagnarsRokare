@@ -80,7 +80,7 @@ namespace RagnarsRokare.MobAI
             {
                 var orphanedZones = OrphanedZonesWithAIMobs().Distinct();
                 if (!orphanedZones.Any()) return;
-                Debug.Log($"orphanedZones:{string.Join(",", orphanedZones.Select(z => z.ToString()))}");
+                //Debug.Log($"orphanedZones:{string.Join(",", orphanedZones.Select(z => z.ToString()))}");
 
                 var parent = (long)typeof(ZDOMan).GetField("m_myid", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(ZDOMan.instance);
                 var objs = new List<ZDO>();
