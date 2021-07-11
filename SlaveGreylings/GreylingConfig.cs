@@ -51,6 +51,7 @@ namespace RagnarsRokare.SlaveGreylings
             {"RR_SFISearchItemsOnGround","Look, there is a {0} on da grund"},
             {"RR_SFISearchForRandomContainer","Look a bin!"},
             {"RR_SFIMoveToGroundItem","Heading to {0}"},
+            {"RR_SFIMoveToPickable","Heading to {0}"},
             {"RR_SFIPickUpItemFromGround","Got a {0} from the ground"},
             {"RR_SFIMoveToContainer","Heading to that a bin"},
             {"RR_SFISearchForItem","Found {0} in this a bin!"},

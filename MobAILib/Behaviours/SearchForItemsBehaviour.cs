@@ -189,7 +189,6 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Failed, State.SearchItemsOnGround)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.name);
                     m_pickableTimer = Time.time + 0.7f;
                 });
 
