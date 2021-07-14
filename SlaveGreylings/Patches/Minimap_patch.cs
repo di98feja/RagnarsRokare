@@ -20,7 +20,7 @@ namespace RagnarsRokare.SlaveGreylings
                     var name = mob.Value.NView.GetZDO().GetString(Constants.Z_GivenName);
                     if (!m_mobPins.ContainsKey(mob.Key))
                     {
-                        var pin = Minimap.instance.AddPin(pos, PinType.Player, name, false, false);
+                        var pin = Minimap.instance.AddPin(pos, PinType.Icon3, name, false, false);
                         m_mobPins.Add(mob.Key, pin);
                     }
                     else
