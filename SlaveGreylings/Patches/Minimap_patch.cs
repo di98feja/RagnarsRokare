@@ -2,7 +2,6 @@
 using RagnarsRokare.MobAI;
 using System.Collections.Generic;
 using System.Linq;
-using static Minimap;
 
 namespace RagnarsRokare.SlaveGreylings
 {
@@ -11,7 +10,7 @@ namespace RagnarsRokare.SlaveGreylings
         [HarmonyPatch(typeof(Minimap), "UpdateDynamicPins")]
         static class Minimap_UpdateDynamicPins_Patch
         {
-            private static Dictionary<string, PinData> m_mobPins = new Dictionary<string, PinData>();
+            private static readonly Dictionary<string, Minimap.PinData> m_mobPins = new Dictionary<string, Minimap.PinData>();
             public static void Postfix()
             {
                 foreach (var mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()))
@@ -20,7 +19,7 @@ namespace RagnarsRokare.SlaveGreylings
                     var name = mob.Value.NView.GetZDO().GetString(Constants.Z_GivenName);
                     if (!m_mobPins.ContainsKey(mob.Key))
                     {
-                        var pin = Minimap.instance.AddPin(pos, PinType.Icon3, name, false, false);
+                        var pin = Minimap.instance.AddPin(pos, Minimap.PinType.Icon3, name, false, false);
                         m_mobPins.Add(mob.Key, pin);
                     }
                     else
@@ -29,11 +28,11 @@ namespace RagnarsRokare.SlaveGreylings
                         m_mobPins[mob.Key].m_name = name;
                     }
                 }
-                var pinsToRemove = m_mobPins.Where(m => !MobManager.AliveMobs.ContainsKey(m.Key));
-                foreach (var pin in pinsToRemove)
+                var idsToRemove = m_mobPins.Where(m => MobManager.AliveMobs.Any(a => (!a.Value.HasInstance()) && (a.Key == m.Key))).Select(m => (m.Key, m.Value)).ToArray();
+                foreach (var pin in idsToRemove)
                 {
-                    Minimap.instance.RemovePin(pin.Value);
                     m_mobPins.Remove(pin.Key);
+                    Minimap.instance.RemovePin(pin.Value);
                 }
             }
         }
