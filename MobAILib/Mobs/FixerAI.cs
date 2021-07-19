@@ -418,7 +418,8 @@ namespace RagnarsRokare.MobAI
                 {
                     m_assignment.Pop();
                 }
-                return true;
+                Brain.Fire(Trigger.Failed);
+                return false;
             }
             if ((m_roarTimer += dt) > RoarTimeout)
             {

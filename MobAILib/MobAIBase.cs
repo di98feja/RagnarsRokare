@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using System.Linq;
 
 namespace RagnarsRokare.MobAI
 {
@@ -48,7 +49,7 @@ namespace RagnarsRokare.MobAI
             {
                 NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
             }
-            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(new char[]{ ' ', ',' }));
+            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(new char[] { ' ', ',' }));
         }
 
         #region Config
@@ -183,15 +184,23 @@ namespace RagnarsRokare.MobAI
         {
             if (AvoidFire(dt)) return false;
 
-            //Debug.Log($"PathfindingLayers:{Pathfinding.instance.m_layers}, {Pathfinding.instance.m_layers.value}");
-            //var bit = 1;
-            //for (int i = 0; i < 32; i++)
+            //var path = typeof(MonsterAI).GetField("m_path", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Instance) as List<Vector3>;
+            //float remainingDist = 0f;
+            //for (int i = 1; i < path.Count; i++)
             //{
-            //    Debug.Log($"layer {bit}:{LayerMask.LayerToName(i)}:{((Pathfinding.instance.m_layers.value & bit) == bit ? "1":"0")}");
-            //    bit <<= 1;
+            //    remainingDist += Vector3.Distance(path[i - 1], path[i]);
             //}
+            //running = remainingDist > 10;
             running = Vector3.Distance(Character.transform.position, destination) > 10;
-            return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
+            var nearbyMobs = MobManager.AliveMobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f).Where(m => m.UniqueID != this.UniqueID);
+            if (nearbyMobs.Any())
+            {
+                return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
+            }
+            else
+            {
+                return (bool)Invoke<MonsterAI>(Instance, "MoveTo", dt, destination, distance, running);
+            }
         }
 
         protected Player GetPlayer(ZDOID characterID)

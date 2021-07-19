@@ -273,7 +273,6 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(State.MoveToAssignment)
                 .PermitIf(Trigger.TakeDamage, State.Fight, () => TimeSinceHurt < 20)
                 .PermitIf(Trigger.Follow, State.Follow, () => (bool)(Instance as MonsterAI).GetFollowTarget())
-                .PermitIf(Trigger.Hungry, eatingBehaviour.StartState, () => eatingBehaviour.IsHungry(IsHurt))
                 .Permit(Trigger.AssignmentTimedOut, State.DoneWithAssignment)
                 .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .OnEntry(t =>
@@ -504,7 +503,7 @@ namespace RagnarsRokare.MobAI
 
         public bool MoveToAssignment(float dt)
         {
-            bool assignmentIsInvalid = m_assignment.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
+            bool assignmentIsInvalid = m_assignment?.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
             {
                 m_assignment.Pop();

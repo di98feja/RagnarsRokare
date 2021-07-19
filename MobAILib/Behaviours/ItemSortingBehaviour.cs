@@ -471,6 +471,7 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.StopMoving();
                     Common.Dbgl("GroundItem is close", "Sorter");
+                    m_item.RequestOwn();
                     aiBase.Brain.Fire(Trigger.GroundItemIsClose);
                 }
                 if (Time.time > m_currentSearchTimeout)
@@ -538,6 +539,7 @@ namespace RagnarsRokare.MobAI
                 //m_item = m_pickable.m_itemPrefab.GetComponent<ItemDrop>();
                 Common.Dbgl($"m_item:{m_item?.name ?? "is null"}");
                 m_startPosition = m_item.transform.position;
+                m_item.RequestOwn();
                 aiBase.Brain.Fire(Trigger.GroundItemIsClose);
             }
 
@@ -717,6 +719,11 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
+                if (!m_item.CanPickup())
+                {
+                    Debug.Log($"Can't pickup {m_item?.name ?? "thing"}");
+                    return;
+                }
                 m_carriedItem = m_item.m_itemData;
                 m_aiBase.UpdateAiStatus(State.PickUpItemFromGround, m_carriedItem.m_shared.m_name);
                 m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
@@ -730,7 +737,31 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.PickUpAnotherItemFromGround))
             {
                 var existingInventoryItem = (aiBase.Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault(i => i.m_shared.m_name == m_carriedItem.m_shared.m_name);
-                if (existingInventoryItem.m_stack >= existingInventoryItem.m_shared.m_maxStackSize)
+                if (existingInventoryItem == null)
+                {
+                    Debug.Log("existingInventoryItem is null");
+                    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                    return;
+                }
+                if (!(bool)m_item)
+                {
+                    Debug.Log("m_item is null");
+                    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                    return;
+                }
+                //if (!Common.GetNView(m_item).IsValid())
+                //{
+                //    Debug.Log("not valid");
+                //    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                //    return;
+                //}
+                //if (!Common.GetNView(m_item)?.IsOwner() ?? true)
+                //{
+                //    Debug.Log("not the owner");
+                //    aiBase.Brain.Fire(Trigger.ItemNotFound);
+                //    return;
+                //}
+                if (existingInventoryItem?.m_stack >= existingInventoryItem.m_shared.m_maxStackSize)
                 {
                     aiBase.Brain.Fire(Trigger.ItemNotFound);
                     return;
