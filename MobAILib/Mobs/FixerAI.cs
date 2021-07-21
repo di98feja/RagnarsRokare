@@ -105,7 +105,7 @@ namespace RagnarsRokare.MobAI
                 var assignmentList = loadedAssignments.Split(',');
                 var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
                 var pieceDict = allPieces.Where(p => Common.GetNView(p)?.IsValid() ?? false).ToDictionary(p => Common.GetOrCreateUniqueId(Common.GetNView(p)));
-                Common.Dbgl($"Loading {assignmentList.Count()} assignments");
+                Common.Dbgl($"{Character.GetHoverName()}:Loading {assignmentList.Count()} assignments");
                 foreach (var p in assignmentList)
                 {
                     if (pieceDict.ContainsKey(p))
@@ -149,8 +149,8 @@ namespace RagnarsRokare.MobAI
             {
                 if (NView.IsOwner())
                 {
-                    Common.Dbgl($"Saving {m_assignment.Count()} assignments");
-                    Common.Dbgl($"Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
+                    Common.Dbgl($"{Character.GetHoverName()}:Saving {m_assignment.Count()} assignments");
+                    Common.Dbgl($"{Character.GetHoverName()}:Removed {m_assignment.Where(p => !Common.GetNView(p).IsValid()).Count()} invalid assignments");
                     var assignmentsToRemove = m_assignment.Where(p => !Common.GetNView(p).IsValid()).ToList();
                     foreach (var piece in assignmentsToRemove)
                     {
@@ -160,7 +160,7 @@ namespace RagnarsRokare.MobAI
                 }
                 else
                 {
-                    Common.Dbgl($"Push new assignment");
+                    Common.Dbgl($"{Character.GetHoverName()}:Push new assignment");
                     var allPieces = typeof(Piece).GetField("m_allPieces", BindingFlags.Static | BindingFlags.NonPublic).GetValue(null) as IEnumerable<Piece>;
                     var addedPiece = allPieces.Where(p => p.GetUniqueId() == assignment).FirstOrDefault();
                     if (null != addedPiece && !m_assignment.Contains(addedPiece))
@@ -205,7 +205,7 @@ namespace RagnarsRokare.MobAI
                     if (Brain.IsInState(State.Hungry)) return false;
                     if ((m_stuckInIdleTimer += arg.dt) > 300f)
                     {
-                        Common.Dbgl("m_startPosition = HomePosition");
+                        Common.Dbgl($"{Character.GetHoverName()}:m_startPosition = HomePosition");
                         m_startPosition = HomePosition;
                         m_stuckInIdleTimer = 0f;
                     }
@@ -289,7 +289,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.SearchForItems, searchForItemsBehaviour.StartState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("ConfigureSearchContainers Initiated");
+                    Common.Dbgl($"{Character.GetHoverName()}:ConfigureSearchContainers Initiated");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
@@ -333,7 +333,7 @@ namespace RagnarsRokare.MobAI
 
             Brain.Configure(State.TurnToFaceAssignment)
                 .SubstateOf(State.Assigned)
-                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => Common.TurnToFacePosition(this, m_assignment.Peek().transform.position));
+                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) =>  (bool)m_assignment.Peek() ? Common.TurnToFacePosition(this, m_assignment.Peek().transform.position) : true );
 
             Brain.Configure(State.CheckRepairState)
                 .SubstateOf(State.Assigned)
@@ -440,7 +440,7 @@ namespace RagnarsRokare.MobAI
 
         private bool AddNewAssignment(Vector3 position)
         {
-            Common.Dbgl($"Enter {nameof(AddNewAssignment)}");
+            Common.Dbgl($"{Character.GetHoverName()}:Enter {nameof(AddNewAssignment)}");
             var pieceList = new List<Piece>();
             var start = DateTime.Now;
             Piece.GetAllPiecesInRadius(position, m_config.Awareness*5 , pieceList);
@@ -451,7 +451,7 @@ namespace RagnarsRokare.MobAI
                 .Where(p => Common.CanSeeTarget(Instance, p.gameObject))
                 .OrderBy(p => Vector3.Distance(p.GetCenter(), position))
                 .FirstOrDefault();
-            Common.Dbgl($"Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
+            Common.Dbgl($"{Character.GetHoverName()}:Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
             if (piece != null && !string.IsNullOrEmpty(Common.GetOrCreateUniqueId(Common.GetNView(piece))))
             {
                 m_lastSuccessfulFindAssignment = Time.time;
@@ -460,7 +460,7 @@ namespace RagnarsRokare.MobAI
                     m_lastFailedFindAssignment = Time.time;
                     int newMaxSize = Math.Min(100, (int)(m_assignment.MaxSize * 1.2f));
                     int oldCount = m_assignment.Count();
-                    Common.Dbgl($"Increased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} and copied {oldCount} pieces");
+                    Common.Dbgl($"{Character.GetHoverName()}:Increased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} and copied {oldCount} pieces");
 
                     m_assignment.MaxSize = newMaxSize;
                 }
@@ -475,7 +475,7 @@ namespace RagnarsRokare.MobAI
                     m_lastSuccessfulFindAssignment = Time.time;
                     int newMaxSize = Math.Max(1, (int)(m_assignment.Count() * 0.8f));
                     int oldCount = m_assignment.Count();
-                    Common.Dbgl($"Decreased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} pushing {oldCount} pieces");
+                    Common.Dbgl($"{Character.GetHoverName()}:Decreased Assigned stack from {m_assignment.MaxSize} to {newMaxSize} pushing {oldCount} pieces");
                     m_assignment.MaxSize = newMaxSize;
                 }
             }
@@ -488,7 +488,7 @@ namespace RagnarsRokare.MobAI
         {
             if (Brain.State != m_lastState)
             {
-                Common.Dbgl($"State:{Brain.State}");
+                Common.Dbgl($"{Character.GetHoverName()}:State:{Brain.State}");
                 m_lastState = Brain.State;
             }
 

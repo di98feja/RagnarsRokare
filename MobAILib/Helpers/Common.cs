@@ -162,8 +162,14 @@ namespace RagnarsRokare.MobAI
 
         public static bool AssignmentTimeoutCheck(ref MaxStack<Assignment> assignments, float dt, float timeBeforeAssignmentCanBeRepeated)
         {
-            foreach (Assignment assignment in assignments)
+            bool repeatImmediatelyIfSingle = assignments.Count() == 1 && assignments.Peek().AssignmentTime > 0f;
+            if (repeatImmediatelyIfSingle)
             {
+                assignments.Pop();
+            }
+            for (int i = 1; i < assignments.Count(); i++)
+            {
+                var assignment = assignments.ElementAt(i);
                 assignment.AssignmentTime += dt;
                 int multiplicator = 1;
                 if (assignment.TypeOfAssignment.ComponentType == typeof(Fireplace))

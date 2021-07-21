@@ -186,9 +186,11 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
+                    if (Brain.IsInState(State.Assigned)) return false;
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    return AddNewAssignment(arg.instance, m_assignment);
+                    Debug.Log("Searching for new assignment");
+                    return AddNewAssignment(arg.instance, ref m_assignment);
                 })
                 .OnEntry(t =>
                 {
@@ -317,6 +319,7 @@ namespace RagnarsRokare.MobAI
             Brain.Configure(State.MoveToAssignment)
                 .SubstateOf(State.Assigned)
                 .PermitDynamicIf(UpdateTrigger, (args) => true ? nextState : State.Idle, (arg) => MoveToAssignment(arg.dt))
+                .Permit(Trigger.LeaveAssignment, State.Idle)
                 .OnEntry(t =>
                 {
                     UpdateAiStatus(State.MoveToAssignment);
@@ -345,7 +348,7 @@ namespace RagnarsRokare.MobAI
                     var needFuel = m_assignment.Peek().NeedFuel;
                     var needOre = m_assignment.Peek().NeedOre;
                     var fetchItems = new List<ItemDrop.ItemData>();
-                    Common.Dbgl($"Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
+                    Common.Dbgl($"{Character.GetHoverName()}:Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
                     if (needFuel != null)
                     {
                         fetchItems.Add(needFuel);
@@ -409,7 +412,7 @@ namespace RagnarsRokare.MobAI
                 {
                     if (m_carrying != null)
                     {
-                        Common.Dbgl($"Dropping {m_carrying.m_shared.m_name} on the ground");
+                        Common.Dbgl($"{Character.GetHoverName()}:Dropping {m_carrying.m_shared.m_name} on the ground");
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                         m_carrying = null;
                     }
@@ -425,7 +428,7 @@ namespace RagnarsRokare.MobAI
         {
             if (Brain.State != m_lastState)
             {
-                Common.Dbgl($"State:{Brain.State}");
+                Common.Dbgl($"{Character.GetHoverName()}:State:{Brain.State}");
                 m_lastState = Brain.State;
             }
 
@@ -487,11 +490,12 @@ namespace RagnarsRokare.MobAI
             }
         }
 
-        public bool AddNewAssignment(BaseAI instance, MaxStack<Assignment> KnownAssignments)
+        public bool AddNewAssignment(BaseAI instance, ref MaxStack<Assignment> KnownAssignments)
         {
             Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Awareness * 5);
             if (newassignment != null)
             {
+                Debug.Log($"{Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}");
                 KnownAssignments.Push(newassignment);
                 return true;
             }
@@ -503,10 +507,25 @@ namespace RagnarsRokare.MobAI
 
         public bool MoveToAssignment(float dt)
         {
-            bool assignmentIsInvalid = m_assignment?.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
+            if (!m_assignment.Any())
+            {
+                Debug.Log($"{Character.GetHoverName()}:No assignments to move to");
+                Brain.Fire(Trigger.LeaveAssignment);
+                return true;
+            }
+            if (!(bool)m_assignment.Peek()?.AssignmentObject)
+            {
+                Debug.Log("AssignmentObject is null");
+                m_assignment.Pop();
+                Brain.Fire(Trigger.LeaveAssignment);
+                return true;
+            }
+            bool assignmentIsInvalid = m_assignment.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
             {
+                Debug.Log("AssignmentObject is invalid");
                 m_assignment.Pop();
+                Brain.Fire(Trigger.LeaveAssignment);
                 return true;
             }
             float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? m_assignment.Peek().TypeOfAssignment.InteractDist : m_assignment.Peek().TypeOfAssignment.InteractDist + 1;
