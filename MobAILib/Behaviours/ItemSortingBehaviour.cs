@@ -366,7 +366,7 @@ namespace RagnarsRokare.MobAI
                 RemoveTimeoutedContainers();
                 if (HaveItemInInventory(m_item?.m_itemData) && m_itemsDictionary.ContainsKey(m_item.m_itemData.m_shared.m_name))
                 {
-                    Debug.LogWarning("resume store item task!");
+                    //Debug.LogWarning("resume store item task!");
                     m_carriedItem = m_item.m_itemData;
                     (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
                     m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
@@ -440,7 +440,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.StopMoving();
                     if (m_container.Container == null)
                     {
-                        Common.Dbgl($"Is near container {m_container.UniqueId} but it is still null");
+                        Common.Dbgl($"{aiBase.Character.GetHoverName()}({aiBase.Character.transform.position}):Is near container {m_container.UniqueId}({m_container.Position}) but it is still null", "Sorter");
                         return;
                     }
                     if (!m_container.Container.IsInUse())
@@ -668,7 +668,7 @@ namespace RagnarsRokare.MobAI
                     Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", "Sorter");
                     mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
                     m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
-                    Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
+                    //Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
                 }
                 Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", "Sorter");
                 m_carriedItem = null;
@@ -721,7 +721,7 @@ namespace RagnarsRokare.MobAI
                 }
                 if (!m_item.CanPickup())
                 {
-                    Debug.Log($"Can't pickup {m_item?.name ?? "thing"}");
+                    Common.Dbgl($"Can't pickup {m_item?.name ?? "thing"}");
                     return;
                 }
                 m_carriedItem = m_item.m_itemData;
@@ -739,13 +739,13 @@ namespace RagnarsRokare.MobAI
                 var existingInventoryItem = (aiBase.Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault(i => i.m_shared.m_name == m_carriedItem.m_shared.m_name);
                 if (existingInventoryItem == null)
                 {
-                    Debug.Log("existingInventoryItem is null");
+                    //Debug.Log("existingInventoryItem is null");
                     aiBase.Brain.Fire(Trigger.ItemNotFound);
                     return;
                 }
                 if (!(bool)m_item)
                 {
-                    Debug.Log("m_item is null");
+                    //Debug.Log("m_item is null");
                     aiBase.Brain.Fire(Trigger.ItemNotFound);
                     return;
                 }
@@ -883,7 +883,7 @@ namespace RagnarsRokare.MobAI
             {
                 if (Time.time > m_putItemInContainerFailTimers[key])
                 {
-                    Debug.LogWarning($"remove {key} from timeout");
+                    //Debug.LogWarning($"remove {key} from timeout");
                     m_putItemInContainerFailTimers.Remove(key);
                 }
             }

@@ -189,7 +189,7 @@ namespace RagnarsRokare.MobAI
                     if (Brain.IsInState(State.Assigned)) return false;
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    Debug.Log("Searching for new assignment");
+                    Common.Dbgl("Searching for new assignment");
                     return AddNewAssignment(arg.instance, ref m_assignment);
                 })
                 .OnEntry(t =>
@@ -495,7 +495,7 @@ namespace RagnarsRokare.MobAI
             Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Awareness * 5);
             if (newassignment != null)
             {
-                Debug.Log($"{Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}");
+                Common.Dbgl($"{Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}");
                 KnownAssignments.Push(newassignment);
                 return true;
             }
@@ -509,13 +509,13 @@ namespace RagnarsRokare.MobAI
         {
             if (!m_assignment.Any())
             {
-                Debug.Log($"{Character.GetHoverName()}:No assignments to move to");
+                Common.Dbgl($"{Character.GetHoverName()}:No assignments to move to");
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
             }
             if (!(bool)m_assignment.Peek()?.AssignmentObject)
             {
-                Debug.Log("AssignmentObject is null");
+                Common.Dbgl("AssignmentObject is null");
                 m_assignment.Pop();
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
@@ -523,7 +523,7 @@ namespace RagnarsRokare.MobAI
             bool assignmentIsInvalid = m_assignment.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
             {
-                Debug.Log("AssignmentObject is invalid");
+                Common.Dbgl("AssignmentObject is invalid");
                 m_assignment.Pop();
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
