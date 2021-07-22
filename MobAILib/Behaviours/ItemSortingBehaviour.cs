@@ -72,7 +72,18 @@ namespace RagnarsRokare.MobAI
         public float OpenChestDelay { get; private set; } = 1;
         public float PutItemInChestFailedRetryTimeout { get; set; } = 120f;
         public float SearchDumpContainerRetryTimeout { get; set; } = 60f;
-        public StorageContainer DumpContainer { get; set; }
+        public StorageContainer DumpContainer 
+        { 
+            get => m_dumpContainer; 
+            set  
+            { 
+                m_dumpContainer = value;
+                if (value != null)
+                {
+                    RemoveContainerFromItemsDict(value);
+                }
+            }
+        }
         public float ReadSignDelay { get; private set; } = 1;
 
         private Dictionary<string, IEnumerable<(StorageContainer container, int count)>> m_itemsDictionary;
@@ -94,6 +105,7 @@ namespace RagnarsRokare.MobAI
         private MaxStack<(StorageContainer container, int count)> m_itemStorageStack;
         private float m_readNearbySignTimer;
         private float m_pickableTimer;
+        private StorageContainer m_dumpContainer;
 
         public void SaveItemDictionary()
         {

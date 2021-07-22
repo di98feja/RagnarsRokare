@@ -417,7 +417,7 @@ namespace RagnarsRokare.MobAI
                         m_carrying = null;
                     }
                     UpdateAiStatus(State.DoneWithAssignment);
-                    m_containers.Peek()?.SetInUse(inUse: false);
+                    //m_containers.Peek()?.SetInUse(inUse: false);
                     Brain.Fire(Trigger.LeaveAssignment);
                 });
         }
