@@ -69,7 +69,7 @@ namespace RagnarsRokare.MobAI
             return ClosestObject;
         }
 
-        public static Assignment FindRandomNearbyAssignment(BaseAI instance, List<string> trainedAssignments, MaxStack<Assignment> knownassignments, float assignmentSearchRadius)
+        public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius)
         {
             Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
             Vector3 position = instance.transform.position;
@@ -158,36 +158,6 @@ namespace RagnarsRokare.MobAI
             else
                 result = name;
             return result;
-        }
-
-        public static bool AssignmentTimeoutCheck(ref MaxStack<Assignment> assignments, float dt, float timeBeforeAssignmentCanBeRepeated)
-        {
-            bool repeatImmediatelyIfSingle = assignments.Count() == 1 && assignments.Peek().AssignmentTime > 0f;
-            if (repeatImmediatelyIfSingle)
-            {
-                assignments.Pop();
-            }
-            for (int i = 1; i < assignments.Count(); i++)
-            {
-                var assignment = assignments.ElementAt(i);
-                assignment.AssignmentTime += dt;
-                int multiplicator = 1;
-                if (assignment.TypeOfAssignment.ComponentType == typeof(Fireplace))
-                {
-                    multiplicator = 3;
-                }
-                if (assignment.AssignmentTime > timeBeforeAssignmentCanBeRepeated * multiplicator)
-                {
-                    Common.Dbgl($"GreAssignment: {assignment} forgotten");
-                    assignments.Remove(assignment);
-                    if (!assignments.Any())
-                    {
-                        return false;
-                    }
-                    break;
-                }
-            }
-            return true;
         }
 
         public static ZNetView GetNView<T>(T obj)

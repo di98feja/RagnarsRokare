@@ -37,7 +37,7 @@ namespace RagnarsRokare.MobAI
     {
         public GameObject AssignmentObject { get; set; }
         public AssignmentType TypeOfAssignment { get; set; }
-        public float AssignmentTime { get; set; }
+        public float AssignmentTimeout { get; set; }
         public Vector3 Position 
         {
             get
@@ -119,7 +119,7 @@ namespace RagnarsRokare.MobAI
             //BelongsTo = instanceId;
             TypeOfAssignment = GetAssignmentType(piece);
             AssignmentObject = piece.gameObject;
-            AssignmentTime = 0;
+            AssignmentTimeout = 0;
         }
 
         private AssignmentType GetAssignmentType(Piece piece)

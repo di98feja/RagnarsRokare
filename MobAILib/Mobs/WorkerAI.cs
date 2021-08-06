@@ -8,7 +8,7 @@ namespace RagnarsRokare.MobAI
 {
     public class WorkerAI : MobAIBase, IMobAIType
     {
-        public MaxStack<Assignment> m_assignment;
+        public LinkedList<Assignment> m_assignment;
         public MaxStack<Container> m_containers;
         public ItemDrop.ItemData m_carrying;
 
@@ -87,7 +87,7 @@ namespace RagnarsRokare.MobAI
             PrintAIStateToDebug = false;
 
             m_config = config as WorkerAIConfig;
-            m_assignment = new MaxStack<Assignment>(Intelligence);
+            m_assignment = new LinkedList<Assignment>();
             m_containers = new MaxStack<Container>(Intelligence);
             m_carrying = null;
             m_assignedTimer = 0f;
@@ -190,7 +190,7 @@ namespace RagnarsRokare.MobAI
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
                     Common.Dbgl("Searching for new assignment");
-                    return AddNewAssignment(arg.instance, ref m_assignment);
+                    return StartNewAssignment(arg.instance, ref m_assignment);
                 })
                 .OnEntry(t =>
                 {
@@ -343,10 +343,10 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.AssignmentFinished, State.DoneWithAssignment)
                 .OnEntry(t =>
                 {
-                    UpdateAiStatus(State.CheckingAssignment, m_assignment.Peek().TypeOfAssignment.Name);
+                    UpdateAiStatus(State.CheckingAssignment, m_assignment.First().TypeOfAssignment.Name);
                     StopMoving();
-                    var needFuel = m_assignment.Peek().NeedFuel;
-                    var needOre = m_assignment.Peek().NeedOre;
+                    var needFuel = m_assignment.First().NeedFuel;
+                    var needOre = m_assignment.First().NeedOre;
                     var fetchItems = new List<ItemDrop.ItemData>();
                     Common.Dbgl($"{Character.GetHoverName()}:Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
                     if (needFuel != null)
@@ -376,20 +376,20 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     StopMoving();
-                    var needFuel = m_assignment.Peek().NeedFuel;
-                    var needOre = m_assignment.Peek().NeedOre;
+                    var needFuel = m_assignment.First().NeedFuel;
+                    var needOre = m_assignment.First().NeedOre;
                     bool isCarryingFuel = m_carrying.m_shared.m_name == needFuel?.m_shared?.m_name;
                     bool isCarryingMatchingOre = needOre?.Any(c => m_carrying.m_shared.m_name == c?.m_shared?.m_name) ?? false;
 
-                    UpdateAiStatus(State.UnloadToAssignment, m_assignment.Peek().TypeOfAssignment.Name);
+                    UpdateAiStatus(State.UnloadToAssignment, m_assignment.First().TypeOfAssignment.Name);
                     if (isCarryingFuel)
                     {
-                        m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
+                        m_assignment.First().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else if (isCarryingMatchingOre)
                     {
-                        m_assignment.Peek().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
+                        m_assignment.First().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else
@@ -418,6 +418,15 @@ namespace RagnarsRokare.MobAI
                     }
                     UpdateAiStatus(State.DoneWithAssignment);
                     //m_containers.Peek()?.SetInUse(inUse: false);
+                    if (m_assignment.Any())
+                    {
+                        int multiplicator = 1;
+                        if (m_assignment.First().TypeOfAssignment.ComponentType == typeof(Fireplace))
+                        {
+                            multiplicator = 3;
+                        }
+                        m_assignment.First().AssignmentTimeout = Time.time + m_config.TimeBeforeAssignmentCanBeRepeated*multiplicator;
+                    }
                     Brain.Fire(Trigger.LeaveAssignment);
                 });
         }
@@ -449,11 +458,6 @@ namespace RagnarsRokare.MobAI
             //Assigned timeout-function 
             m_assignedTimer += dt;
             if (m_assignedTimer > m_config.TimeLimitOnAssignment)
-            {
-                Brain.Fire(Trigger.AssignmentTimedOut);
-            }
-            //Assignment timeout-function
-            if (!Common.AssignmentTimeoutCheck(ref m_assignment, dt, m_config.TimeBeforeAssignmentCanBeRepeated))
             {
                 Brain.Fire(Trigger.AssignmentTimedOut);
             }
@@ -490,19 +494,24 @@ namespace RagnarsRokare.MobAI
             }
         }
 
-        public bool AddNewAssignment(BaseAI instance, ref MaxStack<Assignment> KnownAssignments)
+        public bool StartNewAssignment(BaseAI instance, ref LinkedList<Assignment> KnownAssignments)
         {
             Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Awareness * 5);
             if (newassignment != null)
             {
                 Common.Dbgl($"{Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}");
-                KnownAssignments.Push(newassignment);
+                KnownAssignments.AddFirst(newassignment);
+                Debug.Log($"Num assignments:{KnownAssignments.Count}, First assignment:{KnownAssignments.First()?.TypeOfAssignment.Name}");
                 return true;
             }
-            else
+            else if(KnownAssignments.Any())
             {
-                return false;
+                KnownAssignments.OrderBy(a => a.AssignmentTimeout);
+                KnownAssignments.First().AssignmentTimeout = 0;
+                Common.Dbgl($"{Character.GetHoverName()}:No new assignment found, checking old one:{KnownAssignments.First().TypeOfAssignment.Name}");
+                return true;
             }
+            return false;
         }
 
         public bool MoveToAssignment(float dt)
@@ -513,23 +522,23 @@ namespace RagnarsRokare.MobAI
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
             }
-            if (!(bool)m_assignment.Peek()?.AssignmentObject)
+            if (!(bool)m_assignment.First().AssignmentObject)
             {
                 Common.Dbgl("AssignmentObject is null");
-                m_assignment.Pop();
+                m_assignment.RemoveFirst();
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
             }
-            bool assignmentIsInvalid = m_assignment.Peek()?.AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
+            bool assignmentIsInvalid = m_assignment.First().AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
             {
                 Common.Dbgl("AssignmentObject is invalid");
-                m_assignment.Pop();
+                m_assignment.RemoveFirst();
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
             }
-            float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? m_assignment.Peek().TypeOfAssignment.InteractDist : m_assignment.Peek().TypeOfAssignment.InteractDist + 1;
-            return MoveAndAvoidFire(m_assignment.Peek().Position, dt, distance);
+            float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? m_assignment.First().TypeOfAssignment.InteractDist : m_assignment.First().TypeOfAssignment.InteractDist + 1;
+            return MoveAndAvoidFire(m_assignment.First().Position, dt, distance);
         }
 
         public MobAIInfo GetMobAIInfo()
