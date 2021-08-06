@@ -196,17 +196,19 @@ namespace RagnarsRokare.MobAI
             Vector3 rhs = itemPosition - eyesPosition;
             var tempRaycastHits = Physics.RaycastAll(eyesPosition, rhs.normalized, rhs.magnitude, LayerMask.GetMask("Default", /*"terrain",*/ "static_solid", "Default_small", "piece", "viewblock", "vehicle", "item")); //, "terrain"
             //Debug.Log("#############################################");
-            //Debug.Log($"RaycastHit: {item.name} pos: {item.transform.position}");
+            //Debug.Log($"Target: {item.name}, id:{item.GetInstanceID()} pos: {item.transform.position}");
             //foreach (RaycastHit RaycastHit in tempRaycastHits)
             //{
-            //    Debug.Log($"RaycastHit: {RaycastHit.collider.name} pos:  {RaycastHit.collider.transform.position}");
+            //    Debug.Log($"RaycastHit: {RaycastHit.collider.name} GO:{RaycastHit.collider.gameObject.name} id:{RaycastHit.collider.gameObject.GetInstanceID()} pos:  {RaycastHit.collider.transform.position}");
             //}
 
-            if (tempRaycastHits.Length < 2)
-            {
-                return true;
-            }
-            return false;
+            return tempRaycastHits.Any(h => Vector3.Distance(h.collider.transform.position, itemPosition) < 0.5f);
+
+            //if (tempRaycastHits.Length < 2)
+            //{
+            //    return true;
+            //}
+            //return false;
         }
 
         public static bool Alarmed(BaseAI instance, float Awareness)
