@@ -122,7 +122,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
-xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y
+xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output\ /S /Y
 
 </PostBuildEvent>
   </PropertyGroup>
