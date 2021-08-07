@@ -47,7 +47,6 @@ namespace RagnarsRokare.SlaveGreylings
                             {
                                 FeedDuration = GreylingsConfig.FeedDuration.Value,
                                 IncludedContainers = GreylingsConfig.IncludedContainersList.Value.Split(','),
-                                TimeBeforeAssignmentCanBeRepeated = GreylingsConfig.TimeBeforeAssignmentCanBeRepeated.Value,
                                 TimeLimitOnAssignment = GreylingsConfig.TimeLimitOnAssignment.Value,
                                 Agressiveness = GreylingsConfig.Agressiveness.Value,
                                 Awareness = GreylingsConfig.Awareness.Value,
@@ -100,7 +99,8 @@ namespace RagnarsRokare.SlaveGreylings
                                 Awareness = GreydwarfConfig.Awareness.Value,
                                 Mobility = GreydwarfConfig.Mobility.Value,
                                 Intelligence = GreydwarfConfig.Intelligence.Value,
-                                AIStateCustomStrings = GreydwarfConfig.AIStateDictionary
+                                AIStateCustomStrings = GreydwarfConfig.AIStateDictionary,
+                                WorkableAssignments = GreydwarfConfig.WorkableAssignments
                             }
                         };
                     }

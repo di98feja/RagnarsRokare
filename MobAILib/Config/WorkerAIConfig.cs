@@ -6,7 +6,6 @@ namespace RagnarsRokare.MobAI
     {
         public int FeedDuration = 1000;
         public string[] IncludedContainers = new string[] { "piece_chest_wood" };
-        public int TimeBeforeAssignmentCanBeRepeated = 120;
         public int TimeLimitOnAssignment = 60;
 
         [Obsolete]

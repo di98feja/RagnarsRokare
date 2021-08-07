@@ -69,7 +69,7 @@ namespace RagnarsRokare.MobAI
             return ClosestObject;
         }
 
-        public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius)
+        public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius, AssignmentType[] acceptedAssignmentTypes = null)
         {
             Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
             Vector3 position = instance.transform.position;
@@ -77,6 +77,7 @@ namespace RagnarsRokare.MobAI
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, assignmentSearchRadius, pieceList);
             var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject))); //&& CanSeeTarget(instance, p.gameObject)
+            allAssignablePieces = allAssignablePieces.Where(p => acceptedAssignmentTypes?.Any(a => a.PieceName == GetPrefabName(p.name)) ?? true);
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
             {

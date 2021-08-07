@@ -13,7 +13,11 @@ namespace RagnarsRokare.MobAI
         public Type ComponentType { get; set; }
         public float InteractDist { get; set; }
         public bool Activated { get; set; }
+        public bool IsExtractable { get; set; } = false;
+        public string ExtractableItemName { get; set; }
+        public int TimeBeforeAssignmentCanBeRepeated { get; set; }
     }
+
     //public enum AssignmentTypes
     //{
     //    [Description("Smelter")]
@@ -104,6 +108,25 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public ItemDrop.ItemData ExtractionItem
+        {
+            get
+            {
+                if (TypeOfAssignment.ComponentType == typeof(Beehive))
+                {
+                    var hive = AssignmentObject.GetComponent<Beehive>();
+                    return hive.m_honeyItem.m_itemData;
+                }
+                return null;
+            }
+        }
+
+
+        public bool IsExtractable() 
+        {
+            return TypeOfAssignment.IsExtractable;
+        }
+
         public bool IsClose(Vector3 point)
         {
             return Vector3.Distance(point, Position) < TypeOfAssignment.InteractDist;
@@ -120,6 +143,11 @@ namespace RagnarsRokare.MobAI
             TypeOfAssignment = GetAssignmentType(piece);
             AssignmentObject = piece.gameObject;
             AssignmentTimeout = 0;
+        }
+
+        public override string ToString()
+        {
+            return TypeOfAssignment.Name;
         }
 
         private AssignmentType GetAssignmentType(Piece piece)
@@ -141,18 +169,19 @@ namespace RagnarsRokare.MobAI
 
         public static IEnumerable<AssignmentType> AssignmentTypes { get; } = new List<AssignmentType>
         {
-            new AssignmentType { Name = "Smelter", PieceName = "smelter", ComponentType = typeof(Smelter), InteractDist = 1.5f},
-            new AssignmentType { Name = "Kiln", PieceName = "charcoal_kiln", ComponentType = typeof(Smelter), InteractDist = 1.5f},
-            new AssignmentType { Name = "Fireplace", PieceName = "fire_pit", ComponentType = typeof(Fireplace), InteractDist = 4.0f},
-            new AssignmentType { Name = "Hearth", PieceName = "hearth", ComponentType = typeof(Fireplace), InteractDist = 5.0f},
-            new AssignmentType { Name = "StandingWoodTorch", PieceName = "piece_groundtorch_wood", ComponentType = typeof(Fireplace), InteractDist = 1.5f},
-            new AssignmentType { Name = "StandingIronTorch", PieceName = "piece_groundtorch", ComponentType = typeof(Fireplace), InteractDist = 1.5f},
-            new AssignmentType { Name = "StandingGreenTorch", PieceName = "piece_groundtorch_green", ComponentType = typeof(Fireplace), InteractDist = 1.5f},
-            new AssignmentType { Name = "WallTorch", PieceName = "piece_walltorch", ComponentType = typeof(Fireplace), InteractDist = 2.5f},
-            new AssignmentType { Name = "Brazier", PieceName = "piece_brazierceiling01", ComponentType = typeof(Fireplace), InteractDist = 2.5f},
-            new AssignmentType { Name = "Blastfurnace", PieceName = "blastfurnace", ComponentType = typeof(Smelter), InteractDist = 1.5f},
-            new AssignmentType { Name = "Windmill", PieceName = "windmill", ComponentType = typeof(Smelter), InteractDist = 2.5f},
-            new AssignmentType { Name = "Spinningwheel", PieceName = "piece_spinningwheel", ComponentType = typeof(Smelter), InteractDist = 2.5f},
+            new AssignmentType { Name = "Smelter", PieceName = "smelter", ComponentType = typeof(Smelter), InteractDist = 1.5f, TimeBeforeAssignmentCanBeRepeated = 120},
+            new AssignmentType { Name = "Kiln", PieceName = "charcoal_kiln", ComponentType = typeof(Smelter), InteractDist = 1.5f, TimeBeforeAssignmentCanBeRepeated = 120},
+            new AssignmentType { Name = "Fireplace", PieceName = "fire_pit", ComponentType = typeof(Fireplace), InteractDist = 4.0f, TimeBeforeAssignmentCanBeRepeated = 360},
+            new AssignmentType { Name = "Hearth", PieceName = "hearth", ComponentType = typeof(Fireplace), InteractDist = 5.0f, TimeBeforeAssignmentCanBeRepeated = 360},
+            new AssignmentType { Name = "StandingWoodTorch", PieceName = "piece_groundtorch_wood", ComponentType = typeof(Fireplace), InteractDist = 1.5f, TimeBeforeAssignmentCanBeRepeated = 360},
+            new AssignmentType { Name = "StandingIronTorch", PieceName = "piece_groundtorch", ComponentType = typeof(Fireplace), InteractDist = 1.5f, TimeBeforeAssignmentCanBeRepeated = 360},
+            new AssignmentType { Name = "StandingGreenTorch", PieceName = "piece_groundtorch_green", ComponentType = typeof(Fireplace), InteractDist = 1.5f, TimeBeforeAssignmentCanBeRepeated = 360},
+            new AssignmentType { Name = "WallTorch", PieceName = "piece_walltorch", ComponentType = typeof(Fireplace), InteractDist = 2.5f, TimeBeforeAssignmentCanBeRepeated = 360},
+            new AssignmentType { Name = "Brazier", PieceName = "piece_brazierceiling01", ComponentType = typeof(Fireplace), InteractDist = 2.5f, TimeBeforeAssignmentCanBeRepeated = 360},
+            new AssignmentType { Name = "Blastfurnace", PieceName = "blastfurnace", ComponentType = typeof(Smelter), InteractDist = 1.5f, TimeBeforeAssignmentCanBeRepeated = 120},
+            new AssignmentType { Name = "Windmill", PieceName = "windmill", ComponentType = typeof(Smelter), InteractDist = 2.5f, TimeBeforeAssignmentCanBeRepeated = 120},
+            new AssignmentType { Name = "Spinningwheel", PieceName = "piece_spinningwheel", ComponentType = typeof(Smelter), InteractDist = 2.5f, TimeBeforeAssignmentCanBeRepeated = 120},
+            new AssignmentType { Name = "Beehive", PieceName = "piece_beehive", ComponentType = typeof(Beehive), InteractDist = 1.5f, IsExtractable=true, ExtractableItemName = "$item_honey", TimeBeforeAssignmentCanBeRepeated = 360},
         };
     }
 

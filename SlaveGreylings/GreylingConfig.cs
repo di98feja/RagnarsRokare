@@ -10,7 +10,6 @@ namespace RagnarsRokare.SlaveGreylings
         public static ConfigEntry<int> FeedDuration;
         public static ConfigEntry<int> TamingTime;
         public static ConfigEntry<string> IncludedContainersList;
-        public static ConfigEntry<int> TimeBeforeAssignmentCanBeRepeated;
         public static ConfigEntry<int> TimeLimitOnAssignment;
         public static IEnumerable<string> PreTameConsumables;
         public static IEnumerable<string> PostTameConsumables;
@@ -25,7 +24,6 @@ namespace RagnarsRokare.SlaveGreylings
             FeedDuration = Config.Bind<int>("General", "Greyling_FeedDuration", 500, "Time before getting hungry after consuming one item");
             TamingTime = Config.Bind<int>("General", "Greyling_TamingTime", 1000, "Total time it takes to tame a greyling");
             IncludedContainersList = Config.Bind<string>("General", "Greyling_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
-            TimeBeforeAssignmentCanBeRepeated = Config.Bind<int>("General", "Greylings_TimeBeforeAssignmentCanBeRepeated", 120, "How long before assignment can be done again");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Greylings_TimeLimitOnAssignment", 60, "How long before moving on to next assignment");
             PreTameConsumables = TamingItemList.Value.Split(',');
             PostTameConsumables = "Resin".Split(',');
@@ -34,7 +32,7 @@ namespace RagnarsRokare.SlaveGreylings
             Mobility = Config.Bind<int>("General", "Greyling_Mobility", 5, "Mobility is used to determine how often and how far the mob moves");
             Intelligence = Config.Bind<int>("General", "Greyling_Intelligence", 3, "General intelligence, how much the mob can remember");
 
-            WorkableAssignments = new HashSet<string>(MobAI.Assignment.AssignmentTypes.Select(a => a.PieceName));
+            WorkableAssignments = new HashSet<string>(MobAI.Assignment.AssignmentTypes.Where(t => !t.IsExtractable).Select(a => a.PieceName));
         }
         public static Dictionary<string, string> AIStateDictionary { get; } = new Dictionary<string, string>()
         {

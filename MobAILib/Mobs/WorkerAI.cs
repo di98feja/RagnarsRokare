@@ -420,12 +420,7 @@ namespace RagnarsRokare.MobAI
                     //m_containers.Peek()?.SetInUse(inUse: false);
                     if (m_assignment.Any())
                     {
-                        int multiplicator = 1;
-                        if (m_assignment.First().TypeOfAssignment.ComponentType == typeof(Fireplace))
-                        {
-                            multiplicator = 3;
-                        }
-                        m_assignment.First().AssignmentTimeout = Time.time + m_config.TimeBeforeAssignmentCanBeRepeated*multiplicator;
+                        m_assignment.First().AssignmentTimeout = Time.time + m_assignment.First().TypeOfAssignment.TimeBeforeAssignmentCanBeRepeated;
                     }
                     Brain.Fire(Trigger.LeaveAssignment);
                 });

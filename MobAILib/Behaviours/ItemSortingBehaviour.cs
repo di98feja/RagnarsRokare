@@ -32,6 +32,7 @@ namespace RagnarsRokare.MobAI
             public const string LookForNearbyStorageSign = Prefix + "LookForNearbyStorageSign";
             public const string ReadNearbyStorageSign = Prefix + "ReadNearbyStorageSign";
             public const string WaitingForPickable = Prefix + "WaitingForPickable";
+            public const string FindingExtractionTask = Prefix + "FindingExtractionTask";
         }
 
         private class Trigger
@@ -56,6 +57,7 @@ namespace RagnarsRokare.MobAI
             public const string NearbySignNotFound = Prefix + "NearbySignNotFound";
             public const string SignHasBeenRead = Prefix + "SignHasBeenRead";
             public const string WaitForPickable = Prefix + "WaitForPickable";
+            public const string FindExtractionTask = Prefix + "FindExtractionTask";
         }
 
         // Input
@@ -72,6 +74,8 @@ namespace RagnarsRokare.MobAI
         public float OpenChestDelay { get; private set; } = 1;
         public float PutItemInChestFailedRetryTimeout { get; set; } = 120f;
         public float SearchDumpContainerRetryTimeout { get; set; } = 60f;
+        public float SearchForExtractionTaskTimeout { get; set; } = 60f;
+
         public StorageContainer DumpContainer 
         { 
             get => m_dumpContainer; 
@@ -86,8 +90,18 @@ namespace RagnarsRokare.MobAI
         }
         public float ReadSignDelay { get; private set; } = 1;
 
+        private ExtractionBehaviour m_extractionBehaviour;
+
         private Dictionary<string, IEnumerable<(StorageContainer container, int count)>> m_itemsDictionary;
         private Dictionary<string, float> m_putItemInContainerFailTimers;
+
+        //Timers
+        private float m_openChestTimer;
+        private float m_currentSearchTimeout;
+        private float m_dumpContainerTimer;
+        private float m_readNearbySignTimer;
+        private float m_pickableTimer;
+        private float m_extractionBehaviourTimer;
 
         private ItemDrop m_item;
         private Pickable m_pickable;
@@ -95,16 +109,11 @@ namespace RagnarsRokare.MobAI
         private Sign m_nearbySign;
         private ItemDrop.ItemData m_carriedItem;
         private MobAIBase m_aiBase;
-        private float m_openChestTimer;
-        private float m_currentSearchTimeout;
         private int m_searchRadius;
         private MaxStack<StorageContainer> m_knownContainers;
         private Vector3 m_startPosition;
         private Vector3 m_lastPickupPosition;
-        private float m_dumpContainerTimer;
         private MaxStack<(StorageContainer container, int count)> m_itemStorageStack;
-        private float m_readNearbySignTimer;
-        private float m_pickableTimer;
         private StorageContainer m_dumpContainer;
 
         public void SaveItemDictionary()
@@ -150,6 +159,10 @@ namespace RagnarsRokare.MobAI
             m_searchRadius = aiBase.Awareness * 5;
             m_knownContainers = new MaxStack<StorageContainer>(aiBase.Intelligence);
             m_putItemInContainerFailTimers = new Dictionary<string, float>();
+            m_extractionBehaviour = new ExtractionBehaviour();
+            m_extractionBehaviour.SuccessState = State.FindRandomTask;
+            m_extractionBehaviour.FailState = State.FindRandomTask;
+            m_extractionBehaviour.Configure(aiBase, aiBase.Brain, State.FindingExtractionTask);
 
             LoadItemDictionary();
             foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container))?.Distinct(new Helpers.StorageContainerComparer()))
@@ -176,10 +189,19 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.FoundPickable, State.MoveToPickable)
                 .Permit(Trigger.SearchDumpContainer, State.MoveToDumpContainer)
                 .Permit(Trigger.ItemFound, State.MoveToStorageContainer)
+                .Permit(Trigger.FindExtractionTask, State.FindingExtractionTask)
                 .OnEntry(t =>
                 {
                     //Common.Dbgl("Entered SearchForRandomContainer", "Sorter");
                     m_currentSearchTimeout = Time.time + 2f;  //Delay before search initiates.
+                });
+
+            brain.Configure(State.FindingExtractionTask)
+                .SubstateOf(State.Main)
+                .InitialTransition(m_extractionBehaviour.StartState)
+                .OnEntry(t =>
+                {
+                    m_extractionBehaviourTimer = Time.time + SearchForExtractionTaskTimeout;
                 });
 
             brain.Configure(State.MoveToContainer)
@@ -404,6 +426,20 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
 
+                if (Time.time > m_dumpContainerTimer && DumpContainer != null)
+                {
+                    m_startPosition = DumpContainer.Position;
+                    aiBase.Brain.Fire(Trigger.SearchDumpContainer);
+                    return;
+                }
+
+                if (Time.time > m_extractionBehaviourTimer)
+                {
+                    m_extractionBehaviour.AcceptedAssignments = Assignment.AssignmentTypes.Where(t => t.IsExtractable && m_itemsDictionary.Keys.Contains(t.ExtractableItemName)).ToArray();
+                    aiBase.Brain.Fire(Trigger.FindExtractionTask);
+                    return;
+                }
+
                 var knownContainers = m_knownContainers.ToList();
                 if (DumpContainer != null && !knownContainers.Contains(DumpContainer))
                 {
@@ -422,12 +458,6 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
 
-                if (Time.time > m_dumpContainerTimer && DumpContainer != null)
-                {
-                    m_startPosition = DumpContainer.Position;
-                    aiBase.Brain.Fire(Trigger.SearchDumpContainer);
-                    return;
-                }
                 if (m_lastPickupPosition != Vector3.zero)
                 {
                     if (aiBase.MoveAndAvoidFire(m_lastPickupPosition, dt, 1.0f))
@@ -437,6 +467,12 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
                 Common.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition);
+                return;
+            }
+
+            if (aiBase.Brain.IsInState(State.FindingExtractionTask))
+            {
+                m_extractionBehaviour.Update(aiBase, dt);
                 return;
             }
 
