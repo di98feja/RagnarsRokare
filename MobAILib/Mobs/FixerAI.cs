@@ -448,7 +448,7 @@ namespace RagnarsRokare.MobAI
                 .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
                 .Where(p => !m_assignment.Contains(p))
                 .Where(p => Common.GetNView(p)?.IsValid() ?? false)
-                .Where(p => Common.CanSeeTarget(Instance, p.gameObject))
+                .Where(p => Common.CanSeeTarget(Instance, p.GetComponentInParent<StaticTarget>()))
                 .OrderBy(p => Vector3.Distance(p.GetCenter(), position))
                 .FirstOrDefault();
             Common.Dbgl($"{Character.GetHoverName()}:Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");

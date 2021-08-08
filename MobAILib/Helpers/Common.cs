@@ -24,7 +24,7 @@ namespace RagnarsRokare.MobAI
                 {
                     continue;
                 }
-                if (item?.transform?.position != null && acceptedNames.Contains(item.m_itemData.m_shared.m_name) && CanSeeTarget(instance, item.gameObject) && (ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
+                if (item?.transform?.position != null && acceptedNames.Contains(item.m_itemData.m_shared.m_name) && CanSeeTarget(instance, collider) && (ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
                 {
                     ClosestObject = item;
                 }
@@ -45,7 +45,7 @@ namespace RagnarsRokare.MobAI
                 .Where(p => acceptedPickables.Contains(GetPrefabName(p.gameObject.name)))
                 .Where(p => !string.IsNullOrEmpty(p.GetHoverText()))
                 .Where(p => p.transform?.position != null)
-                //.Where(p => CanSeeTarget(instance, p.gameObject))
+                .Where(p => CanSeeTarget(instance, p.gameObject))
                 .Where(p => acceptedItemNames?.Contains(p.m_itemPrefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_name) ?? true)
                 .OrderBy(p => Vector3.Distance(instance.transform.position, p.transform.position))
                 .FirstOrDefault();
@@ -59,7 +59,7 @@ namespace RagnarsRokare.MobAI
             {
                 ItemDrop item = collider.transform?.GetComponentInParent<ItemDrop>();
                 if (item?.GetComponent<ZNetView>()?.IsValid() != true || item?.transform?.position == null) continue;
-                if (mustBeVisible && !CanSeeTarget(instance, item.gameObject)) continue;
+                if (mustBeVisible && !CanSeeTarget(instance, collider)) continue;
                 if (!string.IsNullOrEmpty(itemName) && item.m_itemData.m_shared.m_name != itemName) continue;
                 if ((ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
                 {
@@ -71,22 +71,31 @@ namespace RagnarsRokare.MobAI
 
         public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius, AssignmentType[] acceptedAssignmentTypes = null)
         {
-            Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}");
+            //Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}", "Extraction");
             Vector3 position = instance.transform.position;
             //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, assignmentSearchRadius, pieceList);
-            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject))); //&& CanSeeTarget(instance, p.gameObject)
-            allAssignablePieces = allAssignablePieces.Where(p => acceptedAssignmentTypes?.Any(a => a.PieceName == GetPrefabName(p.name)) ?? true);
+            //Common.Dbgl($"Pieces in readius: {pieceList.Select(n => n.name).Join()}", "Extraction");
+            //Common.Dbgl($"Trained assignments: {trainedAssignments.Join()}", "Extraction");
+            //Common.Dbgl($"Known assignments: {knownassignments.Select(a => a.TypeOfAssignment.Name).Join()}", "Extraction");
+            //Common.Dbgl($"Accepted assignments: {acceptedAssignmentTypes.Select(a => a.Name).Join()}", "Extraction");
+            //Common.Dbgl($"Can see:{pieceList.Select(p => $"{p.name}:{CanSeeTarget(instance, p.GetComponentInParent<StaticTarget>())}").Join()}", "Extraction");
+            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.GetComponentInParent<StaticTarget>()))); //&& CanSeeTarget(instance, p.gameObject)
+            //Common.Dbgl($"Assignments found 1: {allAssignablePieces.Select(n => n.name).Join()}", "Extraction");
+            if (acceptedAssignmentTypes != null)
+            {
+                allAssignablePieces = allAssignablePieces.Where(p => acceptedAssignmentTypes.Any(a => a.PieceName == GetPrefabName(p.name)));
+            }
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
             {
                 return null;
             }
-            Common.Dbgl($"Assignments found: {allAssignablePieces.Select(n => n.name).Join()}");
+            //Common.Dbgl($"Assignments found 2: {allAssignablePieces.Select(n => n.name).Join()}", "Extraction");
             // filter out assignments already in list
             var newAssignments = allAssignablePieces.Where(p => !knownassignments.Any(a => a.AssignmentObject == p.gameObject));
-            Common.Dbgl($"Assignments after filter: {newAssignments.Select(n => n.name).Join()}");
+            //Common.Dbgl($"Assignments after filter: {newAssignments.Select(n => n.name).Join()}", "Extraction");
 
             // filter out inaccessible assignments
             //newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, true, true));
@@ -111,7 +120,7 @@ namespace RagnarsRokare.MobAI
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
-            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.gameObject)); //&& CanSeeTarget(instance, p.gameObject)
+            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.GetComponentInParent<StaticTarget>())); //&& CanSeeTarget(instance, p.gameObject)
             var containers = allcontainerPieces?.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList(); 
             if (!containers.Any())
             {
@@ -200,16 +209,65 @@ namespace RagnarsRokare.MobAI
             //Debug.Log($"Target: {item.name}, id:{item.GetInstanceID()} pos: {item.transform.position}");
             //foreach (RaycastHit RaycastHit in tempRaycastHits)
             //{
-            //    Debug.Log($"RaycastHit: {RaycastHit.collider.name} GO:{RaycastHit.collider.gameObject.name} id:{RaycastHit.collider.gameObject.GetInstanceID()} pos:  {RaycastHit.collider.transform.position}");
+            //    Debug.Log($"RaycastHit:Collider:{RaycastHit.collider.GetInstanceID()}, id:{RaycastHit.collider.gameObject.GetInstanceID()}, pos:{RaycastHit.collider.transform.position}");
             //}
 
-            return tempRaycastHits.Any(h => Vector3.Distance(h.collider.transform.position, itemPosition) < 0.5f);
+            return tempRaycastHits.All(h => Vector3.Distance(h.collider.transform.position, itemPosition) < 0.2f);
 
             //if (tempRaycastHits.Length < 2)
             //{
             //    return true;
             //}
             //return false;
+        }
+
+        private static RaycastHit[] m_tempRaycastHits = new RaycastHit[128];
+
+        public static bool CanSeeTarget(BaseAI instance, StaticTarget target)
+        {
+            Vector3 center = target.GetCenter();
+            if (Vector3.Distance(center, instance.transform.position) > instance.m_viewRange)
+            {
+                return false;
+            }
+            var character = instance.GetComponent<Character>();
+            Vector3 rhs = center - character.m_eye.position;
+            List<Collider> allColliders = target.GetAllColliders();
+            var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
+            int num = Physics.RaycastNonAlloc(character.m_eye.position, rhs.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
+            for (int i = 0; i < num; i++)
+            {
+                RaycastHit raycastHit = m_tempRaycastHits[i];
+                if (!allColliders.Contains(raycastHit.collider))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public static bool CanSeeTarget(BaseAI instance, Collider target)
+        {
+            if (!(bool)target) return false;
+
+            Vector3 center = target.ClosestPoint(instance.transform.position);
+            if (Vector3.Distance(center, instance.transform.position) > instance.m_viewRange)
+            {
+                return false;
+            }
+            var character = instance.GetComponent<Character>();
+            Vector3 rhs = center - character.m_eye.position;
+            var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
+            int num = Physics.RaycastNonAlloc(character.m_eye.position, rhs.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
+            for (int i = 0; i < num; i++)
+            {
+                RaycastHit raycastHit = m_tempRaycastHits[i];
+                if (target != raycastHit.collider)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         public static bool Alarmed(BaseAI instance, float Awareness)

@@ -49,7 +49,7 @@ namespace RagnarsRokare.MobAI
             {
                 NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
             }
-            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(new char[] { ' ', ',' }));
+            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(new char[] { ' ', ',' }).Where(a => !string.IsNullOrEmpty(a)));
         }
 
         #region Config
