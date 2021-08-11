@@ -47,6 +47,7 @@ namespace RagnarsRokare.MobAI
             CurrentAIState = initState;
             if (NView.IsValid())
             {
+                NView.Unregister(Constants.Z_MobCommand);
                 NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
             }
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(new char[] { ' ', ',' }).Where(a => !string.IsNullOrEmpty(a)));
@@ -191,8 +192,8 @@ namespace RagnarsRokare.MobAI
             //    remainingDist += Vector3.Distance(path[i - 1], path[i]);
             //}
             //running = remainingDist > 10;
-            running = Vector3.Distance(Character.transform.position, destination) > 10;
-            var nearbyMobs = MobManager.AliveMobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f).Where(m => m.UniqueID != this.UniqueID);
+            running = Vector3.Distance(Character.transform.position, destination) > 5;
+            var nearbyMobs = MobManager.AliveMobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 0.5f).Where(m => m.UniqueID != this.UniqueID);
             var havePath = (bool)Invoke<MonsterAI>(Instance, "HavePath", destination);
             if (!nearbyMobs.Any() && havePath)
             {
