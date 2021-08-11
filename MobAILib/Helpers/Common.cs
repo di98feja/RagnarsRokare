@@ -232,18 +232,37 @@ namespace RagnarsRokare.MobAI
             }
             var character = instance.GetComponent<Character>();
             Vector3 rhs = center - character.m_eye.position;
-            List<Collider> allColliders = target.GetAllColliders();
-            var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
-            int num = Physics.RaycastNonAlloc(character.m_eye.position, rhs.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
-            for (int i = 0; i < num; i++)
+            Vector3 rhs_temp = rhs;
+            Vector3 beam = rhs;
+            bool seen = true;
+            for (int step = 0; step < 10; step++)
             {
-                RaycastHit raycastHit = m_tempRaycastHits[i];
-                if (!allColliders.Contains(raycastHit.collider))
+                rhs_temp = Quaternion.AngleAxis(step, Vector3.up) * rhs;
+                for (int rotation = 0; rotation < 360; rotation += 36/System.Math.Max(step, 1))
                 {
-                    return false;
+                    beam = Quaternion.AngleAxis(rotation, rhs) * rhs_temp;
+                    List<Collider> allColliders = target.GetAllColliders();
+                    var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
+                    int num = Physics.RaycastNonAlloc(character.m_eye.position, beam.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
+                    for (int i = 0; i < num; i++)
+                    {
+                        RaycastHit raycastHit = m_tempRaycastHits[i];
+                        if (!allColliders.Contains(raycastHit.collider))
+                        {
+                            seen = false;
+                        }
+                    }
+                    if (!seen)
+                    {
+                        Dbgl($"{character.GetHoverName()}: nothing at angle {rotation}, {step}");
+                        continue;
+                    }
+                    Dbgl($"{character.GetHoverName()}: detected {target.gameObject.name} at angle {rotation}, {step}");
+                    return true;
                 }
             }
-            return true;
+            Dbgl($"{character.GetHoverName()}: Nothing found");
+            return false;
         }
 
         public static bool CanSeeTarget(BaseAI instance, Collider target)
