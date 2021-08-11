@@ -244,6 +244,7 @@ namespace RagnarsRokare.MobAI
                     List<Collider> allColliders = target.GetAllColliders();
                     var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
                     int num = Physics.RaycastNonAlloc(character.m_eye.position, beam.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
+                    seen = true;
                     for (int i = 0; i < num; i++)
                     {
                         RaycastHit raycastHit = m_tempRaycastHits[i];
