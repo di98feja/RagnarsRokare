@@ -157,9 +157,10 @@ namespace RagnarsRokare.MobAI
             else if (KnownAssignments.Any())
             {
                 KnownAssignments.OrderBy(a => a.AssignmentTimeout);
+                Common.Dbgl($"Have {KnownAssignments.Count}, next is due in {KnownAssignments.First().AssignmentTimeout - Time.time} seconds", "Extraction");
                 if (KnownAssignments.First().AssignmentTimeout <= Time.time)
                 {
-                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:No new assignment found, checking old one:{KnownAssignments.First().TypeOfAssignment.Name}", "Extraction");
+                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:Redoing known assignment:{KnownAssignments.First().TypeOfAssignment.Name}", "Extraction");
                     return true;
                 }
             }

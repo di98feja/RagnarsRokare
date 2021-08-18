@@ -189,7 +189,7 @@ namespace RagnarsRokare.MobAI
                     if (Brain.IsInState(State.Assigned)) return false;
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    Common.Dbgl("Searching for new assignment");
+                    Common.Dbgl("Searching for new assignment", "Worker");
                     return StartNewAssignment(arg.instance, ref m_assignment);
                 })
                 .OnEntry(t =>
@@ -348,7 +348,7 @@ namespace RagnarsRokare.MobAI
                     var needFuel = m_assignment.First().NeedFuel;
                     var needOre = m_assignment.First().NeedOre;
                     var fetchItems = new List<ItemDrop.ItemData>();
-                    Common.Dbgl($"{Character.GetHoverName()}:Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}");
+                    Common.Dbgl($"{Character.GetHoverName()}:Ore:{needOre.Join(j => j.m_shared.m_name)}, Fuel:{needFuel?.m_shared.m_name}", "Worker");
                     if (needFuel != null)
                     {
                         fetchItems.Add(needFuel);
@@ -412,7 +412,7 @@ namespace RagnarsRokare.MobAI
                 {
                     if (m_carrying != null)
                     {
-                        Common.Dbgl($"{Character.GetHoverName()}:Dropping {m_carrying.m_shared.m_name} on the ground");
+                        Common.Dbgl($"{Character.GetHoverName()}:Dropping {m_carrying.m_shared.m_name} on the ground", "Worker");
                         (Character as Humanoid).DropItem((Character as Humanoid).GetInventory(), m_carrying, 1);
                         m_carrying = null;
                     }
@@ -432,7 +432,7 @@ namespace RagnarsRokare.MobAI
         {
             if (Brain.State != m_lastState)
             {
-                Common.Dbgl($"{Character.GetHoverName()}:State:{Brain.State}");
+                Common.Dbgl($"{Character.GetHoverName()}:State:{Brain.State}", "Worker");
                 m_lastState = Brain.State;
             }
 
@@ -494,7 +494,7 @@ namespace RagnarsRokare.MobAI
             Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Awareness * 5);
             if (newassignment != null)
             {
-                Common.Dbgl($"{Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}");
+                Common.Dbgl($"{Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}", "Worker");
                 KnownAssignments.AddFirst(newassignment);
                 Debug.Log($"Num assignments:{KnownAssignments.Count}, First assignment:{KnownAssignments.First()?.TypeOfAssignment.Name}");
                 return true;
@@ -503,7 +503,7 @@ namespace RagnarsRokare.MobAI
             {
                 KnownAssignments.OrderBy(a => a.AssignmentTimeout);
                 KnownAssignments.First().AssignmentTimeout = 0;
-                Common.Dbgl($"{Character.GetHoverName()}:No new assignment found, checking old one:{KnownAssignments.First().TypeOfAssignment.Name}");
+                Common.Dbgl($"{Character.GetHoverName()}:No new assignment found, checking old one:{KnownAssignments.First().TypeOfAssignment.Name}", "Worker");
                 return true;
             }
             return false;
@@ -513,13 +513,13 @@ namespace RagnarsRokare.MobAI
         {
             if (!m_assignment.Any())
             {
-                Common.Dbgl($"{Character.GetHoverName()}:No assignments to move to");
+                Common.Dbgl($"{Character.GetHoverName()}:No assignments to move to", "Worker");
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
             }
             if (!(bool)m_assignment.First().AssignmentObject)
             {
-                Common.Dbgl("AssignmentObject is null");
+                Common.Dbgl("AssignmentObject is null", "Worker");
                 m_assignment.RemoveFirst();
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;
@@ -527,7 +527,7 @@ namespace RagnarsRokare.MobAI
             bool assignmentIsInvalid = m_assignment.First().AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
             {
-                Common.Dbgl("AssignmentObject is invalid");
+                Common.Dbgl("AssignmentObject is invalid", "Worker");
                 m_assignment.RemoveFirst();
                 Brain.Fire(Trigger.LeaveAssignment);
                 return true;

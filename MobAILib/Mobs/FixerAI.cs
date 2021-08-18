@@ -444,13 +444,21 @@ namespace RagnarsRokare.MobAI
             var pieceList = new List<Piece>();
             var start = DateTime.Now;
             Piece.GetAllPiecesInRadius(position, m_config.Awareness*5 , pieceList);
-            var piece = pieceList
+            var availablePieces = pieceList
                 .Where(p => p.m_category == Piece.PieceCategory.Building || p.m_category == Piece.PieceCategory.Crafting)
                 .Where(p => !m_assignment.Contains(p))
                 .Where(p => Common.GetNView(p)?.IsValid() ?? false)
-                .Where(p => Common.CanSeeTarget(Instance, p.GetComponentInParent<StaticTarget>()))
-                .OrderBy(p => Vector3.Distance(p.GetCenter(), position))
-                .FirstOrDefault();
+                .OrderBy(p => Vector3.Distance(p.GetCenter(), position));
+            Piece piece = null;
+            foreach (var p in availablePieces)
+            {
+                if (Common.CanSeeTarget(Instance, p.GetComponentInParent<StaticTarget>()))
+                {
+                    piece = p;
+                    break;
+                }
+            }
+                
             Common.Dbgl($"{Character.GetHoverName()}:Selecting piece took {(DateTime.Now - start).TotalMilliseconds}ms");
             if (piece != null && !string.IsNullOrEmpty(Common.GetOrCreateUniqueId(Common.GetNView(piece))))
             {
