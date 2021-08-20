@@ -452,7 +452,7 @@ namespace RagnarsRokare.MobAI
             Piece piece = null;
             foreach (var p in availablePieces)
             {
-                if (Common.CanSeeTarget(Instance, p.GetComponentInParent<StaticTarget>()))
+                if (Common.CanSeeTarget(Instance, p.GetComponentInParent<StaticTarget>().GetAllColliders().ToArray()))
                 {
                     piece = p;
                     break;
