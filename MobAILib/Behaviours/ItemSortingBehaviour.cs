@@ -180,6 +180,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
+                    m_aiBase.UpdateAiStatus(string.Empty);
                 });
 
             brain.Configure(State.FindRandomTask)
@@ -194,6 +195,7 @@ namespace RagnarsRokare.MobAI
                 {
                     //Common.Dbgl("Entered SearchForRandomContainer", "Sorter");
                     m_currentSearchTimeout = Time.time + 2f;  //Delay before search initiates.
+                    m_aiBase.UpdateAiStatus(State.FindRandomTask);
                 });
 
             brain.Configure(State.FindingExtractionTask)

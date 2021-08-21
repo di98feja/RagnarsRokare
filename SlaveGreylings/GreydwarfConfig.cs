@@ -45,6 +45,7 @@ namespace RagnarsRokare.SlaveGreylings
             {"RR_FIGHTDoneFighting","*looks relieved*"},
             {"RR_EATHungry", "Is hungry, no work a do"},
             {"RR_EATHaveFoodItem","*burps*"},
+            {"RR_ISBFindRandomTask", "*is looking for things to do*"},
             {"RR_ISBMoveToContainer", "Heading to that a bin"},
             {"RR_ISBMoveToStorageContainer", "Puttin this {0} where it belongs"},
             {"RR_ISBMoveToDumpContainer", "Gonna check da messy bin"},

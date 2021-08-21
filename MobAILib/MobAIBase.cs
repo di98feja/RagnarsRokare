@@ -185,16 +185,13 @@ namespace RagnarsRokare.MobAI
         {
             if (AvoidFire(dt)) return false;
 
-            //var path = typeof(MonsterAI).GetField("m_path", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(Instance) as List<Vector3>;
-            //float remainingDist = 0f;
-            //for (int i = 1; i < path.Count; i++)
-            //{
-            //    remainingDist += Vector3.Distance(path[i - 1], path[i]);
-            //}
-            //running = remainingDist > 10;
-            running = Vector3.Distance(Character.transform.position, destination) > 5;
-            var nearbyMobs = MobManager.AliveMobs.Values.Where(c => c.HasInstance()).Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 0.5f).Where(m => m.UniqueID != this.UniqueID);
-            var havePath = (bool)Invoke<MonsterAI>(Instance, "HavePath", destination);
+            var remainingDistance = Vector3.Distance(Character.transform.position, destination);
+            running = remainingDistance > 5;
+            var nearbyMobs = MobManager.AliveMobs.Values
+                .Where(c => c.HasInstance())
+                .Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 0.5f)
+                .Where(m => m.UniqueID != this.UniqueID);
+            var havePath = (bool)Invoke<MonsterAI>(Instance, "HavePath", destination) && remainingDistance < 50;
             if (!nearbyMobs.Any() && havePath)
             {
                 return (bool)Invoke<MonsterAI>(Instance, "MoveTo", dt, destination, distance, running);

@@ -85,6 +85,7 @@ namespace RagnarsRokare.MobAI
                 .OnExit(t =>
                 {
                     KnownContainers.Peek()?.SetInUse(inUse: false);
+                    m_aiBase.UpdateAiStatus(string.Empty);
                 });
 
             brain.Configure(State.SearchItemsOnGround)
