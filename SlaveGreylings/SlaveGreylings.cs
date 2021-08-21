@@ -21,6 +21,13 @@ namespace RagnarsRokare.SlaveGreylings
 
         private void Awake()
         {
+            var requiredVersion = new System.Version(0, 3);
+            var mobAILibVersion = new System.Version(typeof(MobAILib).Assembly.GetName().Version.Major, typeof(MobAILib).Assembly.GetName().Version.Minor);
+            if (mobAILibVersion.CompareTo(requiredVersion) != 0)
+            {
+                Debug.LogError($"Wrong version of MobAILib. Required:{requiredVersion}, actual:{mobAILibVersion}");
+                return;
+            }
             CommonConfig.Init(Config);
             GreylingsConfig.Init(Config);
             BruteConfig.Init(Config);

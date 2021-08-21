@@ -97,6 +97,11 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###
+- Version 0.3.0  
+Added markers for mobs on map  
+Various tweaks and stability improvements  
+RoamingAI disabled by default. It works well in single player and when alone on dedicated server. Needs work in multiplayer.
+
 - Version 0.3.0-preRelease
 Added SorterAI and ItemSortingBehaviour
 Added configurable strings for AIState messages
