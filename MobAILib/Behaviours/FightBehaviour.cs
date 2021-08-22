@@ -15,10 +15,10 @@ namespace RagnarsRokare.MobAI
             public const string IdentifyEnemy = Prefix + "IdentifyEnemy";
             public const string SelectWeapon = Prefix + "SelectWeapon";
             public const string TrackingEnemy = Prefix + "TrackingEnemy";
-            public const string EngagingEnemy = Prefix + "EngaugingEnemy";
+            public const string EngagingEnemy = Prefix + "EngagingEnemy";
             public const string CirclingEnemy = Prefix + "CirclingEnemy";
             public const string AvoidFire = Prefix + "AvoidFire";
-            public const string DoneFighting = Prefix + "DoneFigfhting";
+            public const string DoneFighting = Prefix + "DoneFighting";
         }
 
         private class Trigger
@@ -75,9 +75,9 @@ namespace RagnarsRokare.MobAI
                 .SubstateOf(parentState)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus("Entered fighting behaviour");
+                    m_aiBase.UpdateAiStatus(State.Main);
                     m_startPosition = aiBase.Instance.transform.position;
-                    m_viewRange = m_awarenessLevel * 5f;
+                    m_viewRange = m_awarenessLevel ;
                     m_circleTargetDistance = m_mobilityLevel * 2 - m_agressionLevel;
                     m_searchTargetMovement = m_mobilityLevel;
                 })
@@ -99,6 +99,7 @@ namespace RagnarsRokare.MobAI
                     {
                         aiBase.TargetCreature = aiBase.Attacker;
                         aiBase.Brain.Fire(Trigger.FoundTarget);
+                        aiBase.UpdateAiStatus(State.IdentifyEnemy, aiBase.TargetCreature.GetHoverName());
                         return;
                     }
                 });
@@ -158,7 +159,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.Done, () => SuccessState)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus("Done fighting.");
+                    m_aiBase.UpdateAiStatus(State.DoneFighting);
                     aiBase.Character.Heal(aiBase.Character.GetMaxHealth() / 10);
                 })
                 .OnExit(t =>
@@ -180,7 +181,7 @@ namespace RagnarsRokare.MobAI
             {
                 m_searchTimer -= dt;
                 Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_circleTargetDistance, true);
-                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_viewRange - 5)
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_circleTargetDistance + 1)
                 {
                     return;
                 }

@@ -13,6 +13,7 @@ namespace RagnarsRokare.MobAI
         {
             public const string Main = Prefix + "Main";
             public const string SearchItemsOnGround = Prefix + "SearchItemsOnGround";
+            public const string SearchForPickable = Prefix + "SearchForPickable";
             public const string MoveToGroundItem = Prefix + "MoveToGroundItem";
             public const string SearchForRandomContainer = Prefix + "SearchForRandomContainer";
             public const string MoveToContainer = Prefix + "MoveToContainer";
@@ -20,6 +21,8 @@ namespace RagnarsRokare.MobAI
             public const string SearchForItem = Prefix + "SearchForItem";
             public const string PickUpItemFromGround = Prefix + "PickUpItemFromGround";
             public const string AvoidFire = Prefix + "AvoidFire";
+            public const string MoveToPickable = Prefix + "MoveToPickable";
+            public const string WaitingForPickable = Prefix + "WaitingForPickable";
         }
 
         private class Trigger
@@ -33,6 +36,8 @@ namespace RagnarsRokare.MobAI
             public const string Timeout = Prefix + "Timeout";
             public const string GroundItemIsClose = Prefix + "GroundItemIsClose";
             public const string FoundGroundItem = Prefix + "FoundGroundItem";
+            public const string FoundPickable = Prefix + "FoundPickable";
+            public const string WaitForPickable = Prefix + "WaitForPickable";
         }
 
         StateMachine<string, string>.TriggerWithParameters<ItemDrop> FoundGroundItemTrigger;
@@ -52,18 +57,19 @@ namespace RagnarsRokare.MobAI
         public string SuccessState { get; set; }
         public string FailState { get; set; }
 
-
         private ItemDrop m_groundItem;
         private MobAIBase m_aiBase;
         private float m_openChestTimer;
         private float m_currentSearchTime;
         private int m_searchRadius;
+        private Pickable m_pickable;
+        private float m_pickableTimer;
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
             FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(Trigger.FoundGroundItem);
-            m_searchRadius = aiBase.Awareness *5;
+            m_searchRadius = aiBase.Awareness * 5;
 
 
 
@@ -73,27 +79,45 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.Timeout, () => FailState)
                 .OnEntry(t =>
                 {
-                    //Debug.Log("Entered SearchForItemsBehaviour");
+                    m_currentSearchTime = 0f;
+                    Common.Dbgl("Entered SearchForItemsBehaviour");
                 })
                 .OnExit(t =>
                 {
                     KnownContainers.Peek()?.SetInUse(inUse: false);
+                    m_aiBase.UpdateAiStatus(string.Empty);
                 });
 
             brain.Configure(State.SearchItemsOnGround)
                 .SubstateOf(State.Main)
                 .Permit(FoundGroundItemTrigger.Trigger, State.MoveToGroundItem)
-                .Permit(Trigger.Failed, State.SearchForRandomContainer)
+                .Permit(Trigger.Failed, State.SearchForPickable)
                 .OnEntry(t =>
                 {
-                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items, m_searchRadius);
+                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items.Select(i => i.m_shared.m_name), m_searchRadius);
                     if (groundItem != null)
                     {
-                        m_aiBase.UpdateAiStatus( $"Look, there is a {groundItem.m_itemData.m_shared.m_name} on da grund");
+                        m_aiBase.UpdateAiStatus(State.SearchItemsOnGround, groundItem.m_itemData.m_shared.m_name);
                         brain.Fire(FoundGroundItemTrigger, groundItem);
                         return;
                     }
-                    m_aiBase.UpdateAiStatus( $"I seen nottin on da ground.");
+                    brain.Fire(Trigger.Failed);
+                });
+
+            brain.Configure(State.SearchForPickable)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.FoundPickable, State.MoveToPickable)
+                .Permit(Trigger.Failed, State.SearchForRandomContainer)
+                .OnEntry(t =>
+                {
+                    Pickable pickable = Common.GetNearbyPickable(m_aiBase.Instance, m_aiBase.m_trainedAssignments, m_searchRadius, Items.Select(i => i?.m_shared?.m_name));
+                    if ((bool)pickable)
+                    {
+                        m_pickable = pickable;
+                        Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}");
+                        aiBase.Brain.Fire(Trigger.FoundPickable);
+                        return;
+                    }
                     brain.Fire(Trigger.Failed);
                 });
 
@@ -111,22 +135,20 @@ namespace RagnarsRokare.MobAI
                         {
                             KnownContainers.Remove(matchingContainer);
                             KnownContainers.Push(matchingContainer);
-                            m_aiBase.UpdateAiStatus( $"I seen this in that a bin");
                             brain.Fire(Trigger.ContainerFound);
                             return;
                         }
                     }
-                    
+
                     Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames, m_searchRadius);
                     if (nearbyChest != null)
                     {
                         KnownContainers.Push(nearbyChest);
-                        m_aiBase.UpdateAiStatus( $"Look a bin!");
+                        m_aiBase.UpdateAiStatus(State.SearchForRandomContainer);
                         m_aiBase.Brain.Fire(Trigger.ContainerFound);
                     }
                     else
                     {
-                        m_aiBase.UpdateAiStatus( $"Me give up, nottin found!");
                         KnownContainers.Clear();
                         m_aiBase.Brain.Fire(Trigger.ContainerNotFound);
                     }
@@ -144,8 +166,33 @@ namespace RagnarsRokare.MobAI
                         brain.Fire(Trigger.Failed);
                         return;
                     }
-                    m_aiBase.UpdateAiStatus( $"Heading to {m_groundItem.m_itemData.m_shared.m_name}");
+                    m_aiBase.UpdateAiStatus(State.MoveToGroundItem, m_groundItem.m_itemData.m_shared.m_name);
                 });
+
+            brain.Configure(State.MoveToPickable)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.WaitForPickable, State.WaitingForPickable)
+                .Permit(Trigger.Failed, State.SearchItemsOnGround)
+                .OnEntry(t =>
+                {
+                    if (m_pickable == null || Common.GetNView(m_pickable)?.IsValid() != true)
+                    {
+                        brain.Fire(Trigger.Failed);
+                        return;
+                    }
+                    m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.GetHoverName());
+                    m_pickableTimer = Time.time + 0.7f;
+                });
+
+            brain.Configure(State.WaitingForPickable)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.GroundItemIsClose, State.PickUpItemFromGround)
+                .Permit(Trigger.Failed, State.SearchItemsOnGround)
+                .OnEntry(t =>
+                {
+                    m_pickableTimer = Time.time + 0.7f;
+                });
+
 
             brain.Configure(State.PickUpItemFromGround)
                 .SubstateOf(State.Main)
@@ -159,7 +206,7 @@ namespace RagnarsRokare.MobAI
                         brain.Fire(Trigger.Failed);
                         return;
                     }
-                    m_aiBase.UpdateAiStatus( $"Got a {FoundItem.m_shared.m_name} from the ground");
+                    m_aiBase.UpdateAiStatus(State.PickUpItemFromGround, FoundItem.m_shared.m_name);
                     if (m_groundItem.RemoveOne())
                     {
                         brain.Fire(Trigger.ItemFound);
@@ -177,7 +224,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.ContainerNotFound, () => FailState)
                 .OnEntry(t =>
                 {
-                    m_aiBase.UpdateAiStatus( $"Heading to that a bin");
+                    m_aiBase.UpdateAiStatus(State.MoveToContainer);
                 });
 
             brain.Configure(State.OpenContainer)
@@ -212,7 +259,7 @@ namespace RagnarsRokare.MobAI
                     FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name)).RandomOrDefault();
                     if (FoundItem != null)
                     {
-                        m_aiBase.UpdateAiStatus( $"Found {FoundItem.m_shared.m_name} in this a bin!");
+                        m_aiBase.UpdateAiStatus(State.SearchForItem, FoundItem.m_shared.m_name);
                         KnownContainers.Peek().GetInventory().RemoveItem(FoundItem, 1);
                         Common.Invoke<Container>(KnownContainers.Peek(), "Save");
                         Common.Invoke<Inventory>(KnownContainers.Peek().GetInventory(), "Changed");
@@ -221,7 +268,6 @@ namespace RagnarsRokare.MobAI
                     }
                     else
                     {
-                        m_aiBase.UpdateAiStatus( $"Nottin in this a bin..");
                         brain.Fire(Trigger.Failed);
                     }
                 })
@@ -278,6 +324,60 @@ namespace RagnarsRokare.MobAI
                     //Debug.Log("GroundItem is close");
                 }
                 return;
+            }
+
+            if (aiBase.Brain.IsInState(State.MoveToPickable))
+            {
+                if (m_pickable == null || m_pickable?.GetComponent<ZNetView>()?.IsValid() != true)
+                {
+                    m_pickable = null;
+                    aiBase.StopMoving();
+                    aiBase.Brain.Fire(Trigger.Failed);
+                    return;
+                }
+
+                if (aiBase.MoveAndAvoidFire(m_pickable.transform.position, dt, 1.5f))
+                {
+                    aiBase.StopMoving();
+                    Common.Dbgl("Pickable is close");
+                    if (m_pickable.Interact((aiBase.Character as Humanoid), false))
+                    {
+                        aiBase.Brain.Fire(Trigger.WaitForPickable);
+                        return;
+                    }
+                    else
+                    {
+                        m_pickable = null;
+                        aiBase.Brain.Fire(Trigger.Failed);
+                        return;
+                    }
+                }
+                return;
+            }
+
+            if (aiBase.Brain.IsInState(State.WaitingForPickable))
+            {
+                if (Time.time < m_pickableTimer) return;
+
+                if (m_pickable == null || m_pickable?.GetComponent<ZNetView>()?.IsValid() != true)
+                {
+                    m_pickable = null;
+                    aiBase.StopMoving();
+                    Common.Dbgl("Pickable = null");
+                    aiBase.Brain.Fire(Trigger.Failed);
+                    return;
+                }
+                m_groundItem = Common.GetClosestItem(aiBase.Instance, 3, m_pickable.m_itemPrefab.GetComponent<ItemDrop>().m_itemData.m_shared.m_name, false);
+                if (m_groundItem == null)
+                {
+                    m_pickable = null;
+                    aiBase.StopMoving();
+                    Common.Dbgl("Pickable dropped item not found");
+                    aiBase.Brain.Fire(Trigger.Failed);
+                    return;
+                }
+                Common.Dbgl($"Pickable itemdrop:{m_groundItem?.m_itemData?.m_shared?.m_name ?? "is null"}");
+                aiBase.Brain.Fire(Trigger.GroundItemIsClose);
             }
 
             if (aiBase.Brain.IsInState(State.OpenContainer))

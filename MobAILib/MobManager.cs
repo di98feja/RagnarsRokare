@@ -15,6 +15,7 @@ namespace RagnarsRokare.MobAI
         {
             foreach (var mobController in GetAllMobAITypes())
             {
+                Debug.LogWarning($"MobController:{mobController}");
                 try
                 {
                     var instance = Activator.CreateInstance(mobController) as IMobAIType;
@@ -86,7 +87,7 @@ namespace RagnarsRokare.MobAI
             if (!m_mobAIs.ContainsKey(mobAIName)) throw new ArgumentException($"Unknown mob controller {mobAIName}");
 
             var configType = m_mobAIs[mobAIName].ConfigType;
-            var aiConfig = JsonUtility.FromJson(configAsJson,configType);
+            var aiConfig = SimpleJson.DeserializeObject(configAsJson,configType);
             RegisterMob(character, uniqueId, mobAIName, aiConfig);
         }
 

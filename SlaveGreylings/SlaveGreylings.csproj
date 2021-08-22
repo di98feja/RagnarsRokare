@@ -76,9 +76,6 @@
     <Reference Include="UnityEngine.InputLegacyModule">
       <HintPath>..\Libs\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.JSONSerializeModule">
-      <HintPath>..\Libs\UnityEngine.JSONSerializeModule.dll</HintPath>
-    </Reference>
     <Reference Include="UnityEngine.PhysicsModule">
       <HintPath>..\Libs\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
@@ -93,10 +90,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GreydwarfConfig.cs" />
     <Compile Include="BruteConfig.cs" />
     <Compile Include="CommonConfig.cs" />
     <Compile Include="GreylingConfig.cs" />
     <Compile Include="MobConfigManager.cs" />
+    <Compile Include="Patches\Minimap_patch.cs" />
+    <Compile Include="Patches\Sign_patch.cs" />
+    <Compile Include="Patches\Container_patch.cs" />
     <Compile Include="Patches\PlayerController_patch.cs" />
     <Compile Include="Patches\Character_patch.cs" />
     <Compile Include="Patches\MonsterAI_patch.cs" />
@@ -131,11 +132,11 @@
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
 
-xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output /S /Y
+xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output\ /S /Y
 
-xcopy $(TargetDir)stateless.dll $(SolutionDir)Output /S /Y
+xcopy $(TargetDir)stateless.dll $(SolutionDir)Output\ /S /Y
 
-xcopy $(TargetDir)*.wav $(SolutionDir)Output /S /Y
+xcopy $(TargetDir)*.wav $(SolutionDir)Output\ /S /Y
 </PostBuildEvent>
   </PropertyGroup>
 </Project>

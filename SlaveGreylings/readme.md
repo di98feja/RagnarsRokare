@@ -48,7 +48,29 @@ In order to keep build the creatures behaviour, we have been using Stateless sta
 We hope you find this little mod fun!
 // Barg and Morg
 
-0.7.2 Patch Notes:
+0.8.0 Patch Notes:  
+* This update requires MobAILib version 0.3.*  
+From the book of Barg:  
+##################################   
+Today 100 days has passed since Odin put us on this faschinating world.
+There has been hardship and strife but also much wonder.
+The last couple of weeks we have been busy trying to figure out how to tame the Greydwarf.
+After watching them nearly be stung to death when trying to get at a bee nest it became clear to us.
+Loaded with honey we managed to tame not one but three Greydwarfs.
+The creature really has a sweet tooth, after it got into our food chest it will not eat anything but Morgs best jam,
+good thing that Morg managed to teach it to pick berries.
+Speaking of teaching, the greydwarf is a remarkably intelligent and orderly creature.
+They remember the content of chests and will pickup things from the ground and put them in matching chests.
+Morg even managed to upset it by making a mess in one of the chests so now it will take whatever is in that chest and 
+sort in others.
+But my greatest supprise was when it watched me noting the content of a chest on a sign.
+From that day on it would only put the things noted on the sign inside the chest, it had learned to read!
+This world never cease to amaze me, now I just got to teach Morg to read aswell.  
+##################################  
+
+
+
+0.7.2 Patch Notes:  
 From the book of Barg:  
 ##################################  
 Today the day 67 in this paradise world of Odin we call Valheim, we managed to teach the slaves to not only look at their feet's when searching for assignments and chests.  
