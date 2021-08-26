@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using System.Linq;
 
 namespace RagnarsRokare.MobAI
 {
@@ -17,6 +18,8 @@ namespace RagnarsRokare.MobAI
                 return m_instance;
             }
         }
+
+        public ZDOID ZDOId { get; set; }
 
         public bool HasInstance()
         {
@@ -37,14 +40,17 @@ namespace RagnarsRokare.MobAI
         public MobAIBase(BaseAI instance, string initState, MobAIBaseConfig config)
         {
             m_instance = instance;
+            ZDOId = NView.GetZDO().m_uid;
             Config = config;
             Brain = new StateMachine<string, string>(() => CurrentAIState, s => CurrentAIState = s);
             Brain.OnUnhandledTrigger((state, trigger) => { });
             CurrentAIState = initState;
             if (NView.IsValid())
             {
+                NView.Unregister(Constants.Z_MobCommand);
                 NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
             }
+            m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(new char[] { ' ', ',' }).Where(a => !string.IsNullOrEmpty(a)));
         }
 
         #region Config
@@ -53,6 +59,10 @@ namespace RagnarsRokare.MobAI
         public int Agressiveness { get { return Config.Agressiveness; } }
         public int Mobility { get { return Config.Mobility; } }
         public int Intelligence { get { return Config.Intelligence; } }
+        public bool CanWorkAssignment(string assignmentName)
+        {
+            return Config.WorkableAssignments?.Contains(assignmentName) ?? false;
+        }
         #endregion
 
         public Character Character
@@ -122,7 +132,7 @@ namespace RagnarsRokare.MobAI
         {
             get
             {
-                return Character.GetHealthPercentage() < 1.0f;
+                return Character.GetHealthPercentage() <= 0.99f;
             }
         }
 
@@ -175,7 +185,21 @@ namespace RagnarsRokare.MobAI
         {
             if (AvoidFire(dt)) return false;
 
-            return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
+            var remainingDistance = Vector3.Distance(Character.transform.position, destination);
+            running = remainingDistance > 5;
+            var nearbyMobs = MobManager.AliveMobs.Values
+                .Where(c => c.HasInstance())
+                .Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 0.5f)
+                .Where(m => m.UniqueID != this.UniqueID);
+            var havePath = (bool)Invoke<MonsterAI>(Instance, "HavePath", destination) && remainingDistance < 50;
+            if (!nearbyMobs.Any() && havePath)
+            {
+                return (bool)Invoke<MonsterAI>(Instance, "MoveTo", dt, destination, distance, running);
+            }
+            else
+            {
+                return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
+            }
         }
 
         protected Player GetPlayer(ZDOID characterID)
@@ -188,10 +212,14 @@ namespace RagnarsRokare.MobAI
             return null;
         }
 
-        public static bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
+        public bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
 
-        public string UpdateAiStatus(string newStatus)
+        public string UpdateAiStatus(string newStatus, string arg = null)
         {
+            if (Config.AIStateCustomStrings?.ContainsKey(newStatus) ?? false)
+            {
+                newStatus = string.Format(Config.AIStateCustomStrings[newStatus], arg ?? string.Empty);
+            }
             newStatus = Localization.instance.Localize(newStatus);
             string currentAiStatus = NView?.GetZDO()?.GetString(Constants.Z_AiStatus);
             if (currentAiStatus != newStatus)

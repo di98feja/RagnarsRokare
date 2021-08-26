@@ -56,7 +56,7 @@ namespace RagnarsRokare.MobAI
         // Settings
         public string SuccessState;
         public string FailState;
-        public float HealPercentageOnConsume;
+        public float HealPercentageOnConsume { get; set; }
         public string SearchForItemsState;
         public string StartState { get { return State.Hungry; } }
         public float HungryTimeout { get; set; } = 500;
@@ -85,11 +85,10 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     aiBase.StopMoving();
-                    aiBase.UpdateAiStatus("Is hungry, no work a do");
+                    aiBase.UpdateAiStatus(State.Hungry);
                 })
                 .OnExit(t =>
                 {
-                    Debug.LogWarning("Exiting EatingBehaviour");
                 });
 
             brain.Configure(State.SearchForFood)
@@ -106,7 +105,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.ConsumeItem, () => SuccessState)
                 .OnEntry(t =>
                 {
-                    aiBase.UpdateAiStatus("*burps*");
+                    aiBase.UpdateAiStatus(State.HaveFoodItem);
                     (aiBase.Instance as MonsterAI).m_onConsumedItem((aiBase.Instance as MonsterAI).m_consumeItems.FirstOrDefault());
                     (aiBase.Instance.GetComponent<Character>() as Humanoid).m_consumeItemEffects.Create(aiBase.Instance.transform.position, Quaternion.identity);
                     var animator = aiBase.Instance.GetType().GetField("m_animator", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(aiBase.Instance) as ZSyncAnimation;
@@ -120,12 +119,10 @@ namespace RagnarsRokare.MobAI
                     }
                     m_hungryTimer = 0f;
                     LastKnownFoodPosition = aiBase.Character.transform.position;
-                    Debug.LogWarning($"SuccessState:{SuccessState}");
                     brain.Fire(Trigger.ConsumeItem);
                 })
                 .OnExit(t =>
                 {
-                    Debug.LogWarning($"Exiting HaveFoodItem, Trigger:{t.Trigger}");
                 });
 
             brain.Configure(State.HaveNoFoodItem)

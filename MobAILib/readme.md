@@ -7,7 +7,7 @@ Start by adding a reference to MobAILib inside your mod-project.
 
 The RagnarsRokare.MobAI.MobManager is used to register and keep track of controlled mobs.
 It has a list of available MobAIs to use as the "brain" of the mob and controls its actions.  
-Each MobAI has its own config file with settings: WorkerAIConfig and FixerAIConfig.
+Each MobAI has its own config file with settings.
 They inherit MobAIBaseConfig that contain the base attributes:  
 **Awareness** - General awareness, used to calculate search ranges and ability to detect enemies  
 **Agressiveness** - Agressivness determines how to behave when fighting and when to give up and flee  
@@ -32,6 +32,17 @@ These are the default values
     public int PostTameFeedDuration = 1000;  
     public int TimeLimitOnAssignment = 30;  
     public string[] IncludedContainers = new string[] { "piece_chest_wood" };  
+
+- **SorterAI**  
+Makes the character pickup items and put them in containers that already contain an item of the same type or that has the item noted on a sign  
+close to the container. It will also pickup whatever items is in an assigned "dump" container and sort them. They can also be taught to interact with  
+with pickable objects like branches, flint and berries.  
+**SorterAIConfig**  
+These are the default values  
+    public int PostTameFeedDuration = 1000;  
+    public int MaxSearchTime = 30;  
+    public string[] IncludedContainers = new string[] { "piece_chest_wood" };  
+
 
 **``RegisterMobAI(Type mobAIType)``**  
 Used to register a custom MobAI  
@@ -82,11 +93,21 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 ### Future plans ###
 - Add more specialized Fighting-behaviours that can be used by all MobAI-classes
 - Add Interface and Strategy pattern for runtime selection of fightingBehaviour
-- ItemSorterBehaviour
 - More built-in MobAI classes
 - More common behaviours
 
 ### Changelog ###
+- Version 0.3.0  
+Added markers for mobs on map  
+Various tweaks and stability improvements  
+RoamingAI disabled by default. It works well in single player and when alone on dedicated server. Needs work in multiplayer.
+
+- Version 0.3.0-preRelease
+Added SorterAI and ItemSortingBehaviour
+Added configurable strings for AIState messages
+Added RoamingAI: mobs do not need a player near to be active
+Added Pickable interaction, can be taught to Sorters
+
 - Version 0.2.0  
 Added base mob attributes to control behaviours.  
 Line of sight required for containers and assignments.  

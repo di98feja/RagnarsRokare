@@ -48,6 +48,52 @@ In order to keep build the creatures behaviour, we have been using Stateless sta
 We hope you find this little mod fun!
 // Barg and Morg
 
+0.8.0 Patch Notes:  
+* This update requires MobAILib version 0.3.*  
+From the book of Barg:  
+##################################   
+Today 100 days has passed since Odin put us on this faschinating world.
+There has been hardship and strife but also much wonder.
+The last couple of weeks we have been busy trying to figure out how to tame the Greydwarf.
+After watching them nearly be stung to death when trying to get at a bee nest it became clear to us.
+Loaded with honey we managed to tame not one but three Greydwarfs.
+The creature really has a sweet tooth, after it got into our food chest it will not eat anything but Morgs best jam,
+good thing that Morg managed to teach it to pick berries.
+Speaking of teaching, the greydwarf is a remarkably intelligent and orderly creature.
+They remember the content of chests and will pickup things from the ground and put them in matching chests.
+Morg even managed to upset it by making a mess in one of the chests so now it will take whatever is in that chest and 
+sort in others.
+But my greatest supprise was when it watched me noting the content of a chest on a sign.
+From that day on it would only put the things noted on the sign inside the chest, it had learned to read!
+This world never cease to amaze me, now I just got to teach Morg to read aswell.  
+##################################  
+
+
+
+0.7.2 Patch Notes:  
+From the book of Barg:  
+##################################  
+Today the day 67 in this paradise world of Odin we call Valheim, we managed to teach the slaves to not only look at their feet's when searching for assignments and chests.  
+This makes them wandering longer distances in search of assignments making it easy for them to get lost. The solution for this was to teach them to return to the "home" position where we last set them to stay (not follow).   
+##################################  
+* This update is adjusted for the use fight behavior in MobAILib 0.2 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
+* Making use of Feedingbehaviour in MobAILib.
+* Making use of new Attributes in BaseIA rather then configuring everything separately.
+* Added random movement in idle and a return point to last stay position to return to after stuck without tasks.
+
+
+
+
+0.7.1 Patch Notes:
+From the book of Barg:  
+##################################  
+Today the day 65 in this paradise world of Odin we call Valheim, we found a way of training the slaves to defend themselves.  
+After teaching the brutes to attack back if they are attacked, the greylings soon copied their behavior and now also tries to attack.   
+They still fall back on fleeing as soon as hurt, so I am afraid they wont help out much in the way of defense.   
+It seems like this defensive behavior have enraged Eikthyr so that Eikthyr's beasts now attacks slaves. 
+##################################  
+* This update is adjusted for the use fight behavior in MobAILib 0.1.3 or later (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
+
 0.7 Patch Notes:  
 * MobAI separated out to MobAILib that can be used separatley in any mod (found at https://www.nexusmods.com/valheim/mods/1188?tab=description).
 * This makes the SlaveGreylings dependent on MobAILib from rev 0.7 and forward.

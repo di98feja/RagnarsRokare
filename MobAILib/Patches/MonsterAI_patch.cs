@@ -77,6 +77,7 @@ namespace RagnarsRokare.SlaveGreylings
                     mob = MobManager.AliveMobs[uniqueId];
                     if (!mob.HasInstance())
                     {
+                        Debug.Log("2");
                         mob = MobManager.CreateMob(uniqueId, instance);
                         MobManager.AliveMobs[uniqueId] = mob;
                         Common.Dbgl($"Replacing old instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");
@@ -85,6 +86,7 @@ namespace RagnarsRokare.SlaveGreylings
                 }
                 else
                 {
+                    Debug.Log("3");
                     mob = MobManager.CreateMob(uniqueId, instance);
                 }
 

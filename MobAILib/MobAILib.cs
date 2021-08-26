@@ -4,13 +4,12 @@ using System.Reflection;
 
 namespace RagnarsRokare.MobAI
 {
-    [BepInProcess("valheim.exe")]
     [BepInPlugin(ModId, ModName, ModVersion)]
     public partial class MobAILib : BaseUnityPlugin
     {
         public const string ModId = "RagnarsRokare.MobAILib";
         public const string ModName = "RagnarsRökare Mob AI";
-        public const string ModVersion = "0.2.0";
+        public const string ModVersion = "0.3.0";
 
         private void Awake()
         {

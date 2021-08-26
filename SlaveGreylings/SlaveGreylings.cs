@@ -1,6 +1,5 @@
 ﻿using BepInEx;
 using HarmonyLib;
-using RagnarsRokare.MobAI;
 using System.Collections;
 using System.IO;
 using System.Reflection;
@@ -9,13 +8,12 @@ using UnityEngine.Networking;
 
 namespace RagnarsRokare.SlaveGreylings
 {
-    [BepInProcess("valheim.exe")]
     [BepInPlugin(ModId, ModName, ModVersion)]
     public partial class SlaveGreylings : BaseUnityPlugin
     {
         public const string ModId = "RagnarsRokare.SlaveGreylings";
         public const string ModName = "RagnarsRökare SlaveGreylings";
-        public const string ModVersion = "0.7.2";
+        public const string ModVersion = "0.8.0";
 
         private static readonly bool isDebug = true;
         
@@ -23,12 +21,19 @@ namespace RagnarsRokare.SlaveGreylings
 
         private void Awake()
         {
+            var requiredVersion = new System.Version(0, 3);
+            var mobAILibVersion = new System.Version(typeof(MobAILib).Assembly.GetName().Version.Major, typeof(MobAILib).Assembly.GetName().Version.Minor);
+            if (mobAILibVersion.CompareTo(requiredVersion) != 0)
+            {
+                Debug.LogError($"Wrong version of MobAILib. Required:{requiredVersion}, actual:{mobAILibVersion}");
+                return;
+            }
             CommonConfig.Init(Config);
             GreylingsConfig.Init(Config);
             BruteConfig.Init(Config);
+            GreydwarfConfig.Init(Config);
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
             StartCoroutine(nameof(PreloadSFX));
-            MobAIBase.PrintAIStateToDebug = CommonConfig.PrintAIStatusMessageToDebug.Value;
         }
 
         private IEnumerator PreloadSFX()

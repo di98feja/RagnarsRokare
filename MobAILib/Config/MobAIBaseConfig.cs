@@ -1,4 +1,6 @@
-﻿namespace RagnarsRokare.MobAI
+﻿using System.Collections.Generic;
+
+namespace RagnarsRokare.MobAI
 {
     public class MobAIBaseConfig
     {
@@ -21,5 +23,9 @@
         /// General intelligence, how much the mob can remember
         /// </summary>
         public int Intelligence { get; set; } = 5;
+
+        public Dictionary<string,string> AIStateCustomStrings { get; set; }
+
+        public HashSet<string> WorkableAssignments { get; set; }
     }
 }

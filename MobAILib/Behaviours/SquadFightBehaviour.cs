@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    class FightBehaviour : IBehaviour
+    class SquadFightBehaviour : IBehaviour
     {
         private const string Prefix = "RR_FIGHT";
         private class State
