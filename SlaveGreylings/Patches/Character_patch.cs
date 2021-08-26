@@ -21,9 +21,9 @@ namespace RagnarsRokare.SlaveGreylings
                 if (MobManager.IsAliveMob(uniqueId))
                 {
                     var attacker = hit.GetAttacker();
-                    if (attacker != null && attacker.IsPlayer())
+                    if (attacker != null)
                     {
-                        hit.m_damage.Modify(0.1f);
+                        hit.m_damage.Modify(0.5f);
                     }
                 }
             }

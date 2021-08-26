@@ -61,6 +61,12 @@ namespace RagnarsRokare.MobAI
         {
             get 
             {
+                if (!(bool)AssignmentObject)
+                {
+                    Common.Dbgl("AssignmentObject is null");
+                    return null;
+                }
+
                 if (TypeOfAssignment.ComponentType == typeof(Smelter))
                 {
                     var smelter = AssignmentObject.GetComponent<Smelter>();

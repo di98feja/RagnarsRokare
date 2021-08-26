@@ -25,7 +25,7 @@ Will fight if hurt but give up easily (has low aggression level). The FeedDurati
     public int TimeLimitOnAssignment = 60;  
 
 - **FixerAI**  
-Makes the character go and repair any damaged structures it finds. It will equip the item from position 0 in inventory and use its attack animation when reapairing. Will fight aggressively if hurt (has high aggression level).  
+Makes the character go and repair any damaged structures it finds. It will equip the item from position 0 in inventory or Hammer if it exists and use its attack animation when reapairing. Will fight aggressively if hurt (has high aggression level).  
 The FeedDuration setting only applies if there is a Tameable component attached to the gameObject.  
 **FixerAIConfig**  
 These are the default values  
@@ -87,6 +87,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###
+- Version 0.2.1
+Removed [BepInProcess("valheim.exe")] to be compatible with dedicated servers
+
 - Version 0.2.0  
 Added base mob attributes to control behaviours.  
 Line of sight required for containers and assignments.  
