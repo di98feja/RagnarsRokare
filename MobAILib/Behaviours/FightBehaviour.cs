@@ -77,9 +77,10 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus(State.Main);
                     m_startPosition = aiBase.Instance.transform.position;
-                    m_viewRange = m_awarenessLevel ;
-                    m_circleTargetDistance = m_mobilityLevel * 2 - m_agressionLevel;
-                    m_searchTargetMovement = m_mobilityLevel;
+                    m_circleTargetDistance = System.Math.Max(m_mobilityLevel - m_agressionLevel, 1);
+                    m_searchTargetMovement = System.Math.Max(m_mobilityLevel, m_agressionLevel);
+                    m_viewRange = m_searchTargetMovement + m_awarenessLevel;
+                    
                 })
                 .OnExit(t =>
                 {
@@ -149,7 +150,7 @@ namespace RagnarsRokare.MobAI
                 .SubstateOf(State.Main)
                 .OnEntry(t =>
                 {
-                    m_circleTimer = 30f / m_agressionLevel;
+                    m_circleTimer = 10f / m_agressionLevel;
                     aiBase.Character.Heal(aiBase.Character.GetMaxHealth()/50);
                 });
 
@@ -180,8 +181,8 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.IdentifyEnemy))
             {
                 m_searchTimer -= dt;
-                Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_circleTargetDistance, true);
-                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_circleTargetDistance + 1)
+                Common.Invoke<MonsterAI>(aiBase.Instance, "RandomMovementArroundPoint", dt, m_startPosition, m_searchTargetMovement, true);
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_searchTargetMovement + 1)
                 {
                     return;
                 }
