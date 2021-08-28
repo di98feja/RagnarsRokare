@@ -51,6 +51,7 @@ namespace RagnarsRokare.MobAI
                 NView.Register<ZDOID, string>(Constants.Z_MobCommand, RPC_MobCommand);
             }
             m_trainedAssignments.AddRange(NView.GetZDO().GetString(Constants.Z_trainedAssignments).Split(new char[] { ' ', ',' }).Where(a => !string.IsNullOrEmpty(a)));
+
         }
 
         #region Config
@@ -148,6 +149,8 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public Func<MobAIBase, Type> FightingBehaviourSelector { get; set; }
+
         public Character Attacker { get; set; }
 
         public abstract void Follow(Player player);
@@ -213,6 +216,12 @@ namespace RagnarsRokare.MobAI
         }
 
         public bool PrintAIStateToDebug { get; set; } = CommonConfig.PrintAIStatusMessageToDebug.Value;
+
+
+        public string UpdateAiStatus(string newStatus)
+        {
+            return UpdateAiStatus(newStatus, null);
+        }
 
         public string UpdateAiStatus(string newStatus, string arg = null)
         {

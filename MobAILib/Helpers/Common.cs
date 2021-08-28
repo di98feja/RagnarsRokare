@@ -13,6 +13,11 @@ namespace RagnarsRokare.MobAI
             return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
         }
 
+        public static ItemDrop GetNearbyItem(BaseAI instance, IEnumerable<ItemDrop.ItemData> acceptedItems, int range = 10)
+        {
+            return GetNearbyItem(instance, acceptedItems.Select(i => i.m_shared.m_name), range);
+        }
+
         public static ItemDrop GetNearbyItem(BaseAI instance, IEnumerable<string> acceptedNames, int range = 10)
         {
             Vector3 position = instance.transform.position;
@@ -69,6 +74,11 @@ namespace RagnarsRokare.MobAI
             return ClosestObject;
         }
 
+        public static Assignment FindRandomNearbyAssignment(BaseAI instance, List<string> trainedAssignments, MaxStack<Assignment> knownassignments, float assignmentSearchRadius)
+        {
+            return FindRandomNearbyAssignment(instance, trainedAssignments, knownassignments as IEnumerable<Assignment>, assignmentSearchRadius, null);
+        }
+
         public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius, AssignmentType[] acceptedAssignmentTypes = null)
         {
             //Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}", "Extraction");
@@ -102,7 +112,7 @@ namespace RagnarsRokare.MobAI
             var visibleAssignments = new List<Piece>();
             foreach (var assignment in newAssignments)
             {
-                Dbgl($"{instance.gameObject.GetComponent<Character>().GetHoverName()}:Looking for {assignment.name}");
+                Dbgl($"{instance.gameObject.GetComponent<Character>().GetHoverName()}:Looking for {assignment.name}", true);
                 var allColliders = assignment.GetComponentsInChildren<Collider>();
                 allColliders.AddRangeToArray(assignment.GetComponents<Collider>());
                 if (CanSeeTarget(instance, allColliders))
@@ -119,9 +129,14 @@ namespace RagnarsRokare.MobAI
             //var random = new System.Random();
             //int index = random.Next(newAssignments.Count());
             var selekted = visibleAssignments.RandomOrDefault();
-            Common.Dbgl($"Returning assignment: {selekted.name}");
+            Common.Dbgl($"Returning assignment: {selekted.name}", true);
             Assignment randomAssignment = new Assignment(selekted);
             return randomAssignment;
+        }
+
+        public static Container FindRandomNearbyContainer(BaseAI instance, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
+        {
+            return FindRandomNearbyContainer(instance, knownContainers as IEnumerable<Container>, m_acceptedContainerNames, containerSearchRadius);
         }
 
         public static Container FindRandomNearbyContainer(BaseAI instance, IEnumerable<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
@@ -196,12 +211,29 @@ namespace RagnarsRokare.MobAI
             return uniqueId;
         }
 
+        public static void Dbgl(string str, bool pref = true)
+        {
+            Dbgl(str, pref, "");
+        }
 
-        public static void Dbgl(string str = "", string filter = "", bool pref = true)
+        public static void Dbgl(string str = "", bool pref = true, string filter = "")
         {
             if (CommonConfig.PrintDebugLog.Value && filter.Contains(CommonConfig.PrintDebugLogFilter.Value))
             {
                 Debug.Log((pref ? typeof(MobAILib).Namespace + " " : "") + str);
+            }
+        }
+
+        public static bool CanSeeTarget(BaseAI instance, GameObject gameObject)
+        {
+            var target = gameObject.GetComponent<StaticTarget>();
+            if ((bool)target)
+            {
+                return CanSeeTarget(instance, target.GetAllColliders().ToArray());
+            }
+            else
+            {
+                return CanSeeTarget(instance, gameObject.GetComponentsInChildren<Collider>());
             }
         }
 
@@ -264,73 +296,6 @@ namespace RagnarsRokare.MobAI
         }
 
         private static RaycastHit[] m_tempRaycastHits = new RaycastHit[128];
-
-        public static bool CanSeeTarget(BaseAI instance, StaticTarget target)
-        {
-            Vector3 center = target.GetCenter();
-            if (Vector3.Distance(center, instance.transform.position) > instance.m_viewRange)
-            {
-                return false;
-            }
-            var character = instance.GetComponent<Character>();
-            Vector3 rhs = center - character.m_eye.position;
-            Vector3 rhs_temp = rhs;
-            Vector3 beam = rhs;
-            bool visible = true;
-            List<Collider> allColliders = target.GetAllColliders();
-            //Dbgl($"Target colliders:{allColliders.Count}", "Worker");
-            var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
-            for (int step = 0; step < 10; step++)
-            {
-                rhs_temp = Quaternion.AngleAxis(step, Vector3.up) * rhs;
-                for (int rotation = 0; rotation < 360; rotation += 36/System.Math.Max(step, 1))
-                {
-                    beam = Quaternion.AngleAxis(rotation, rhs) * rhs_temp;
-                    int numHits = Physics.RaycastNonAlloc(character.m_eye.position, beam.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
-                    visible = true;
-                    //Dbgl($"Step {step}, Rotation {rotation}: numColliders:{numHits}", "Worker");
-                    for (var i = 0; i < numHits; i++)
-                    {
-                        visible &= allColliders.Contains(m_tempRaycastHits[i].collider);
-                    }
-                    if (visible)
-                    {
-                        //Dbgl($"{character.GetHoverName()}: detected {target.gameObject.name} at angle {rotation}, {step}", "Worker");
-                        return true;
-                    }
-                    if (step == 0)
-                    {
-                        break;
-                    }
-                }
-            }
-            //Dbgl($"{character.GetHoverName()}: Nothing found", "Worker");
-            return false;
-        }
-
-        public static bool CanSeeTarget(BaseAI instance, Collider target)
-        {
-            if (!(bool)target) return false;
-
-            Vector3 center = target.ClosestPoint(instance.transform.position);
-            if (Vector3.Distance(center, instance.transform.position) > instance.m_viewRange)
-            {
-                return false;
-            }
-            var character = instance.GetComponent<Character>();
-            Vector3 rhs = center - character.m_eye.position;
-            var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
-            int num = Physics.RaycastNonAlloc(character.m_eye.position, rhs.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
-            for (int i = 0; i < num; i++)
-            {
-                RaycastHit raycastHit = m_tempRaycastHits[i];
-                if (target != raycastHit.collider)
-                {
-                    return false;
-                }
-            }
-            return true;
-        }
 
         public static bool Alarmed(BaseAI instance, float Awareness)
         {

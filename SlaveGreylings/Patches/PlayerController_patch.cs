@@ -76,7 +76,7 @@ namespace RagnarsRokare.SlaveGreylings
         {
             if (Time.time - m_callHomeKeyTimer > m_KeyDelay && Input.GetKey(m_callHomeKey))
             {
-                Common.Dbgl($"CallHome command", "SlaveGreylings");
+                Common.Dbgl($"CallHome command", true, "SlaveGreylings");
                 m_callHomeKeyTimer = Time.time;
                 ___m_nview.InvokeRPC(ZNetView.Everybody, Constants.Z_CallHomeCommand, Player.m_localPlayer.transform.position);
 
@@ -95,7 +95,7 @@ namespace RagnarsRokare.SlaveGreylings
             }
             else if (Time.time - m_updateSignFromContainerKeyTimer > m_KeyDelay && Input.GetKey(m_updateSignFromContainerKey))
             {
-                Common.Dbgl($"UpdateSignFormContainer command", "SlaveGreylings");
+                Common.Dbgl($"UpdateSignFormContainer command", true, "SlaveGreylings");
                 m_updateSignFromContainerKeyTimer = Time.time;
                 SlaveGreylings.UpdateSignFromContainer();
             }

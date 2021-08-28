@@ -54,7 +54,7 @@ namespace RagnarsRokare.SlaveGreylings
                 if (__instance.IsSleeping())
                 {
                     Invoke(__instance, "UpdateSleep", new object[] { dt });
-                    Common.Dbgl($"{___m_character.GetHoverName()}: Sleep updated");
+                    Common.Dbgl($"{___m_character.GetHoverName()}: Sleep updated", true);
                     return false;
                 }
 
@@ -77,26 +77,24 @@ namespace RagnarsRokare.SlaveGreylings
                     mob = MobManager.AliveMobs[uniqueId];
                     if (!mob.HasInstance())
                     {
-                        Debug.Log("2");
                         mob = MobManager.CreateMob(uniqueId, instance);
                         MobManager.AliveMobs[uniqueId] = mob;
-                        Common.Dbgl($"Replacing old instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}");
+                        Common.Dbgl($"Replacing old instance of mob '{mob.Character.m_name}', IsOwner:{nview.IsOwner()}", true);
                     }
                     return mob;
                 }
                 else
                 {
-                    Debug.Log("3");
                     mob = MobManager.CreateMob(uniqueId, instance);
                 }
 
                 if (mob == null)
                 {
-                    Common.Dbgl($"Failed to create mob {uniqueId}', IsOwner:{nview.IsOwner()}");
+                    Common.Dbgl($"Failed to create mob {uniqueId}', IsOwner:{nview.IsOwner()}", true);
                     return null;
                 }
 
-                Common.Dbgl($"Adding new instance of mob '{mob.Character.GetHoverName()}', IsOwner:{nview.IsOwner()}");
+                Common.Dbgl($"Adding new instance of mob '{mob.Character.GetHoverName()}', IsOwner:{nview.IsOwner()}", true);
                 MobManager.AliveMobs.Add(uniqueId, mob);
                 return mob;
             }

@@ -111,7 +111,7 @@ namespace RagnarsRokare.MobAI
                     var animator = aiBase.Instance.GetType().GetField("m_animator", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(aiBase.Instance) as ZSyncAnimation;
                     animator.SetTrigger("consume");
                     float consumeHeal = aiBase.Character.GetMaxHealth() * HealPercentageOnConsume;
-                    Common.Dbgl($"consumeHeal:{consumeHeal}");
+                    Common.Dbgl($"consumeHeal:{consumeHeal}", true);
 
                     if (consumeHeal > 0f)
                     {
