@@ -97,6 +97,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###
+- Version 0.3.1  
+Made backwards compatible with v0.2  
+
 - Version 0.3.0  
 Added markers for mobs on map  
 Various tweaks and stability improvements  
