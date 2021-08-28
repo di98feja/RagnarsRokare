@@ -1,4 +1,5 @@
 ﻿using Stateless;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -57,7 +58,7 @@ namespace RagnarsRokare.MobAI
         readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         readonly SearchForItemsBehaviour searchForItemsBehaviour;
         readonly ItemSortingBehaviour itemSortingBehaviour;
-        readonly FightBehaviour fightBehaviour;
+        readonly IFightBehaviour fightBehaviour;
         readonly EatingBehaviour eatingBehaviour;
 
         SorterAIConfig m_config;
@@ -96,7 +97,7 @@ namespace RagnarsRokare.MobAI
             itemSortingBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
             itemSortingBehaviour.SuccessState = State.Idle;
             itemSortingBehaviour.FailState = State.Idle;
-            fightBehaviour = new FightBehaviour();
+            fightBehaviour = Activator.CreateInstance(FightingBehaviourSelector.Invoke(this)) as IFightBehaviour;
             fightBehaviour.Configure(this, Brain, State.Fight);
             eatingBehaviour = new EatingBehaviour();
             eatingBehaviour.Configure(this, Brain, State.Hungry);
@@ -187,9 +188,9 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_mobilityLevel = Mobility;
-                    fightBehaviour.m_agressionLevel = Agressiveness;
-                    fightBehaviour.m_awarenessLevel = Awareness;
+                    fightBehaviour.MobilityLevel = Mobility;
+                    fightBehaviour.AgressionLevel = Agressiveness;
+                    fightBehaviour.AwarenessLevel = Awareness;
 
                     Brain.Fire(Trigger.Fight);
                 })

@@ -104,6 +104,7 @@ namespace RagnarsRokare.MobAI
             if (string.IsNullOrEmpty(uniqueId)) throw new ArgumentException("UniqueId must not be empty");
             if (!m_mobAIs.ContainsKey(mobAIName)) throw new ArgumentException($"Unknown mob controller {mobAIName}");
             if (mobAIConfig.GetType() != m_mobAIs[mobAIName].ConfigType) throw new ArgumentException($"Wrong type of config {mobAIConfig.GetType()}");
+            if (fightBehaviourSelector != null && fightBehaviourSelector.Method.ReturnType != typeof(IFightBehaviour)) throw new ArgumentException($"fightBehaviourSelector must return a type that implements IFightBehaviour");
 
             if (MobsRegister.ContainsKey(uniqueId))
             {

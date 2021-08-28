@@ -31,6 +31,7 @@ namespace RagnarsRokare.MobAI
         public string learningTask;
         public int learningRate = 0;
         public List<string> m_trainedAssignments = new List<string>();
+        private Func<MobAIBase, Type> m_fightingBehaviourSelector;
 
         public string CurrentAIState { get; protected set; }
 
@@ -149,7 +150,13 @@ namespace RagnarsRokare.MobAI
             }
         }
 
-        public Func<MobAIBase, Type> FightingBehaviourSelector { get; set; }
+        private Type DefaultFightingBehaviour(MobAIBase m) { return typeof(FightBehaviour); }
+
+        public Func<MobAIBase, Type> FightingBehaviourSelector 
+        { 
+            get => m_fightingBehaviourSelector ?? DefaultFightingBehaviour; 
+            set => m_fightingBehaviourSelector = value; 
+        }
 
         public Character Attacker { get; set; }
 

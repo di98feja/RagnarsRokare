@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using Stateless;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -69,7 +70,7 @@ namespace RagnarsRokare.MobAI
         private readonly StateMachine<string, string>.TriggerWithParameters<(MonsterAI instance, float dt)> UpdateTrigger;
         private readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         private readonly SearchForItemsBehaviour searchForItemsBehaviour;
-        private readonly FightBehaviour fightBehaviour;
+        private readonly IFightBehaviour fightBehaviour;
         private readonly EatingBehaviour eatingBehaviour;
 
         public WorkerAIConfig m_config { get; set; }
@@ -103,7 +104,7 @@ namespace RagnarsRokare.MobAI
 
             searchForItemsBehaviour = new SearchForItemsBehaviour();
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems);
-            fightBehaviour = new FightBehaviour();
+            fightBehaviour = Activator.CreateInstance(FightingBehaviourSelector.Invoke(this)) as IFightBehaviour;
             fightBehaviour.Configure(this, Brain, State.Fight);
             eatingBehaviour = new EatingBehaviour();
             eatingBehaviour.Configure(this, Brain, State.Hungry);
@@ -221,9 +222,9 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_mobilityLevel =  Mobility;
-                    fightBehaviour.m_agressionLevel = Agressiveness;
-                    fightBehaviour.m_awarenessLevel = Awareness;
+                    fightBehaviour.MobilityLevel =  Mobility;
+                    fightBehaviour.AgressionLevel = Agressiveness;
+                    fightBehaviour.AwarenessLevel = Awareness;
                     Brain.Fire(Trigger.Fight);
                 })
                 .OnExit(t =>
