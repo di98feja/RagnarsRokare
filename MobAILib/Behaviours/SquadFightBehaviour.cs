@@ -48,6 +48,7 @@ namespace RagnarsRokare.MobAI
         public float MobilityLevel { get; set; }
         public float AgressionLevel { get; set; }
         public float AwarenessLevel { get; set; }
+        public float InteligenceLevel { get; set; }
 
         // Management
         private float m_viewRange;
@@ -263,12 +264,12 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.AvoidingEnemy))
             {
-                var enemies = Common.FindClosestEnemies(aiBase.Character, m_startPosition, m_viewRange).GetRange(0, m_intelligence);
+                var enemies = Common.FindClosestEnemies(aiBase.Character, m_startPosition, m_viewRange).GetRange(0, (int)InteligenceLevel);
                 var position = Vector3.zero;
 
                 aiBase.Alerted = true;
 
-                if (Vector3.Distance(aiBase.Instance.transform.position, enemies.FirstOrDefault().transform.position) < m_agressionLevel)
+                if (Vector3.Distance(aiBase.Instance.transform.position, enemies.FirstOrDefault().transform.position) < InteligenceLevel)
                 {
                     aiBase.Brain.Fire(Trigger.Attack);
                     return;
