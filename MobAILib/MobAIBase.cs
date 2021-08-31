@@ -150,6 +150,8 @@ namespace RagnarsRokare.MobAI
 
         public Character Attacker { get; set; }
 
+        public bool Alerted { get; set; }
+
         public abstract void Follow(Player player);
 
         protected abstract void RPC_MobCommand(long sender, ZDOID playerId, string command);
