@@ -80,7 +80,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_currentSearchTime = 0f;
-                    Common.Dbgl("Entered SearchForItemsBehaviour");
+                    Common.Dbgl("Entered SearchForItemsBehaviour", true);
                 })
                 .OnExit(t =>
                 {
@@ -114,7 +114,7 @@ namespace RagnarsRokare.MobAI
                     if ((bool)pickable)
                     {
                         m_pickable = pickable;
-                        Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}");
+                        Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", true);
                         aiBase.Brain.Fire(Trigger.FoundPickable);
                         return;
                     }
@@ -339,7 +339,7 @@ namespace RagnarsRokare.MobAI
                 if (aiBase.MoveAndAvoidFire(m_pickable.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
-                    Common.Dbgl("Pickable is close");
+                    Common.Dbgl("Pickable is close", true);
                     if (m_pickable.Interact((aiBase.Character as Humanoid), false))
                     {
                         aiBase.Brain.Fire(Trigger.WaitForPickable);
@@ -363,7 +363,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = null;
                     aiBase.StopMoving();
-                    Common.Dbgl("Pickable = null");
+                    Common.Dbgl("Pickable = null", true);
                     aiBase.Brain.Fire(Trigger.Failed);
                     return;
                 }
@@ -372,11 +372,11 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = null;
                     aiBase.StopMoving();
-                    Common.Dbgl("Pickable dropped item not found");
+                    Common.Dbgl("Pickable dropped item not found", true);
                     aiBase.Brain.Fire(Trigger.Failed);
                     return;
                 }
-                Common.Dbgl($"Pickable itemdrop:{m_groundItem?.m_itemData?.m_shared?.m_name ?? "is null"}");
+                Common.Dbgl($"Pickable itemdrop:{m_groundItem?.m_itemData?.m_shared?.m_name ?? "is null"}", true);
                 aiBase.Brain.Fire(Trigger.GroundItemIsClose);
             }
 

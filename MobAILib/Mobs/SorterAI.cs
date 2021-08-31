@@ -1,4 +1,5 @@
 ﻿using Stateless;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -57,7 +58,7 @@ namespace RagnarsRokare.MobAI
         readonly StateMachine<string, string>.TriggerWithParameters<IEnumerable<ItemDrop.ItemData>, string, string> LookForItemTrigger;
         readonly SearchForItemsBehaviour searchForItemsBehaviour;
         readonly ItemSortingBehaviour itemSortingBehaviour;
-        readonly FightBehaviour fightBehaviour;
+        readonly IFightBehaviour fightBehaviour;
         readonly EatingBehaviour eatingBehaviour;
 
         SorterAIConfig m_config;
@@ -96,7 +97,7 @@ namespace RagnarsRokare.MobAI
             itemSortingBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
             itemSortingBehaviour.SuccessState = State.Idle;
             itemSortingBehaviour.FailState = State.Idle;
-            fightBehaviour = new FightBehaviour();
+            fightBehaviour = Activator.CreateInstance(FightingBehaviourSelector.Invoke(this)) as IFightBehaviour;
             fightBehaviour.Configure(this, Brain, State.Fight);
             eatingBehaviour = new EatingBehaviour();
             eatingBehaviour.Configure(this, Brain, State.Hungry);
@@ -108,7 +109,7 @@ namespace RagnarsRokare.MobAI
 
             string serializedDumpChest = NView.GetZDO().GetString(Constants.Z_SavedDumpChest);
             itemSortingBehaviour.DumpContainer = StorageContainer.DeSerialize(serializedDumpChest);
-            Common.Dbgl($"{Character.GetHoverName()}:Loaded dumpchest {serializedDumpChest}", "Sorter");
+            Common.Dbgl($"{Character.GetHoverName()}:Loaded dumpchest {serializedDumpChest}", true, "Sorter");
 
             ConfigureRoot();
             ConfigureIdle();
@@ -162,13 +163,13 @@ namespace RagnarsRokare.MobAI
                     if (Brain.IsInState(State.Sorting)) return false;
                     if ((m_stuckInIdleTimer += dt) > 300f)
                     {
-                        Common.Dbgl($"{Character.GetHoverName()}:m_startPosition = HomePosition", "Sorter");
+                        Common.Dbgl($"{Character.GetHoverName()}:m_startPosition = HomePosition", true, "Sorter");
                         m_startPosition = HomePosition;
                         m_stuckInIdleTimer = 0f;
                     }
                     if ((m_searchForNewAssignmentTimer += dt) < 10f) return false;
                     m_searchForNewAssignmentTimer = 0f;
-                    Common.Dbgl($"{Character.GetHoverName()}:Execute State.Sorting ", "Sorter");
+                    Common.Dbgl($"{Character.GetHoverName()}:Execute State.Sorting ", true, "Sorter");
                     return true;
                 })
                 .OnEntry(t =>
@@ -187,9 +188,9 @@ namespace RagnarsRokare.MobAI
                 {
                     fightBehaviour.SuccessState = State.Idle;
                     fightBehaviour.FailState = State.Flee;
-                    fightBehaviour.m_mobilityLevel = Mobility;
-                    fightBehaviour.m_agressionLevel = Agressiveness;
-                    fightBehaviour.m_awarenessLevel = Awareness;
+                    fightBehaviour.MobilityLevel = Mobility;
+                    fightBehaviour.AgressionLevel = Agressiveness;
+                    fightBehaviour.AwarenessLevel = Awareness;
 
                     Brain.Fire(Trigger.Fight);
                 })
@@ -247,7 +248,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.SearchForItems, searchForItemsBehaviour.StartState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl($"{Character.GetHoverName()}:ConfigureSearchContainers Initiated", "Sorter");
+                    Common.Dbgl($"{Character.GetHoverName()}:ConfigureSearchContainers Initiated", true, "Sorter");
                     searchForItemsBehaviour.KnownContainers = m_containers;
                     searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                     searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
@@ -264,7 +265,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(itemSortingBehaviour.StartState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl($"{Character.GetHoverName()}:ItemSortBehaviour Initiated", "Sorter");
+                    Common.Dbgl($"{Character.GetHoverName()}:ItemSortBehaviour Initiated", true, "Sorter");
                 });
         }
 
@@ -275,7 +276,7 @@ namespace RagnarsRokare.MobAI
         {
             if (Brain.State != m_lastState)
             {
-                Common.Dbgl($"{Character.GetHoverName()}:State:{Brain.State}", "Sorter");
+                Common.Dbgl($"{Character.GetHoverName()}:State:{Brain.State}", true, "Sorter");
                 m_lastState = Brain.State;
             }
 
@@ -371,7 +372,7 @@ namespace RagnarsRokare.MobAI
                 {
                     itemSortingBehaviour.DumpContainer = new StorageContainer(container, 0f);
                     NView.GetZDO().Set(Constants.Z_SavedDumpChest, itemSortingBehaviour.DumpContainer.Serialize());
-                    Common.Dbgl($"{Character.GetHoverName()}:Set DumpContainer: {itemSortingBehaviour.DumpContainer.Serialize()}", "Sorter");
+                    Common.Dbgl($"{Character.GetHoverName()}:Set DumpContainer: {itemSortingBehaviour.DumpContainer.Serialize()}", true, "Sorter");
                 }
             }
         }

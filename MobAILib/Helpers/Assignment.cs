@@ -63,7 +63,7 @@ namespace RagnarsRokare.MobAI
             {
                 if (!(bool)AssignmentObject)
                 {
-                    Common.Dbgl("AssignmentObject is null");
+                    Common.Dbgl("AssignmentObject is null", true);
                     return null;
                 }
 

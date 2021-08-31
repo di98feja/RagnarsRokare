@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    class SquadFightBehaviour : IBehaviour
+    class SquadFightBehaviour : IFightBehaviour
     {
         private const string Prefix = "RR_SQFIGHT";
         private class State
@@ -44,11 +44,10 @@ namespace RagnarsRokare.MobAI
         public string SuccessState { get; set; }
         public string FailState { get; set; }
         public string StartState { get { return State.Main; } }
-        
-        public float m_mobilityLevel;
-        public float m_agressionLevel;
-        public float m_awarenessLevel;
-        public int m_intelligence;
+
+        public float MobilityLevel { get; set; }
+        public float AgressionLevel { get; set; }
+        public float AwarenessLevel { get; set; }
 
         // Management
         private float m_viewRange;
@@ -64,7 +63,7 @@ namespace RagnarsRokare.MobAI
 
         public bool IsBelowHealthThreshold(MobAIBase aiBase)
         {
-            return aiBase.Character.GetHealthPercentage() < 1 - m_agressionLevel * 0.08;
+            return aiBase.Character.GetHealthPercentage() < 1 - AgressionLevel * 0.08;
         }
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
@@ -79,9 +78,9 @@ namespace RagnarsRokare.MobAI
                 {
                     m_aiBase.UpdateAiStatus(State.Main);
                     m_startPosition = aiBase.Instance.transform.position;
-                    m_circleTargetDistance = System.Math.Max(m_mobilityLevel - m_agressionLevel, 1);
-                    m_searchTargetMovement = System.Math.Max(m_mobilityLevel, m_agressionLevel);
-                    m_viewRange = m_searchTargetMovement + m_awarenessLevel;
+                    m_circleTargetDistance = System.Math.Max(MobilityLevel - AgressionLevel, 1);
+                    m_searchTargetMovement = System.Math.Max(MobilityLevel, AgressionLevel);
+                    m_viewRange = m_searchTargetMovement + AwarenessLevel;
                     
                 })
                 .OnExit(t =>
@@ -97,7 +96,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     //Debug.Log("IdentifyEnemy-Enter");
-                    m_searchTimer = m_agressionLevel * 2;
+                    m_searchTimer = AgressionLevel * 2;
                     if (aiBase.Attacker != null && aiBase.Instance.CanSenseTarget(aiBase.Attacker))
                     {
                         aiBase.TargetCreature = aiBase.Attacker;
@@ -134,7 +133,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     //Debug.Log("TrackingEnemy-Enter");
-                    m_searchTimer = m_agressionLevel * 2;
+                    m_searchTimer = AgressionLevel * 2;
                 });
 
             brain.Configure(State.AvoidingEnemy)
@@ -152,7 +151,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.Reposition, State.CirclingEnemy)
                 .OnEntry(t =>
                 {
-                    m_circleTimer = m_agressionLevel;
+                    m_circleTimer = AgressionLevel;
                 });
 
             brain.Configure(State.CirclingEnemy)
@@ -160,7 +159,7 @@ namespace RagnarsRokare.MobAI
                 .SubstateOf(State.Main)
                 .OnEntry(t =>
                 {
-                    m_circleTimer = 10f / m_agressionLevel;
+                    m_circleTimer = 10f / AgressionLevel;
                     aiBase.Character.Heal(aiBase.Character.GetMaxHealth()/50);
                 });
 
@@ -231,7 +230,7 @@ namespace RagnarsRokare.MobAI
                     ////Debug.Log("TrackingEnemy-Switch target to Attacker");
                 }
                 Common.Invoke<MonsterAI>(aiBase.Instance, "LookAt", aiBase.TargetCreature.transform.position);
-                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_viewRange && (aiBase.TargetCreature != aiBase.Attacker || m_agressionLevel < 5))
+                if (Vector3.Distance(m_startPosition, aiBase.Character.transform.position) > m_viewRange && (aiBase.TargetCreature != aiBase.Attacker || AgressionLevel < 5))
                 {
                     //Debug.Log("TrackingEnemy-NoTarget(lost track)");
                     aiBase.TargetCreature = null;

@@ -41,7 +41,7 @@ namespace RagnarsRokare.MobAI
                     }
                     catch (System.Exception)
                     {
-                        Common.Dbgl($"Failed GetContainerById({UniqueId})");
+                        Common.Dbgl($"Failed GetContainerById({UniqueId})", true);
                     }
                 }
                 return m_container;

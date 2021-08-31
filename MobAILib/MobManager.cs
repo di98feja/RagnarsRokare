@@ -71,7 +71,7 @@ namespace RagnarsRokare.MobAI
 
         #region Mobs
         public static Dictionary<string, MobAIBase> AliveMobs = new Dictionary<string, MobAIBase>();
-        private static readonly Dictionary<string, (string controller, object config)> MobsRegister = new Dictionary<string, (string controller, object config)>();
+        private static readonly Dictionary<string, (string controller, object config, Func<MobAIBase, Type> fightBehaviourSelector)> MobsRegister = new Dictionary<string, (string controller, object config, Func<MobAIBase, Type> fightBehaviourSelector)>();
 
         /// <summary>
         /// Register a Character to use a certain mobAI.
@@ -99,19 +99,20 @@ namespace RagnarsRokare.MobAI
         /// <param name="uniqueId">An identifier string for this specific mob. Must be unique among all other mobs.</param>
         /// <param name="mobAIName">The name of the mobAI to use</param>
         /// <param name="mobAIConfig">The matching config for the mobAI. For example WorkerAI must have a WorkerAIConfig</param>
-        public static void RegisterMob(Character character, string uniqueId, string mobAIName, object mobAIConfig)
+        public static void RegisterMob(Character character, string uniqueId, string mobAIName, object mobAIConfig, Func<MobAIBase, Type> fightBehaviourSelector = null)
         {
             if (string.IsNullOrEmpty(uniqueId)) throw new ArgumentException("UniqueId must not be empty");
             if (!m_mobAIs.ContainsKey(mobAIName)) throw new ArgumentException($"Unknown mob controller {mobAIName}");
             if (mobAIConfig.GetType() != m_mobAIs[mobAIName].ConfigType) throw new ArgumentException($"Wrong type of config {mobAIConfig.GetType()}");
+            if (fightBehaviourSelector != null && fightBehaviourSelector.Method.ReturnType != typeof(IFightBehaviour)) throw new ArgumentException($"fightBehaviourSelector must return a type that implements IFightBehaviour");
 
             if (MobsRegister.ContainsKey(uniqueId))
             {
-                MobsRegister[uniqueId] = (mobAIName, mobAIConfig);
+                MobsRegister[uniqueId] = (mobAIName, mobAIConfig, fightBehaviourSelector);
             }
             else
             {
-                MobsRegister.Add(uniqueId, (mobAIName, mobAIConfig));
+                MobsRegister.Add(uniqueId, (mobAIName, mobAIConfig, fightBehaviourSelector));
                 SetUniqueId(character, uniqueId);
             }
         }
@@ -162,7 +163,9 @@ namespace RagnarsRokare.MobAI
             var controllerName = MobsRegister[uniqueId].controller;
             var config = MobsRegister[uniqueId].config;
             var mobType = m_mobAIs[controllerName].AIType;
-            return Activator.CreateInstance(mobType, new object[]{ baseAI, config}) as MobAIBase;
+            var mobAIBase = Activator.CreateInstance(mobType, new object[]{ baseAI, config}) as MobAIBase;
+            mobAIBase.FightingBehaviourSelector = MobsRegister[uniqueId].fightBehaviourSelector;
+            return mobAIBase;
         }
 
         private static void SetUniqueId(Character character, string uniqueId)

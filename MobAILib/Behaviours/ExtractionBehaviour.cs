@@ -55,7 +55,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.Failed, () => FailState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("Entered ExtractionBehaviour", "Extraction");
+                    Common.Dbgl("Entered ExtractionBehaviour", true, "Extraction");
                 });
 
             brain.Configure(State.FindRandomTask)
@@ -63,7 +63,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.TaskFound, State.MoveToTask)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("Entered SearchForTask", "Extraction");
+                    Common.Dbgl("Entered SearchForTask", true, "Extraction");
                     m_currentSearchTimeLimit = 0f;
                 });
 
@@ -94,7 +94,7 @@ namespace RagnarsRokare.MobAI
                 bool noAssignmentFound = !StartNewAssignment(aiBase, ref m_taskList, AcceptedAssignments);
                 if (noAssignmentFound)
                 {
-                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:No suitable extraction assignments found", "Extraction");
+                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:No suitable extraction assignments found", true, "Extraction");
                     aiBase.Brain.Fire(Trigger.Failed);
                     return;
                 }
@@ -107,12 +107,12 @@ namespace RagnarsRokare.MobAI
                 bool isCloseToTask = MoveToAssignment(aiBase, dt);
                 if (isCloseToTask)
                 {
-                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:Reached task position", "Extraction");
+                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:Reached task position", true, "Extraction");
                     aiBase.Brain.Fire(Trigger.TaskIsClose);
                 }
                 if (Time.time > m_currentSearchTimeLimit)
                 {
-                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:Failed to reach task in time", "Extraction");
+                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:Failed to reach task in time", true, "Extraction");
                     m_taskList.First().AssignmentTimeout = Time.time + m_taskList.First().TypeOfAssignment.TimeBeforeAssignmentCanBeRepeated;
                     aiBase.Brain.Fire(Trigger.TaskNotFound);
                 }
@@ -124,12 +124,12 @@ namespace RagnarsRokare.MobAI
                 bool successful = PerformExtraction(aiBase, m_taskList.First());
                 if (successful)
                 {
-                    Common.Dbgl($"{aiBase.Character.GetHoverName()}: Extraction successful", "Extraction");
+                    Common.Dbgl($"{aiBase.Character.GetHoverName()}: Extraction successful", true, "Extraction");
                     aiBase.Brain.Fire(Trigger.ExtractionSucceeded);
                 }
                 else
                 {
-                    Common.Dbgl($"{aiBase.Character.GetHoverName()}: Extraction failed", "Extraction");
+                    Common.Dbgl($"{aiBase.Character.GetHoverName()}: Extraction failed", true, "Extraction");
                     aiBase.Brain.Fire(Trigger.ExtractionFailed);
                 }
                 return;
@@ -150,17 +150,17 @@ namespace RagnarsRokare.MobAI
             var newassignment = Common.FindRandomNearbyAssignment(aiBase.Instance, aiBase.m_trainedAssignments, KnownAssignments, m_searchRadius, acceptedAssignmentTypes);
             if (newassignment != null && newassignment.IsExtractable())
             {
-                Common.Dbgl($"{aiBase.Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}", "Extraction");
+                Common.Dbgl($"{aiBase.Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}", true, "Extraction");
                 KnownAssignments.AddFirst(newassignment);
                 return true;
             }
             else if (KnownAssignments.Any())
             {
                 KnownAssignments.OrderBy(a => a.AssignmentTimeout);
-                Common.Dbgl($"Have {KnownAssignments.Count}, next is due in {KnownAssignments.First().AssignmentTimeout - Time.time} seconds", "Extraction");
+                Common.Dbgl($"Have {KnownAssignments.Count}, next is due in {KnownAssignments.First().AssignmentTimeout - Time.time} seconds", true, "Extraction");
                 if (KnownAssignments.First().AssignmentTimeout <= Time.time)
                 {
-                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:Redoing known assignment:{KnownAssignments.First().TypeOfAssignment.Name}", "Extraction");
+                    Common.Dbgl($"{aiBase.Character.GetHoverName()}:Redoing known assignment:{KnownAssignments.First().TypeOfAssignment.Name}", true, "Extraction");
                     return true;
                 }
             }
@@ -171,13 +171,13 @@ namespace RagnarsRokare.MobAI
         {
             if (!m_taskList.Any())
             {
-                Common.Dbgl($"{aiBase.Character.GetHoverName()}:No assignments to move to", "Extraction");
+                Common.Dbgl($"{aiBase.Character.GetHoverName()}:No assignments to move to", true, "Extraction");
                 aiBase.Brain.Fire(Trigger.TaskNotFound);
                 return true;
             }
             if (!(bool)m_taskList.First().AssignmentObject)
             {
-                Common.Dbgl($"{aiBase.Character.GetHoverName()}:AssignmentObject is null", "Extraction");
+                Common.Dbgl($"{aiBase.Character.GetHoverName()}:AssignmentObject is null", true, "Extraction");
                 m_taskList.RemoveFirst();
                 aiBase.Brain.Fire(Trigger.TaskNotFound);
                 return true;
@@ -185,7 +185,7 @@ namespace RagnarsRokare.MobAI
             bool assignmentIsInvalid = m_taskList.First().AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
             {
-                Common.Dbgl($"{aiBase.Character.GetHoverName()}:AssignmentObject is invalid", "Extraction");
+                Common.Dbgl($"{aiBase.Character.GetHoverName()}:AssignmentObject is invalid", true, "Extraction");
                 m_taskList.RemoveFirst();
                 aiBase.Brain.Fire(Trigger.TaskNotFound);
                 return true;

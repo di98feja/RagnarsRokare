@@ -74,6 +74,7 @@
   <ItemGroup>
     <Compile Include="Behaviours\EatingBehaviour.cs" />
     <Compile Include="Behaviours\ExtractionBehaviour.cs" />
+    <Compile Include="Behaviours\IFightBehaviour.cs" />
     <Compile Include="Behaviours\SquadFightBehaviour.cs" />
     <Compile Include="Behaviours\ItemSortingBehaviour.cs" />
     <Compile Include="Config\SorterAIConfig.cs" />

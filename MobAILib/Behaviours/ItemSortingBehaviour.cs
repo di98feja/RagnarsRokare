@@ -145,11 +145,11 @@ namespace RagnarsRokare.MobAI
                     }
                     m_itemsDictionary.Add(key, containerList);
                 }
-                Common.Dbgl($"{m_aiBase.NView.GetZDO().GetString(Constants.Z_GivenName)}:Loaded {m_itemsDictionary.Count} items", "Sorter");
+                Common.Dbgl($"{m_aiBase.NView.GetZDO().GetString(Constants.Z_GivenName)}:Loaded {m_itemsDictionary.Count} items",true, "Sorter");
             }
             catch (Exception)
             {
-                Common.Dbgl($"Failed to load items dictionary");
+                Common.Dbgl($"Failed to load items dictionary", true);
             }
         }
 
@@ -175,7 +175,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(Trigger.Failed, () => FailState)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("Entered ItemSortingBehaviour", "Sorter");
+                    Common.Dbgl("Entered ItemSortingBehaviour", true, "Sorter");
                     m_startPosition = aiBase.Character.transform.position;
                 })
                 .OnExit(t =>
@@ -379,7 +379,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.GroundItemLost, State.FindRandomTask)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("PickUpItemFromGround", "Sorter");
+                    Common.Dbgl("PickUpItemFromGround", true, "Sorter");
                 });
             brain.Configure(State.PickUpAnotherItemFromGround)
                 .SubstateOf(State.Main)
@@ -387,7 +387,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ItemNotFound, State.MoveToStorageContainer)
                 .OnEntry(t =>
                 {
-                    Common.Dbgl("PickUpAnotherItemFromGround", "Sorter");
+                    Common.Dbgl("PickUpAnotherItemFromGround", true, "Sorter");
                 });
         }
 
@@ -423,7 +423,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = pickable;
                     m_startPosition = pickable.transform.position;
-                    Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", "Sorter");
+                    Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", true, "Sorter");
                     aiBase.Brain.Fire(Trigger.FoundPickable);
                     return;
                 }
@@ -452,7 +452,7 @@ namespace RagnarsRokare.MobAI
                 {
                     var storageContainer = new StorageContainer(newContainer, Time.time + RememberChestTime);
                     m_knownContainers.Push(storageContainer);
-                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{storageContainer.Timestamp}", "Sorter");
+                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{storageContainer.Timestamp}", true, "Sorter");
                     m_startPosition = storageContainer.Position;
                     aiBase.Brain.Fire(Trigger.ContainerFound);
                     aiBase.StopMoving();
@@ -491,7 +491,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.StopMoving();
                     if (m_container.Container == null)
                     {
-                        Common.Dbgl($"{aiBase.Character.GetHoverName()}({aiBase.Character.transform.position}):Is near container {m_container.UniqueId}({m_container.Position}) but it is still null", "Sorter");
+                        Common.Dbgl($"{aiBase.Character.GetHoverName()}({aiBase.Character.transform.position}):Is near container {m_container.UniqueId}({m_container.Position}) but it is still null", true, "Sorter");
                         return;
                     }
                     if (!m_container.Container.IsInUse())
@@ -514,20 +514,20 @@ namespace RagnarsRokare.MobAI
                 {
                     m_item = null;
                     aiBase.StopMoving();
-                    Common.Dbgl("GroundItem = null", "Sorter");
+                    Common.Dbgl("GroundItem = null", true, "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
                 if (aiBase.MoveAndAvoidFire(m_item.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
-                    Common.Dbgl("GroundItem is close", "Sorter");
+                    Common.Dbgl("GroundItem is close", true, "Sorter");
                     m_item.RequestOwn();
                     aiBase.Brain.Fire(Trigger.GroundItemIsClose);
                 }
                 if (Time.time > m_currentSearchTimeout)
                 {
-                    Common.Dbgl($"Giving up on {m_item.m_itemData.m_shared.m_name}", "Sorter");
+                    Common.Dbgl($"Giving up on {m_item.m_itemData.m_shared.m_name}", true, "Sorter");
                     m_item = null;
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
@@ -541,14 +541,14 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = null;
                     aiBase.StopMoving();
-                    Common.Dbgl("Pickable = null", "Sorter");
+                    Common.Dbgl("Pickable = null", true, "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
                 if (aiBase.MoveAndAvoidFire(m_pickable.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
-                    Common.Dbgl("Pickable is close", "Sorter");
+                    Common.Dbgl("Pickable is close", true, "Sorter");
                     if (m_pickable.Interact((aiBase.Character as Humanoid), false))
                     {
                         aiBase.Brain.Fire(Trigger.WaitForPickable);
@@ -558,7 +558,7 @@ namespace RagnarsRokare.MobAI
                 }
                 if (Time.time > m_currentSearchTimeout)
                 {
-                    Common.Dbgl($"Giving up on {m_pickable.gameObject.name}", "Sorter");
+                    Common.Dbgl($"Giving up on {m_pickable.gameObject.name}", true, "Sorter");
                     m_pickable = null;
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
@@ -574,7 +574,7 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = null;
                     aiBase.StopMoving();
-                    Common.Dbgl("Pickable = null", "Sorter");
+                    Common.Dbgl("Pickable = null", true, "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
@@ -583,12 +583,12 @@ namespace RagnarsRokare.MobAI
                 {
                     m_pickable = null;
                     aiBase.StopMoving();
-                    Common.Dbgl("Pickable dropped item not found", "Sorter");
+                    Common.Dbgl("Pickable dropped item not found", true, "Sorter");
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
                 //m_item = m_pickable.m_itemPrefab.GetComponent<ItemDrop>();
-                Common.Dbgl($"m_item:{m_item?.name ?? "is null"}");
+                Common.Dbgl($"m_item:{m_item?.name ?? "is null"}", true);
                 m_startPosition = m_item.transform.position;
                 m_item.RequestOwn();
                 aiBase.Brain.Fire(Trigger.GroundItemIsClose);
@@ -624,9 +624,9 @@ namespace RagnarsRokare.MobAI
                 }
                 if ((m_openChestTimer += dt) > OpenChestDelay)
                 {
-                    Common.Dbgl("Open Container", "Sorter");
+                    Common.Dbgl("Open Container", true, "Sorter");
                     m_container.Timestamp = Time.time + RememberChestTime;
-                    Common.Dbgl($"Updated timeout for {m_container.Container.name}", "Sorter");
+                    Common.Dbgl($"Updated timeout for {m_container.Container.name}", true, "Sorter");
                     aiBase.Brain.Fire(Trigger.ContainerOpened);
                     return;
                 }
@@ -649,14 +649,14 @@ namespace RagnarsRokare.MobAI
                     return;
                 }
 
-                Common.Dbgl($"NearbySign says:{m_nearbySign.GetText()}", "Sorter");
+                Common.Dbgl($"NearbySign says:{m_nearbySign.GetText()}", true, "Sorter");
                 ItemDrop.ItemData[] itemsOnSign = GetItemsOnSign(m_nearbySign);
                 if (itemsOnSign.Length == 0)
                 {
                     aiBase.Brain.Fire(Trigger.NearbySignNotFound);
                     return;
                 }
-                Common.Dbgl($"Deciphered {itemsOnSign.Length} items from nearbySign:{string.Join(",", itemsOnSign.Select(i => i.m_shared.m_name))}", "Sorter");
+                Common.Dbgl($"Deciphered {itemsOnSign.Length} items from nearbySign:{string.Join(",", itemsOnSign.Select(i => i.m_shared.m_name))}", true, "Sorter");
                 RemoveContainerFromItemsDict(m_container);
                 AddItemsToDictionary(itemsOnSign.ToDictionary(i => i.m_shared.m_name, e => 1000));
                 SaveItemDictionary();
@@ -678,7 +678,7 @@ namespace RagnarsRokare.MobAI
                     foreach (ItemDrop.ItemData item in foundItems)
                     {
                         string key = Common.GetPrefabName(item.m_shared.m_name);
-                        Common.Dbgl($"Key: {key}", "Sorter");
+                        Common.Dbgl($"Key: {key}", true, "Sorter");
                         if (chestInventory.ContainsKey(key))
                         {
                             chestInventory[key] += item.m_stack;
@@ -697,18 +697,18 @@ namespace RagnarsRokare.MobAI
             {
                 var mob = (aiBase.Character as Humanoid);
                 m_container.Container.SetInUse(inUse: false);
-                Common.Dbgl($"Unload {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", "Sorter");
+                Common.Dbgl($"Unload {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", true, "Sorter");
                 var itemToStore = (aiBase.Character as Humanoid).GetInventory().GetAllItems().FirstOrDefault(i => i.m_shared.m_name == m_carriedItem.m_shared.m_name);
 
                 if (m_container.Container.GetInventory().CanAddItem(itemToStore))
                 {
-                    Common.Dbgl($"Putting {itemToStore.m_stack} {itemToStore.m_shared.m_name} in container", "Sorter");
+                    Common.Dbgl($"Putting {itemToStore.m_stack} {itemToStore.m_shared.m_name} in container", true, "Sorter");
                     mob.UnequipItem(m_carriedItem);
                     m_container.Container.GetInventory().MoveItemToThis(mob.GetInventory(), itemToStore);
                 }
                 else if (m_itemStorageStack.Count() > 1)
                 {
-                    Common.Dbgl($"Container full", "Sorter");
+                    Common.Dbgl($"Container full", true, "Sorter");
                     m_itemStorageStack.Pop();
                     m_container = m_itemStorageStack.Peek().container;
                     aiBase.Brain.Fire(Trigger.ContainerIsFull);
@@ -716,12 +716,12 @@ namespace RagnarsRokare.MobAI
                 }
                 else
                 {
-                    Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", "Sorter");
+                    Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", true, "Sorter");
                     mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
                     m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
                     //Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
                 }
-                Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", "Sorter");
+                Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", true, "Sorter");
                 m_carriedItem = null;
                 m_itemStorageStack = null;
                 aiBase.Brain.Fire(Trigger.ItemSorted);
@@ -766,19 +766,19 @@ namespace RagnarsRokare.MobAI
             {
                 if (m_item == null || Common.GetNView(m_item)?.IsValid() != true || Common.GetNView(m_item)?.HasOwner() != true)
                 {
-                    Common.Dbgl($"GroundItem lost: {m_item == null}, {Common.GetNView(m_item)?.IsValid() != true}, {Common.GetNView(m_item)?.HasOwner() != true}");
+                    Common.Dbgl($"GroundItem lost: {m_item == null}, {Common.GetNView(m_item)?.IsValid() != true}, {Common.GetNView(m_item)?.HasOwner() != true}", true);
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
                 if (!m_item.CanPickup())
                 {
-                    Common.Dbgl($"Can't pickup {m_item?.name ?? "thing"}");
+                    Common.Dbgl($"Can't pickup {m_item?.name ?? "thing"}", true);
                     return;
                 }
                 m_carriedItem = m_item.m_itemData;
                 m_aiBase.UpdateAiStatus(State.PickUpItemFromGround, m_carriedItem.m_shared.m_name);
                 m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
-                Common.Dbgl($"Pickup {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", "Sorter");
+                Common.Dbgl($"Pickup {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", true, "Sorter");
                 m_item.Pickup(aiBase.Character as Humanoid);
                 (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
                 m_lastPickupPosition = aiBase.Character.transform.position;
@@ -847,7 +847,7 @@ namespace RagnarsRokare.MobAI
                 if (container.Timestamp < Time.time)
                 {
                     m_knownContainers.Remove(container);
-                    Common.Dbgl($"Container {container.UniqueId} timeouted", "Sorter");
+                    Common.Dbgl($"Container {container.UniqueId} timeouted", true, "Sorter");
                 }
             }
         }
@@ -905,12 +905,12 @@ namespace RagnarsRokare.MobAI
                         m_itemsDictionary[item.Key] = m_itemsDictionary[item.Key].Append((m_container, item.Value));
                     }
                     m_itemsDictionary[item.Key] = m_itemsDictionary[item.Key].OrderByDescending(c => c.count);
-                    Common.Dbgl($"{item.Key} exists in {m_itemsDictionary[item.Key].Count()} containers", "Sorter");
+                    Common.Dbgl($"{item.Key} exists in {m_itemsDictionary[item.Key].Count()} containers", true, "Sorter");
                 }
                 else if (!m_itemsDictionary.ContainsKey(item.Key))
                 {
                     m_itemsDictionary.Add(item.Key, new List<(StorageContainer, int)> { (m_container, item.Value) });
-                    Common.Dbgl($"Added {item.Key} to dict", "Sorter");
+                    Common.Dbgl($"Added {item.Key} to dict", true, "Sorter");
                 }
             }
         }
