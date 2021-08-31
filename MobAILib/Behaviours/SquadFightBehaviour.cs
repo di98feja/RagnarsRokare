@@ -8,13 +8,14 @@ namespace RagnarsRokare.MobAI
 {
     class SquadFightBehaviour : IBehaviour
     {
-        private const string Prefix = "RR_FIGHT";
+        private const string Prefix = "RR_SQFIGHT";
         private class State
         {
             public const string Main = Prefix + "Main";
             public const string IdentifyEnemy = Prefix + "IdentifyEnemy";
             public const string SelectWeapon = Prefix + "SelectWeapon";
             public const string TrackingEnemy = Prefix + "TrackingEnemy";
+            public const string AvoidingEnemy = Prefix + "AvoidingEnemy";
             public const string EngagingEnemy = Prefix + "EngagingEnemy";
             public const string CirclingEnemy = Prefix + "CirclingEnemy";
             public const string AvoidFire = Prefix + "AvoidFire";
@@ -47,6 +48,7 @@ namespace RagnarsRokare.MobAI
         public float m_mobilityLevel;
         public float m_agressionLevel;
         public float m_awarenessLevel;
+        public int m_intelligence;
 
         // Management
         private float m_viewRange;
@@ -135,6 +137,14 @@ namespace RagnarsRokare.MobAI
                     m_searchTimer = m_agressionLevel * 2;
                 });
 
+            brain.Configure(State.AvoidingEnemy)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.Attack, State.EngagingEnemy)
+                .Permit(Trigger.NoTarget, State.IdentifyEnemy)
+                .OnEntry(t =>
+                {
+                });
+
             brain.Configure(State.EngagingEnemy)
                 .SubstateOf(State.Main)
                 .Permit(Trigger.Attack, State.TrackingEnemy)
@@ -197,7 +207,8 @@ namespace RagnarsRokare.MobAI
                 if (m_searchTimer <= 0)
                 {
                     //Debug.Log("IdentifyEnemy-NoTarget");
-                    aiBase.StopMoving();
+                    aiBase.StopMoving(); 
+                    aiBase.Alerted = false;
                     aiBase.Brain.Fire(Trigger.NoTarget);
                 }
                 return;
@@ -226,6 +237,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.TargetCreature = null;
                     aiBase.Attacker = null;
                     aiBase.StopMoving();
+                    aiBase.Alerted = false;
                     aiBase.Brain.Fire(Trigger.NoTarget);
                     return;
                 }
@@ -243,9 +255,40 @@ namespace RagnarsRokare.MobAI
                     aiBase.TargetCreature = null;
                     aiBase.Attacker = null;
                     aiBase.StopMoving();
+                    aiBase.Alerted = false;
                     aiBase.Brain.Fire(Trigger.NoTarget);
                 }
                 //Debug.Log("TrackingEnemy-End");
+                return;
+            }
+
+            if (aiBase.Brain.IsInState(State.AvoidingEnemy))
+            {
+                var enemies = Common.FindClosestEnemies(aiBase.Character, m_startPosition, m_viewRange).GetRange(0, m_intelligence);
+                var position = Vector3.zero;
+
+                aiBase.Alerted = true;
+
+                if (Vector3.Distance(aiBase.Instance.transform.position, enemies.FirstOrDefault().transform.position) < m_agressionLevel)
+                {
+                    aiBase.Brain.Fire(Trigger.Attack);
+                    return;
+                }
+
+                foreach (Character enemy in enemies)
+                {
+                    position = (position + enemy.transform.position);
+                }
+                position = position / enemies.Count;
+
+                //Debug.Log("AvoidingEnemy-Movement");
+                if (aiBase.MoveAndAvoidFire(position + m_viewRange * (position - aiBase.Instance.transform.position).normalized , dt, 0, true))
+                {
+                    aiBase.StopMoving();
+                    aiBase.Alerted = false;
+                    aiBase.Brain.Fire(Trigger.NoTarget);
+                }
+                //Debug.Log("AvoidingEnemy-End");
                 return;
             }
 

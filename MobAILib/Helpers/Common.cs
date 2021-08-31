@@ -363,5 +363,16 @@ namespace RagnarsRokare.MobAI
                 .Where(p => GetOrCreateUniqueId(GetNView(p)) == uniqueId)
                 .SingleOrDefault();
         }
+
+        public static List<Character> FindClosestEnemies(Character me, Vector3 position, float maxDistance)
+        {
+            var characters = new List<Character>();
+            var enemyCharactersInRange = characters.Where(p => (BaseAI.IsEnemy(me, p) && Vector3.Distance(p.transform.position, position) < maxDistance)).ToList();
+            if (!enemyCharactersInRange.Any())
+            {
+                return null;
+            }
+            return (List<Character>)enemyCharactersInRange.OrderBy(c => Vector3.Distance(position, c.transform.position));
+        }
     }
 }
