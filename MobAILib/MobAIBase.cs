@@ -160,6 +160,8 @@ namespace RagnarsRokare.MobAI
 
         public Character Attacker { get; set; }
 
+        public bool Alerted { get; set; }
+
         public abstract void Follow(Player player);
 
         public void GiveCommand(string command, params object[] commandData)
