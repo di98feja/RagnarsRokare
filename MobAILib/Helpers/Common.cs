@@ -22,6 +22,7 @@ namespace RagnarsRokare.MobAI
         {
             Vector3 position = instance.transform.position;
             ItemDrop ClosestObject = null;
+            //Debug.Log($"{instance.GetComponent<Character>().GetHoverName()}: AcceptedNames:{string.Join(",",acceptedNames)}");
             foreach (Collider collider in Physics.OverlapSphere(position, range, LayerMask.GetMask(new string[] { "item" })))
             {
                 ItemDrop item = collider.transform?.GetComponentInParent<ItemDrop>();
@@ -29,6 +30,7 @@ namespace RagnarsRokare.MobAI
                 {
                     continue;
                 }
+                //Debug.Log($"Item:{item.GetHoverName()}, CanSee:{CanSeeTarget(instance, new Collider[] { collider })}");
                 if (item?.transform?.position != null && acceptedNames.Contains(item.m_itemData.m_shared.m_name) && CanSeeTarget(instance, new Collider[] { collider }) && (ClosestObject == null || Vector3.Distance(position, item.transform.position) < Vector3.Distance(position, ClosestObject.transform.position)))
                 {
                     ClosestObject = item;
@@ -275,7 +277,7 @@ namespace RagnarsRokare.MobAI
                 {
                     beam = Quaternion.AngleAxis(rotation, rhs) * rhs_temp;
                     int numHits = Physics.RaycastNonAlloc(eyesPosition, beam.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
-                    visible = numHits > 0;
+                    visible = true; 
                     //Dbgl($"Step {step}, Rotation {rotation}: numColliders:{numHits}", true, "Sorter");
                     for (var i = 0; i < numHits; i++)
                     {
