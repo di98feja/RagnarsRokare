@@ -162,6 +162,11 @@ namespace RagnarsRokare.MobAI
 
         public abstract void Follow(Player player);
 
+        public void GiveCommand(string command, params object[] commandData)
+        {
+            NView.InvokeRPC(ZNetView.Everybody, Constants.Z_MobCommand, commandData , command);
+        }
+
         protected abstract void RPC_MobCommand(long sender, ZDOID playerId, string command);
 
         public abstract void GotShoutedAtBy(MobAIBase mob);
@@ -199,10 +204,10 @@ namespace RagnarsRokare.MobAI
             running = remainingDistance > 5;
             var nearbyMobs = MobManager.AliveMobs.Values
                 .Where(c => c.HasInstance())
-                .Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 0.5f)
+                .Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f)
                 .Where(m => m.UniqueID != this.UniqueID);
-            var havePath = (bool)Invoke<MonsterAI>(Instance, "HavePath", destination) && remainingDistance < 50;
-            if (!nearbyMobs.Any() && havePath)
+            var findPath = (bool)Invoke<MonsterAI>(Instance, "FindPath", destination) && remainingDistance < 50;
+            if (!nearbyMobs.Any() && findPath)
             {
                 return (bool)Invoke<MonsterAI>(Instance, "MoveTo", dt, destination, distance, running);
             }

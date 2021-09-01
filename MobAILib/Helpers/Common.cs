@@ -145,15 +145,16 @@ namespace RagnarsRokare.MobAI
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
-            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) && CanSeeTarget(instance, p.GetComponentInParent<StaticTarget>().GetAllColliders().ToArray())); //&& CanSeeTarget(instance, p.gameObject)
-            var containers = allcontainerPieces?.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList(); 
-            if (!containers.Any())
+            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) ); //&& CanSeeTarget(instance, p.gameObject)
+            var containers = allcontainerPieces?.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList();
+            var seenContainers = containers.Where(c => CanSeeTarget(instance, c.GetComponent<StaticTarget>().GetAllColliders().ToArray())).ToList();
+            if (!seenContainers.Any())
             {
-                //Common.Dbgl("No containers found, returning null");
+                Common.Dbgl("No containers found, returning null", true, "Sorter");
                 return null;
             }
             // select random piece
-            return containers.RandomOrDefault();
+            return seenContainers.RandomOrDefault();
         }
 
         public static Container FindClosestContainer(Vector3 position, float containerSearchRadius)
@@ -258,7 +259,7 @@ namespace RagnarsRokare.MobAI
             Vector3 rhs_temp = rhs;
             Vector3 beam = rhs;
             bool visible = true;
-            //Dbgl($"Target colliders:{allColliders.Length}");
+            //Dbgl($"Target colliders:{allColliders.Length}", true, "Sorter");
             var viewBlockMask = LayerMask.GetMask("Default", "static_solid", "Default_small", "piece", "terrain", "viewblock", "vehicle");
             for (int step = 0; step < 10; step++)
             {
@@ -267,14 +268,15 @@ namespace RagnarsRokare.MobAI
                 //Debug.Log($"Angle:{Vector3.Angle(rhs, rhs_temp)}, side:{Mathf.Asin(Mathf.Abs(Vector3.Angle(rhs, rhs_temp))) * rhs_temp.magnitude}, extent:{Mathf.Max(bounds.extents.x, Mathf.Max(bounds.extents.y, bounds.extents.z))}");
                 if(outsideBounds)
                 {
+                    //Debug.Log($"Can't see 1");
                     return false;
                 }
                 for (int rotation = 0; rotation < 360; rotation += 36 / System.Math.Max(step, 1))
                 {
                     beam = Quaternion.AngleAxis(rotation, rhs) * rhs_temp;
                     int numHits = Physics.RaycastNonAlloc(eyesPosition, beam.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
-                    visible = true;
-                    //Dbgl($"Step {step}, Rotation {rotation}: numColliders:{numHits}");
+                    visible = numHits > 0;
+                    //Dbgl($"Step {step}, Rotation {rotation}: numColliders:{numHits}", true, "Sorter");
                     for (var i = 0; i < numHits; i++)
                     {
                         visible &= allColliders.Contains(m_tempRaycastHits[i].collider);
@@ -282,7 +284,7 @@ namespace RagnarsRokare.MobAI
                     if (visible)
                     {
                         //Debug.Log("Can see!");
-                        //Dbgl($"{character.GetHoverName()}: detected {target.gameObject.name} at angle {rotation}, {step}", "Worker");
+                        //Dbgl($"detected at angle {rotation}, {step}", true, "Sorter");
                         return true;
                     }
                     if (step == 0)

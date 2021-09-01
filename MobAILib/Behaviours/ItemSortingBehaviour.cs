@@ -75,6 +75,7 @@ namespace RagnarsRokare.MobAI
         public float PutItemInChestFailedRetryTimeout { get; set; } = 120f;
         public float SearchDumpContainerRetryTimeout { get; set; } = 60f;
         public float SearchForExtractionTaskTimeout { get; set; } = 60f;
+        public float FindRandomTaskDelay { get; set; } = 1.0f;
 
         public StorageContainer DumpContainer 
         { 
@@ -102,6 +103,7 @@ namespace RagnarsRokare.MobAI
         private float m_readNearbySignTimer;
         private float m_pickableTimer;
         private float m_extractionBehaviourTimer;
+        private float m_findRandomTaskTimer;
 
         private ItemDrop m_item;
         private Pickable m_pickable;
@@ -194,7 +196,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     //Common.Dbgl("Entered SearchForRandomContainer", "Sorter");
-                    m_currentSearchTimeout = Time.time + 2f;  //Delay before search initiates.
+                    m_findRandomTaskTimer = Time.time + FindRandomTaskDelay;  //Delay before search initiates.
                     m_aiBase.UpdateAiStatus(State.FindRandomTask);
                 });
 
@@ -397,76 +399,79 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.FindRandomTask))
             {
-                if (m_currentSearchTimeout > Time.time) return;
-                RemoveNullContainers();
-                RemoveTimeoutedContainers();
-                if (HaveItemInInventory(m_item?.m_itemData) && m_itemsDictionary.ContainsKey(m_item.m_itemData.m_shared.m_name))
+                if (m_findRandomTaskTimer < Time.time)
                 {
-                    //Debug.LogWarning("resume store item task!");
-                    m_carriedItem = m_item.m_itemData;
-                    (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
-                    m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
-                    aiBase.Brain.Fire(Trigger.ItemFound);
-                    return;
-                }
-                var wantedItems = m_itemsDictionary.Keys.Where(k => !m_putItemInContainerFailTimers.ContainsKey(k));
-                ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, wantedItems, m_searchRadius);
-                if (groundItem != null)
-                {
-                    m_item = groundItem;
-                    m_startPosition = groundItem.transform.position;
-                    aiBase.Brain.Fire(Trigger.FoundGroundItem);
-                    return;
-                }
-                Pickable pickable = Common.GetNearbyPickable(m_aiBase.Instance, m_aiBase.m_trainedAssignments, m_searchRadius, wantedItems);
-                if (pickable != null)
-                {
-                    m_pickable = pickable;
-                    m_startPosition = pickable.transform.position;
-                    Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", true, "Sorter");
-                    aiBase.Brain.Fire(Trigger.FoundPickable);
-                    return;
-                }
-
-                if (Time.time > m_dumpContainerTimer && DumpContainer != null)
-                {
-                    m_startPosition = DumpContainer.Position;
-                    aiBase.Brain.Fire(Trigger.SearchDumpContainer);
-                    return;
-                }
-
-                if (Time.time > m_extractionBehaviourTimer)
-                {
-                    m_extractionBehaviour.AcceptedAssignments = Assignment.AssignmentTypes.Where(t => t.IsExtractable && m_itemsDictionary.Keys.Contains(t.ExtractableItemName)).ToArray();
-                    aiBase.Brain.Fire(Trigger.FindExtractionTask);
-                    return;
-                }
-
-                var knownContainers = m_knownContainers.ToList();
-                if (DumpContainer != null && !knownContainers.Contains(DumpContainer))
-                {
-                    knownContainers.Add(DumpContainer);
-                }
-                Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers.Select(kc => kc.Container), AcceptedContainerNames, m_searchRadius);
-                if (newContainer != null)
-                {
-                    var storageContainer = new StorageContainer(newContainer, Time.time + RememberChestTime);
-                    m_knownContainers.Push(storageContainer);
-                    Common.Dbgl($"Update FindRandomTask new container with timeout at :{storageContainer.Timestamp}", true, "Sorter");
-                    m_startPosition = storageContainer.Position;
-                    aiBase.Brain.Fire(Trigger.ContainerFound);
-                    aiBase.StopMoving();
-                    //Common.Dbgl("Update SearchForContainer new container not null", "Sorter");
-                    return;
-                }
-
-                if (m_lastPickupPosition != Vector3.zero)
-                {
-                    if (aiBase.MoveAndAvoidFire(m_lastPickupPosition, dt, 1.0f))
+                    m_findRandomTaskTimer = Time.time + FindRandomTaskDelay;
+                    RemoveNullContainers();
+                    RemoveTimeoutedContainers();
+                    if (HaveItemInInventory(m_item?.m_itemData) && m_itemsDictionary.ContainsKey(m_item.m_itemData.m_shared.m_name))
                     {
-                        m_lastPickupPosition = Vector3.zero;
+                        //Debug.LogWarning("resume store item task!");
+                        m_carriedItem = m_item.m_itemData;
+                        (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
+                        m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
+                        aiBase.Brain.Fire(Trigger.ItemFound);
+                        return;
                     }
-                    return;
+                    var wantedItems = m_itemsDictionary.Keys.Where(k => !m_putItemInContainerFailTimers.ContainsKey(k));
+                    ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, wantedItems, m_searchRadius);
+                    if (groundItem != null)
+                    {
+                        m_item = groundItem;
+                        m_startPosition = groundItem.transform.position;
+                        aiBase.Brain.Fire(Trigger.FoundGroundItem);
+                        return;
+                    }
+                    Pickable pickable = Common.GetNearbyPickable(m_aiBase.Instance, m_aiBase.m_trainedAssignments, m_searchRadius, wantedItems);
+                    if (pickable != null)
+                    {
+                        m_pickable = pickable;
+                        m_startPosition = pickable.transform.position;
+                        Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", true, "Sorter");
+                        aiBase.Brain.Fire(Trigger.FoundPickable);
+                        return;
+                    }
+
+                    if (Time.time > m_dumpContainerTimer && DumpContainer != null)
+                    {
+                        m_startPosition = DumpContainer.Position;
+                        aiBase.Brain.Fire(Trigger.SearchDumpContainer);
+                        return;
+                    }
+
+                    if (Time.time > m_extractionBehaviourTimer)
+                    {
+                        m_extractionBehaviour.AcceptedAssignments = Assignment.AssignmentTypes.Where(t => t.IsExtractable && m_itemsDictionary.Keys.Contains(t.ExtractableItemName)).ToArray();
+                        aiBase.Brain.Fire(Trigger.FindExtractionTask);
+                        return;
+                    }
+
+                    var knownContainers = m_knownContainers.ToList();
+                    if (DumpContainer != null && !knownContainers.Contains(DumpContainer))
+                    {
+                        knownContainers.Add(DumpContainer);
+                    }
+                    Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers.Select(kc => kc.Container), AcceptedContainerNames, m_searchRadius);
+                    if (newContainer != null)
+                    {
+                        var storageContainer = new StorageContainer(newContainer, Time.time + RememberChestTime);
+                        m_knownContainers.Push(storageContainer);
+                        Common.Dbgl($"Update FindRandomTask new container with timeout at :{storageContainer.Timestamp}", true, "Sorter");
+                        m_startPosition = storageContainer.Position;
+                        aiBase.Brain.Fire(Trigger.ContainerFound);
+                        aiBase.StopMoving();
+                        //Common.Dbgl("Update SearchForContainer new container not null", "Sorter");
+                        return;
+                    }
+
+                    if (m_lastPickupPosition != Vector3.zero)
+                    {
+                        if (aiBase.MoveAndAvoidFire(m_lastPickupPosition, dt, 1.0f))
+                        {
+                            m_lastPickupPosition = Vector3.zero;
+                        }
+                        return;
+                    }
                 }
                 Common.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition);
                 return;
