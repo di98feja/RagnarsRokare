@@ -578,13 +578,18 @@ namespace RagnarsRokare.MobAI
 
         protected override void RPC_MobCommand(long sender, ZDOID playerId, string command)
         {
-            Player player = GetPlayer(playerId);
-            if (!(player == null) && command == "Follow")
+            if (command == "Follow")
             {
+                Player player = GetPlayer(playerId);
+                if (player != null)
                 {
                     (Instance as MonsterAI).ResetPatrolPoint();
                     (Instance as MonsterAI).SetFollowTarget(player.gameObject);
                 }
+            }
+            else if (command == "EnemySpotted")
+            {
+
             }
         }
 
