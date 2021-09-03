@@ -99,6 +99,11 @@ namespace RagnarsRokare.MobAI
         /// <param name="uniqueId">An identifier string for this specific mob. Must be unique among all other mobs.</param>
         /// <param name="mobAIName">The name of the mobAI to use</param>
         /// <param name="mobAIConfig">The matching config for the mobAI. For example WorkerAI must have a WorkerAIConfig</param>
+        public static void RegisterMob(Character character, string uniqueId, string mobAIName, object mobAIConfig)
+        {
+            RegisterMob(character, uniqueId, mobAIName, mobAIConfig, null);
+        }
+
         public static void RegisterMob(Character character, string uniqueId, string mobAIName, object mobAIConfig, Func<MobAIBase, Type> fightBehaviourSelector = null)
         {
             if (string.IsNullOrEmpty(uniqueId)) throw new ArgumentException("UniqueId must not be empty");

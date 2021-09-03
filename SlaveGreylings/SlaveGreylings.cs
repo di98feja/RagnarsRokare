@@ -13,7 +13,7 @@ namespace RagnarsRokare.SlaveGreylings
     {
         public const string ModId = "RagnarsRokare.SlaveGreylings";
         public const string ModName = "RagnarsRökare SlaveGreylings";
-        public const string ModVersion = "0.8.0";
+        public const string ModVersion = "0.8.1";
 
         private static readonly bool isDebug = true;
         

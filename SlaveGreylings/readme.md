@@ -45,8 +45,11 @@ The code can be found at https://github.com/di98feja/RagnarsRokare
 
 In order to keep build the creatures behaviour, we have been using Stateless state machine (found at https://github.com/dotnet-state-machine/stateless). Thank you stateless team!
 
-We hope you find this little mod fun!
-// Barg and Morg
+We hope you find this little mod fun!  
+// Barg and Morg  
+
+0.8.1 Patch Notes:  
+Bugfix: Missing method exception fixed
 
 0.8.0 Patch Notes:  
 * This update requires MobAILib version 0.3.*  
