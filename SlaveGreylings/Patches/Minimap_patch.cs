@@ -18,6 +18,8 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     foreach (var mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()))
                     {
+                        if (!mob.Value.NView?.IsValid() ?? false) continue;
+
                         var pos = mob.Value.Character.transform.position;
                         var name = mob.Value.NView.GetZDO().GetString(Constants.Z_GivenName);
                         if (!m_mobPins.ContainsKey(mob.Key))
@@ -41,7 +43,6 @@ namespace RagnarsRokare.SlaveGreylings
                 catch (System.Exception e)
                 {
                     Debug.LogError(e.Message);
-                    throw;
                 }
             }
         }
