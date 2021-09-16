@@ -184,7 +184,7 @@ namespace RagnarsRokare.MobAI
 
         public void StopMoving()
         {
-            Invoke<BaseAI>(Instance, "StopMoving");
+            Instance.StopMoving();
         }
 
         public bool AvoidFire(float dt)
