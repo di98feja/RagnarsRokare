@@ -46,7 +46,7 @@ namespace RagnarsRokare.SlaveGreylings
                             AIConfig = new WorkerAIConfig
                             {
                                 FeedDuration = GreylingsConfig.FeedDuration.Value,
-                                IncludedContainers = GreylingsConfig.IncludedContainersList.Value.Split(','),
+                                IncludedContainers = GreylingsConfig.IncludedContainersList.Value.Replace(" ", "").Split(',', ';'),
                                 TimeLimitOnAssignment = GreylingsConfig.TimeLimitOnAssignment.Value,
                                 Agressiveness = GreylingsConfig.Agressiveness.Value,
                                 Awareness = GreylingsConfig.Awareness.Value,
@@ -70,7 +70,7 @@ namespace RagnarsRokare.SlaveGreylings
                             AIConfig = new FixerAIConfig
                             {
                                 PostTameFeedDuration = BruteConfig.PostTameFeedDuration.Value,
-                                IncludedContainers = BruteConfig.IncludedContainersList.Value.Split(','),
+                                IncludedContainers = BruteConfig.IncludedContainersList.Value.Replace(" ", "").Split(',', ';'),
                                 TimeLimitOnAssignment = BruteConfig.TimeLimitOnAssignment.Value,
                                 Agressiveness = BruteConfig.Agressiveness.Value,
                                 Awareness = BruteConfig.Awareness.Value,
@@ -94,7 +94,7 @@ namespace RagnarsRokare.SlaveGreylings
                             AIConfig = new SorterAIConfig
                             {
                                 PostTameFeedDuration = GreydwarfConfig.PostTameFeedDuration.Value,
-                                IncludedContainers = GreydwarfConfig.IncludedContainersList.Value.Split(','),
+                                IncludedContainers = GreydwarfConfig.IncludedContainersList.Value.Replace(" ", "").Split(',',';'),
                                 Agressiveness = GreydwarfConfig.Agressiveness.Value,
                                 Awareness = GreydwarfConfig.Awareness.Value,
                                 Mobility = GreydwarfConfig.Mobility.Value,

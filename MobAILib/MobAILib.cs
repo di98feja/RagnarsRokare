@@ -9,7 +9,7 @@ namespace RagnarsRokare.MobAI
     {
         public const string ModId = "RagnarsRokare.MobAILib";
         public const string ModName = "RagnarsRökare Mob AI";
-        public const string ModVersion = "0.3.2";
+        public const string ModVersion = "0.3.3";
 
         private void Awake()
         {

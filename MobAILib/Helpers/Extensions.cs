@@ -51,8 +51,46 @@ namespace RagnarsRokare.MobAI
             {
                 return container;
             }
-            return  p.gameObject.GetComponentInChildren<Container>();
+
+            container = p.gameObject.GetComponentInChildren<Container>();
+            if ((bool)container)
+            {
+                return container;
+            }
+
+            //container = p.gameObject.GetComponentInParent<Container>();
+            //if ((bool)container)
+            //{
+            //    return container;
+            //}
+
+            return null;
         }
+
+        public static StaticTarget GetStaticTarget(this Container p)
+        {
+            var target = p.gameObject.GetComponent<StaticTarget>();
+            if ((bool)target)
+            {
+                return target;
+            }
+
+            target = p.gameObject.GetComponentInParent<StaticTarget>();
+            if ((bool)target)
+            {
+                return target;
+            }
+
+            target = p.gameObject.GetComponentInChildren<StaticTarget>();
+            if ((bool)target)
+            {
+                return target;
+            }
+
+
+            return null;
+        }
+
 
         public static IEnumerable<string> SplitBySqBrackets(this string input)
         {

@@ -29,7 +29,7 @@ namespace RagnarsRokare.SlaveGreylings
             TamingTime = Config.Bind<int>("General", "Greydwarf_TamingTime", 1000, "Total time it takes to tame a Greydwarf");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Greydwarf_TimeLimitOnAssignment", 30, "How long before moving on to next assignment");
             IncludedContainersList = Config.Bind<string>("General", "Greydwarf_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
-            PreTameConsumables = TamingItemList.Value.Split(',');
+            PreTameConsumables = TamingItemList.Value.Replace(" ", "").Split(',', ';');
             PostTameConsumables = "QueensJam,Raspberry".Split(',');
             Awareness = Config.Bind<int>("General", "Greydwarf_Awareness", 5, "General awareness, used to calculate search ranges and ability to detect enemies");
             Agressiveness = Config.Bind<int>("General", "Greydwarf_Agressiveness", 4, "Agressivness determines how to behave when fighting and when to give up and flee");

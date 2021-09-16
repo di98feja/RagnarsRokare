@@ -143,13 +143,14 @@ namespace RagnarsRokare.MobAI
 
         public static Container FindRandomNearbyContainer(BaseAI instance, IEnumerable<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
         {
-            //Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join()} within {containerSearchRadius}");
+            Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join(delimiter:":")} within {containerSearchRadius}", true, "Sorter");
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
-            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name)) ); //&& CanSeeTarget(instance, p.gameObject)
-            var containers = allcontainerPieces?.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList();
-            var seenContainers = containers.Where(c => CanSeeTarget(instance, c.GetComponent<StaticTarget>().GetAllColliders().ToArray())).ToList();
+            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name))); //&& CanSeeTarget(instance, p.gameObject)
+            var containers = allcontainerPieces.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList();
+            //Common.Dbgl($"Seen containers:{containers.Where(c => CanSeeTarget(instance, c.GetComponent<StaticTarget>()?.GetAllColliders()?.ToArray()))?.Count() ?? -1}", true, "Sorter");
+            var seenContainers = containers.Where(c => CanSeeTarget(instance, c.GetStaticTarget()?.GetAllColliders()?.ToArray())).ToList();
             if (!seenContainers.Any())
             {
                 Common.Dbgl("No containers found, returning null", true, "Sorter");
@@ -242,6 +243,7 @@ namespace RagnarsRokare.MobAI
 
         public static bool CanSeeTarget(BaseAI instance, Collider[] allColliders)
         {
+            if (allColliders == null) return false;
             if (allColliders.Length == 0) return false;
 
             Vector3 eyesPosition = instance.GetComponent<Character>().m_eye.position;
