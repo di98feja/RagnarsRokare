@@ -14,7 +14,7 @@ namespace RagnarsRokare_DodgeOnDoubleTap
     {
         public const string ModId = "RagnarsRokare.DodgeOnDoubleTap";
         public const string ModName = "RagnarsRökare DodgeOnDoubleTapMod";
-        public const string ModVersion = "0.7";
+        public const string ModVersion = "0.8";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> DodgeTapHoldMax;
