@@ -97,6 +97,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###  
+- Version 0.3.4  
+Updated for Hearth&Home
+
 - Version 0.3.3  
 Bugfix
 
