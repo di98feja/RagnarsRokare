@@ -25,7 +25,7 @@ namespace RagnarsRokare.SlaveGreylings
                     var attacker = hit?.GetAttacker();
                     if (attacker != null)
                     {
-                        hit.m_damage.Modify(0.5f);
+                        hit.m_damage.Modify(0.8f);
                     }
                 }
             }
@@ -70,6 +70,10 @@ namespace RagnarsRokare.SlaveGreylings
                         {
                             __instance.m_name = givenName;
                         }
+                        //if (__instance.name.Contains("Greydwarf_Elite"))
+                        //{
+                        //    var piece = __instance.gameObject.AddComponent<Piece>();
+                        //}
                     }
                     else
                     {
@@ -131,8 +135,8 @@ namespace RagnarsRokare.SlaveGreylings
                     greylingToUpdate = MobManager.AliveMobs[uniqueId].Character;
                 }
                 catch (System.Exception)
-                { 
-                    return; 
+                {
+                    return;
                 }
 
                 greylingToUpdate.m_name = text;

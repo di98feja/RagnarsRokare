@@ -96,7 +96,13 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More built-in MobAI classes
 - More common behaviours
 
-### Changelog ###
+### Changelog ###  
+- Version 0.3.4  
+Updated for Hearth&Home
+
+- Version 0.3.3  
+Bugfix
+
 - Version 0.3.2  
 Made Sorter less eager to find new task  
 
