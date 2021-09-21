@@ -8,6 +8,7 @@ namespace RagnarsRokare.SlaveGreylings
     {
         public static ConfigEntry<string> TamingItemList;
         public static ConfigEntry<int> FeedDuration;
+        public static ConfigEntry<string> HungryItemList;
         public static ConfigEntry<int> TamingTime;
         public static ConfigEntry<string> IncludedContainersList;
         public static ConfigEntry<int> TimeLimitOnAssignment;
@@ -21,12 +22,13 @@ namespace RagnarsRokare.SlaveGreylings
         public static void Init(ConfigFile Config)
         {
             TamingItemList = Config.Bind<string>("General", "Greyling_TamingItemList", "SilverNecklace,Amber,AmberPearl,Ruby", "Comma separated list if items used to tame Greylings");
+            HungryItemList = Config.Bind<string>("General", "Greyling_PostTameConsumables", "QueensJam,Raspberry,Honey,Blueberry,Resin", "Comma separated list if items Greylings eat when hungry");
             FeedDuration = Config.Bind<int>("General", "Greyling_FeedDuration", 500, "Time before getting hungry after consuming one item");
             TamingTime = Config.Bind<int>("General", "Greyling_TamingTime", 1000, "Total time it takes to tame a greyling");
             IncludedContainersList = Config.Bind<string>("General", "Greyling_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");
             TimeLimitOnAssignment = Config.Bind<int>("General", "Greylings_TimeLimitOnAssignment", 60, "How long before moving on to next assignment");
             PreTameConsumables = TamingItemList.Value.Replace(" ", "").Split(',', ';');
-            PostTameConsumables = "Resin".Split(',');
+            PostTameConsumables = HungryItemList.Value.Replace(" ", "").Split(',', ';');
             Awareness = Config.Bind<int>("General", "Greyling_Awareness", 4, "General awareness, used to calculate search ranges and ability to detect enemies");
             Agressiveness = Config.Bind<int>("General", "Greyling_Agressiveness", 2, "Agressivness determines how to behave when fighting and when to give up and flee");
             Mobility = Config.Bind<int>("General", "Greyling_Mobility", 5, "Mobility is used to determine how often and how far the mob moves");
