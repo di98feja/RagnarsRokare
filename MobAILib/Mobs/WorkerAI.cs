@@ -210,7 +210,11 @@ namespace RagnarsRokare.MobAI
                     Invoke<MonsterAI>(Instance, "SetAlerted", false);
                     m_assignment.Clear();
                     m_containers.Clear();
-                });
+                })
+                .OnExit(t =>
+                 {
+                     m_startPosition = Instance.transform.position;
+                 });
         }
 
         private void ConfigureFight()
@@ -485,7 +489,7 @@ namespace RagnarsRokare.MobAI
 
             if (Brain.State == State.Idle)
             {
-                Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
+                Common.Invoke<BaseAI>(Instance, "RandomMovementArroundPoint", dt, m_startPosition, 5, false);
                 return;
             }
         }

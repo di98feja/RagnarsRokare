@@ -48,6 +48,10 @@ In order to keep build the creatures behaviour, we have been using Stateless sta
 We hope you find this little mod fun!  
 // Barg and Morg  
 
+
+0.8.3 Patch Notes:
+Rebuild with new (Hearth and Home) dll's.
+
 0.8.2 Patch Notes:  
 Bugfix: Minimap and CharacterDamaged
 
