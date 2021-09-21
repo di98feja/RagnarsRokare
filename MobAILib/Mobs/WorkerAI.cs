@@ -20,6 +20,7 @@ namespace RagnarsRokare.MobAI
         private float m_fleeTimer;
         public float m_assignedTimer;
         private float m_triggerTimer;
+        private float m_stuckInIdleTimer;
 
         // Management
         private Vector3 m_startPosition;
@@ -187,6 +188,12 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.ShoutedAt, State.MoveAwayFrom)
                 .PermitIf(UpdateTrigger, State.Assigned, (arg) =>
                 {
+                    if ((m_stuckInIdleTimer += arg.dt) > 300f)
+                    {
+                        Common.Dbgl($"{Character.GetHoverName()}:m_startPosition = HomePosition", true, "Sorter");
+                        m_startPosition = HomePosition;
+                        m_stuckInIdleTimer = 0f;
+                    }
                     if (Brain.IsInState(State.Assigned)) return false;
                     if ((m_searchForNewAssignmentTimer += arg.dt) < 2) return false;
                     m_searchForNewAssignmentTimer = 0f;
@@ -213,7 +220,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                  {
-                     m_startPosition = Instance.transform.position;
+                     HomePosition = m_startPosition = eatingBehaviour.LastKnownFoodPosition = Instance.transform.position;
                  });
         }
 

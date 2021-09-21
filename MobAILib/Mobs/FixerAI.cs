@@ -279,7 +279,6 @@ namespace RagnarsRokare.MobAI
                 .OnExit(t =>
                 {
                     HomePosition = m_startPosition = eatingBehaviour.LastKnownFoodPosition = Instance.transform.position;
-
                 });
         }
 
