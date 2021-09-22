@@ -451,7 +451,7 @@ namespace RagnarsRokare.MobAI
                     {
                         knownContainers.Add(DumpContainer);
                     }
-                    Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers.Select(kc => kc.Container), AcceptedContainerNames, m_searchRadius);
+                    Container newContainer = Common.FindRandomNearbyContainer(aiBase.Instance, knownContainers.Select(kc => kc.Container), AcceptedContainerNames, m_searchRadius, Vector3.zero);
                     if (newContainer != null)
                     {
                         var storageContainer = new StorageContainer(newContainer, Time.time + RememberChestTime);

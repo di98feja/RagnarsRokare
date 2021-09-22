@@ -375,6 +375,7 @@ namespace RagnarsRokare.MobAI
                     }
                     else
                     {
+                        searchForItemsBehaviour.CenterPoint = Instance.transform.position;
                         Brain.Fire(LookForItemTrigger, fetchItems, State.HaveAssignmentItem, State.HaveNoAssignmentItem);
                     }
                 });
