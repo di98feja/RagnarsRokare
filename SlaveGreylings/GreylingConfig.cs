@@ -22,7 +22,7 @@ namespace RagnarsRokare.SlaveGreylings
         public static void Init(ConfigFile Config)
         {
             TamingItemList = Config.Bind<string>("General", "Greyling_TamingItemList", "SilverNecklace,Amber,AmberPearl,Ruby", "Comma separated list if items used to tame Greylings");
-            HungryItemList = Config.Bind<string>("General", "Greyling_PostTameConsumables", "QueensJam,Raspberry,Honey,Blueberry,Resin", "Comma separated list if items Greylings eat when hungry");
+            HungryItemList = Config.Bind<string>("General", "Greyling_PostTameConsumables", "QueensJam,Raspberry,Honey,Blueberries,Resin", "Comma separated list if items Greylings eat when hungry");
             FeedDuration = Config.Bind<int>("General", "Greyling_FeedDuration", 500, "Time before getting hungry after consuming one item");
             TamingTime = Config.Bind<int>("General", "Greyling_TamingTime", 1000, "Total time it takes to tame a greyling");
             IncludedContainersList = Config.Bind<string>("General", "Greyling_IncludedContainersList", "piece_chest_wood", "Comma separated list of container piece names to be searchable by Greylings");

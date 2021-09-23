@@ -64,6 +64,7 @@ namespace RagnarsRokare.MobAI
 
         public bool IsHungry(bool isHurt)
         {
+            Debug.Log($"{m_aiBase.Character.GetHoverName()}, IsHungry:{m_hungryTimer > (isHurt ? HurtHungryTimeout : HungryTimeout)} isHurt:{isHurt}, m_hungryTimer{m_hungryTimer}");
             return m_hungryTimer > (isHurt ? HurtHungryTimeout : HungryTimeout);
         }
 
@@ -97,6 +98,8 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_foodsearchtimer = 0f;
+                    Debug.Log($"{aiBase.Character.GetHoverName()}Searching for consumeItems{(aiBase.Instance as MonsterAI).m_consumeItems.Count}");
+                    Debug.Log($"{aiBase.Character.GetHoverName()}: {string.Join(",", (aiBase.Instance as MonsterAI).m_consumeItems.Select(c => c?.m_itemData?.m_dropPrefab?.name ?? "null"))}");
                     brain.Fire(LookForItemTrigger, (aiBase.Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem, State.HaveNoFoodItem);
                 });
 
@@ -118,7 +121,9 @@ namespace RagnarsRokare.MobAI
                         aiBase.Instance.GetComponent<Character>().Heal(consumeHeal);
                     }
                     m_hungryTimer = 0f;
+                    HungryTimeout = 1000;
                     LastKnownFoodPosition = aiBase.Character.transform.position;
+                    Debug.Log($"{m_aiBase.Character.GetHoverName()}: Exit EatingBehaviour via to {SuccessState}");
                     brain.Fire(Trigger.ConsumeItem);
                 })
                 .OnExit(t =>

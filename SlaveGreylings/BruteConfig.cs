@@ -25,7 +25,7 @@ namespace RagnarsRokare.SlaveGreylings
         {
             BrutePrefabName = Config.Bind<string>("General", "Brute_PrefabName", "Greydwarf_Elite", "The prefab to use the Brute ai with (repair structures)");
             TamingItemList = Config.Bind<string>("General", "Brute_TamingItemList", "Dandelion", "Comma separated list if items used to tame Brutes");
-            HungryItemList = Config.Bind<string>("General", "Brute_PostTameConsumables", "QueensJam,Raspberry,Honey,Blueberry,Resin,Dandelions", "Comma separated list if items Brutes eat when hungry");
+            HungryItemList = Config.Bind<string>("General", "Brute_PostTameConsumables", "QueensJam,Raspberry,Honey,Blueberries,Resin,Dandelion", "Comma separated list if items Brutes eat when hungry");
             PreTameFeedDuration = Config.Bind<int>("General", "Brute_PreTameFeedDuration", 100, "Time before getting hungry after consuming one item during taming");
             PostTameFeedDuration = Config.Bind<int>("General", "Brute_PostTameFeedDuration", 1000, "Time before getting hungry after consuming one item when tame");
             TamingTime = Config.Bind<int>("General", "Brute_TamingTime", 1000, "Total time it takes to tame a Brute");

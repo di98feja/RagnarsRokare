@@ -88,6 +88,7 @@ namespace RagnarsRokare.MobAI
             PrintAIStateToDebug = false;
 
             m_config = config as WorkerAIConfig;
+
             m_assignment = new LinkedList<Assignment>();
             m_containers = new MaxStack<Container>(Intelligence);
             m_carrying = null;
@@ -108,7 +109,7 @@ namespace RagnarsRokare.MobAI
             fightBehaviour.Configure(this, Brain, State.Fight);
             eatingBehaviour = new EatingBehaviour();
             eatingBehaviour.Configure(this, Brain, State.Hungry);
-            eatingBehaviour.HungryTimeout = m_config.FeedDuration;
+            eatingBehaviour.HungryTimeout = 5;// m_config.FeedDuration;
             eatingBehaviour.SearchForItemsState = State.SearchForItems;
             eatingBehaviour.SuccessState = State.Idle;
             eatingBehaviour.FailState = State.Idle;
@@ -158,7 +159,12 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.EnterEatBehaviour, eatingBehaviour.StartState)
                 .OnEntry(t =>
                 {
+                    Debug.Log($"{Character.GetHoverName()}: Trigger EatingBehaviour");
                     Brain.Fire(Trigger.EnterEatBehaviour);
+                })
+                .OnExit(t =>
+                {
+                    Debug.Log($"{Character.GetHoverName()}: Exit EatingBehaviour");
                 });
         }
 

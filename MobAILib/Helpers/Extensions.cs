@@ -113,5 +113,10 @@ namespace RagnarsRokare.MobAI
                 }
             }
         }
+
+        public static ItemDrop GetItemByName(this ObjectDB objectDB, string itemName)
+        {
+            return objectDB.m_items.SingleOrDefault(i => Common.GetPrefabName(i.name) == itemName)?.GetComponent<ItemDrop>();
+        }
     }
 }

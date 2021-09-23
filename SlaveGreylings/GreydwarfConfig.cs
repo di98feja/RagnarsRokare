@@ -25,7 +25,7 @@ namespace RagnarsRokare.SlaveGreylings
         {
             GreydwarfPrefabName = Config.Bind<string>("General", "Greydwarf_PrefabName", "Greydwarf", "The prefab to use the Greydwarf ai with (sort items)");
             TamingItemList = Config.Bind<string>("General", "Greydwarf_TamingItemList", "Honey", "Comma separated list if items used to tame Greydwarfs");
-            HungryItemList = Config.Bind<string>("General", "Greydwarf_PostTameConsumables", "QueensJam,Raspberry,Honey,Blueberry,Resin", "Comma separated list if items Greydwarfs eat when hungry");
+            HungryItemList = Config.Bind<string>("General", "Greydwarf_PostTameConsumables", "QueensJam,Raspberry,Honey,Blueberries,Resin", "Comma separated list if items Greydwarfs eat when hungry");
             PreTameFeedDuration = Config.Bind<int>("General", "Greydwarf_PreTameFeedDuration", 100, "Time before getting hungry after consuming one item during taming");
             PostTameFeedDuration = Config.Bind<int>("General", "Greydwarf_PostTameFeedDuration", 1000, "Time before getting hungry after consuming one item when tame");
             TamingTime = Config.Bind<int>("General", "Greydwarf_TamingTime", 1000, "Total time it takes to tame a Greydwarf");

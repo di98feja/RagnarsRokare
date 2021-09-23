@@ -256,6 +256,7 @@ namespace RagnarsRokare.MobAI
                         brain.Fire(Trigger.Failed);
                         return;
                     }
+                    Debug.Log($"{aiBase.Character.GetHoverName()}: Search container");
                     FoundItem = KnownContainers.Peek().GetInventory().GetAllItems().Where(i => Items.Any(it => i.m_shared.m_name == it.m_shared.m_name)).RandomOrDefault();
                     if (FoundItem != null)
                     {

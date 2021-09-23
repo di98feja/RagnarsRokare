@@ -27,19 +27,35 @@ namespace RagnarsRokare.SlaveGreylings
             return false;
         }
 
+        public static IEnumerable<ItemDrop> CreateDropItemList(IEnumerable<string> itemNames)
+        {
+            foreach (var itemName in itemNames)
+            {
+                var item = ObjectDB.instance.GetItemByName(itemName);
+                if (null == item)
+                {
+                    Debug.LogWarning($"Cannot find item {itemName} in objectDB");
+                    continue;
+                }
+                yield return item;
+            }
+        }
+
         public static MobConfig GetMobConfig(string mobType)
         {
+            Debug.Log(mobType);
             var type = Common.GetPrefabName(mobType);
             switch (type)
             {
                 case "Greyling":
                     {
-
+                        Debug.Log($"QueensJam:{ObjectDB.instance.GetItemByName("QueensJam").m_itemData.m_shared.m_name}");
+                        Debug.Log($"Raspberry:{ObjectDB.instance.GetItemByName("Raspberry").m_itemData.m_shared.m_name}");
                         return new MobConfig
                         {
-                            PostTameConsumables = GreylingsConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PostTameConsumables = CreateDropItemList(GreydwarfConfig.PostTameConsumables),
                             PostTameFeedDuration = GreylingsConfig.FeedDuration.Value,
-                            PreTameConsumables = GreylingsConfig.PreTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PreTameConsumables = CreateDropItemList(GreylingsConfig.PreTameConsumables),
                             PreTameFeedDuration = GreylingsConfig.FeedDuration.Value,
                             TamingTime = GreylingsConfig.TamingTime.Value,
                             AIType = "Worker",
@@ -61,9 +77,9 @@ namespace RagnarsRokare.SlaveGreylings
                     {
                         return new MobConfig
                         {
-                            PostTameConsumables = BruteConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PostTameConsumables = CreateDropItemList(BruteConfig.PostTameConsumables),
                             PostTameFeedDuration = BruteConfig.PostTameFeedDuration.Value,
-                            PreTameConsumables = BruteConfig.PreTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Material, i).FirstOrDefault()),
+                            PreTameConsumables = CreateDropItemList(BruteConfig.PreTameConsumables),
                             PreTameFeedDuration = BruteConfig.PreTameFeedDuration.Value,
                             TamingTime = BruteConfig.TamingTime.Value,
                             AIType = "Fixer",
@@ -85,9 +101,9 @@ namespace RagnarsRokare.SlaveGreylings
                     {
                         return new MobConfig
                         {
-                            PostTameConsumables = GreydwarfConfig.PostTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Consumable, i).FirstOrDefault()),
+                            PostTameConsumables = CreateDropItemList(GreydwarfConfig.PostTameConsumables),
                             PostTameFeedDuration = GreydwarfConfig.PostTameFeedDuration.Value,
-                            PreTameConsumables = GreydwarfConfig.PreTameConsumables.Select(i => ObjectDB.instance.GetAllItems(ItemDrop.ItemData.ItemType.Consumable, i).FirstOrDefault()),
+                            PreTameConsumables = CreateDropItemList(GreydwarfConfig.PreTameConsumables),
                             PreTameFeedDuration = GreydwarfConfig.PreTameFeedDuration.Value,
                             TamingTime = GreydwarfConfig.TamingTime.Value,
                             AIType = "Sorter",
