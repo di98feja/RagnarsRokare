@@ -136,17 +136,20 @@ namespace RagnarsRokare.MobAI
             return randomAssignment;
         }
 
-        public static Container FindRandomNearbyContainer(BaseAI instance, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
+        public static Container FindRandomNearbyContainer(BaseAI instance, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius, Vector3 centerPoint)
         {
-            return FindRandomNearbyContainer(instance, knownContainers as IEnumerable<Container>, m_acceptedContainerNames, containerSearchRadius);
+            return FindRandomNearbyContainer(instance, knownContainers as IEnumerable<Container>, m_acceptedContainerNames, containerSearchRadius, centerPoint);
         }
 
-        public static Container FindRandomNearbyContainer(BaseAI instance, IEnumerable<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
+        public static Container FindRandomNearbyContainer(BaseAI instance, IEnumerable<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius, Vector3 centerPoint)
         {
             Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join(delimiter:":")} within {containerSearchRadius}", true, "Sorter");
-            Vector3 position = instance.transform.position;
+            if (centerPoint == Vector3.zero)
+            {
+                centerPoint = instance.transform.position;
+            }
             var pieceList = new List<Piece>();
-            Piece.GetAllPiecesInRadius(position, containerSearchRadius, pieceList);
+            Piece.GetAllPiecesInRadius(centerPoint, containerSearchRadius, pieceList);
             var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name))); //&& CanSeeTarget(instance, p.gameObject)
             var containers = allcontainerPieces.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList();
             //Common.Dbgl($"Seen containers:{containers.Where(c => CanSeeTarget(instance, c.GetComponent<StaticTarget>()?.GetAllColliders()?.ToArray()))?.Count() ?? -1}", true, "Sorter");

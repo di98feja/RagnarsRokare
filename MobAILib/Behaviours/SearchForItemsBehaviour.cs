@@ -56,6 +56,7 @@ namespace RagnarsRokare.MobAI
         public string StartState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
+        public Vector3 CenterPoint { get; set; }
 
         private ItemDrop m_groundItem;
         private MobAIBase m_aiBase;
@@ -85,6 +86,7 @@ namespace RagnarsRokare.MobAI
                 .OnExit(t =>
                 {
                     KnownContainers.Peek()?.SetInUse(inUse: false);
+                    CenterPoint = Vector3.zero;
                     m_aiBase.UpdateAiStatus(string.Empty);
                 });
 
@@ -140,7 +142,7 @@ namespace RagnarsRokare.MobAI
                         }
                     }
 
-                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames, m_searchRadius);
+                    Container nearbyChest = Common.FindRandomNearbyContainer(m_aiBase.Instance, KnownContainers, AcceptedContainerNames, m_searchRadius, CenterPoint);
                     if (nearbyChest != null)
                     {
                         KnownContainers.Push(nearbyChest);
