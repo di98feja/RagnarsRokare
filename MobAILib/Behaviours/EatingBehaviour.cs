@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using HarmonyLib;
 
 namespace RagnarsRokare.MobAI
 {
@@ -61,6 +62,7 @@ namespace RagnarsRokare.MobAI
         public string StartState { get { return State.Hungry; } }
         public float HungryTimeout { get; set; } = 1000;
         public float HurtHungryTimeout { get; set; } = 10;
+        public int FailedToFindFood { get; set; } = 0;
 
         public bool IsHungry(bool isHurt)
         {
@@ -122,6 +124,7 @@ namespace RagnarsRokare.MobAI
                     }
                     m_hungryTimer = 0f;
                     HungryTimeout = 1000;
+                    FailedToFindFood = 0;
                     LastKnownFoodPosition = aiBase.Character.transform.position;
                     brain.Fire(Trigger.ConsumeItem);
                 })
@@ -135,6 +138,7 @@ namespace RagnarsRokare.MobAI
                 .PermitIf(Trigger.ItemNotFound, State.Hungry)
                 .OnEntry(t =>
                 {
+                    FailedToFindFood += 1;
                     brain.Fire(Trigger.ItemNotFound);
                 });
 
@@ -143,6 +147,16 @@ namespace RagnarsRokare.MobAI
         public void Update(MobAIBase instance, float dt)
         {
             m_hungryTimer += dt;
+            if (FailedToFindFood > 5)
+            {
+                instance.m_trainedAssignments = new List<string>();
+                instance.NView.GetZDO().Set(Constants.Z_trainedAssignments, instance.m_trainedAssignments.Join());
+                instance.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_updateTrainedAssignments, instance.UniqueID, instance.m_trainedAssignments.Join());
+                Debug.Log($"{instance.Character.GetHoverName()} was hungry for to long and forgot learned tasks.");
+                instance.Character.m_name = "Leonard";
+                instance.NView.GetZDO().Set(Constants.Z_GivenName, instance.Character.m_name);
+                instance.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, instance.NView.GetZDO().GetString(Constants.Z_CharacterId), instance.Character.m_name);
+            }
             if (instance.Brain.State == State.Hungry)
             {
                 Common.Invoke<BaseAI>(instance.Instance, "RandomMovement", dt, LastKnownFoodPosition);
