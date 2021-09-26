@@ -86,7 +86,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     aiBase.StopMoving();
-                    Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
+                    //Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
                     aiBase.UpdateAiStatus(State.Hungry);
                 })
                 .OnExit(t =>
