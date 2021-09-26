@@ -59,12 +59,12 @@ namespace RagnarsRokare.MobAI
         public float HealPercentageOnConsume { get; set; }
         public string SearchForItemsState;
         public string StartState { get { return State.Hungry; } }
-        public float HungryTimeout { get; set; } = 500;
+        public float HungryTimeout { get; set; } = 1000;
         public float HurtHungryTimeout { get; set; } = 10;
 
         public bool IsHungry(bool isHurt)
         {
-            Debug.Log($"{m_aiBase.Character.GetHoverName()}, IsHungry:{m_hungryTimer > (isHurt ? HurtHungryTimeout : HungryTimeout)} isHurt:{isHurt}, m_hungryTimer{m_hungryTimer}");
+            //Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, IsHungry:{m_hungryTimer > (isHurt ? HurtHungryTimeout : HungryTimeout)} isHurt:{isHurt}, m_hungryTimer{m_hungryTimer}");
             return m_hungryTimer > (isHurt ? HurtHungryTimeout : HungryTimeout);
         }
 
@@ -86,6 +86,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     aiBase.StopMoving();
+                    Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
                     aiBase.UpdateAiStatus(State.Hungry);
                 })
                 .OnExit(t =>
@@ -98,13 +99,12 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_foodsearchtimer = 0f;
-                    Debug.Log($"{aiBase.Character.GetHoverName()}Searching for consumeItems{(aiBase.Instance as MonsterAI).m_consumeItems.Count}");
-                    Debug.Log($"{aiBase.Character.GetHoverName()}: {string.Join(",", (aiBase.Instance as MonsterAI).m_consumeItems.Select(c => c?.m_itemData?.m_dropPrefab?.name ?? "null"))}");
+                    //Debug.Log($"{aiBase.Character.GetHoverName()}Searching for consumeItems{(aiBase.Instance as MonsterAI).m_consumeItems.Count}");
+                    //Debug.Log($"{aiBase.Character.GetHoverName()}: {string.Join(",", (aiBase.Instance as MonsterAI).m_consumeItems.Select(c => c?.name ?? "null"))}");
                     brain.Fire(LookForItemTrigger, (aiBase.Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem, State.HaveNoFoodItem);
                 });
 
             brain.Configure(State.HaveFoodItem)
-                .SubstateOf(State.Hungry)
                 .PermitDynamic(Trigger.ConsumeItem, () => SuccessState)
                 .OnEntry(t =>
                 {
@@ -114,7 +114,7 @@ namespace RagnarsRokare.MobAI
                     var animator = aiBase.Instance.GetType().GetField("m_animator", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(aiBase.Instance) as ZSyncAnimation;
                     animator.SetTrigger("consume");
                     float consumeHeal = aiBase.Character.GetMaxHealth() * HealPercentageOnConsume;
-                    Common.Dbgl($"consumeHeal:{consumeHeal}", true);
+                    Common.Dbgl($"Time {Time.time},consumeHeal:{consumeHeal}", true);
 
                     if (consumeHeal > 0f)
                     {
@@ -123,11 +123,11 @@ namespace RagnarsRokare.MobAI
                     m_hungryTimer = 0f;
                     HungryTimeout = 1000;
                     LastKnownFoodPosition = aiBase.Character.transform.position;
-                    Debug.Log($"{m_aiBase.Character.GetHoverName()}: Exit EatingBehaviour via to {SuccessState}");
                     brain.Fire(Trigger.ConsumeItem);
                 })
                 .OnExit(t =>
                 {
+                    //Debug.Log($"Time {Time.time},{m_aiBase.Character.GetHoverName()}: Exit EatingBehaviour via to {SuccessState}");
                 });
 
             brain.Configure(State.HaveNoFoodItem)
