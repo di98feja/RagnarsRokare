@@ -147,7 +147,7 @@ namespace RagnarsRokare.MobAI
         public void Update(MobAIBase instance, float dt)
         {
             m_hungryTimer += dt;
-            if (FailedToFindFood > 5)
+            if ((FailedToFindFood > 5) & (instance.Character.m_name != "Leonard"))
             {
                 instance.m_trainedAssignments = new List<string>();
                 instance.NView.GetZDO().Set(Constants.Z_trainedAssignments, instance.m_trainedAssignments.Join());
