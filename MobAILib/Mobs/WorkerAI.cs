@@ -110,7 +110,7 @@ namespace RagnarsRokare.MobAI
             fightBehaviour.Configure(this, Brain, State.Fight);
             eatingBehaviour = new EatingBehaviour();
             eatingBehaviour.Configure(this, Brain, State.Hungry);
-            eatingBehaviour.HungryTimeout = 5;// m_config.FeedDuration;
+            eatingBehaviour.HungryTimeout = m_config.FeedDuration;
             eatingBehaviour.SearchForItemsState = State.SearchForItems;
             eatingBehaviour.SuccessState = State.Idle;
             eatingBehaviour.FailState = State.Idle;
