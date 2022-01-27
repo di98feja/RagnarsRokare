@@ -15,20 +15,36 @@ namespace RagnarsRokare_AutoPickupSelector
     {
         private readonly Harmony harmony = new Harmony("RagnarsRokare.AutoPickupSelector");
         public static ConfigEntry<string> AutoPickupBlockList;
+        public static ConfigEntry<string> IncludedCategories;
         public static ConfigEntry<int> NexusID;
+        private static IEnumerable<ItemDrop.ItemData.ItemType> categories;
 
         void Awake()
         {
             AutoPickupBlockList = Config.Bind("General", "AutoPickupBlockList", string.Empty);
+            IncludedCategories = Config.Bind("General", "IncludedCategories", "Material;Trophie;Consumable;Torch;Tool", "Semicolon separated list of item types to include. Possible types are:None;Material;Consumable;OneHandedWeapon;Bow;Shield;Helmet;Chest;Ammo;Customization;Legs;Hands;Trophie;TwoHandedWeapon;Torch;Misc;Shoulder;Utility;Tool;Attach_Atgeir");
+            categories = BuildCategoryList();
             NexusID = Config.Bind<int>("General", "NexusID", 868, "Nexus mod ID for updates");
             harmony.PatchAll();
+        }
+
+        private static IEnumerable<ItemDrop.ItemData.ItemType> BuildCategoryList()
+        {
+            var fromConfig = IncludedCategories.Value.Trim().Replace(" ", "").Split(';');
+            foreach (var c in fromConfig)
+            {
+                if (Enum.TryParse<ItemDrop.ItemData.ItemType>(c, out var result))
+                {
+                    yield return result;
+                }
+            }
         }
 
         internal static IEnumerable<ItemDrop> GetFilteredItemList()
         {
             return ObjectDB.instance.m_items
                 .Select(i => i.GetComponent<ItemDrop>())
-                .Where(i => i.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Material || i.m_itemData.m_shared.m_itemType == ItemDrop.ItemData.ItemType.Trophie)
+                .Where(i => categories.Contains(i.m_itemData.m_shared.m_itemType))
                 .Where(i => i.m_itemData.m_shared.m_icons.Length > 0)
                 .Where(i => IsKnownItem(i));
         }
