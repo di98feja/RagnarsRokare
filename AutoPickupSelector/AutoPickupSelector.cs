@@ -10,7 +10,6 @@ using UnityEngine.UI;
 namespace RagnarsRokare_AutoPickupSelector
 {
     [BepInPlugin("RagnarsRokare.AutoPickupSelector", "RagnarsRökare AutoPickupSelector Mod", "0.5.0")]
-    [BepInProcess("valheim.exe")]
     public class RagnarsRokare : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("RagnarsRokare.AutoPickupSelector");
