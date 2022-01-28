@@ -191,7 +191,7 @@ namespace RagnarsRokare.MobAI
                 .Where(c => c.HasInstance())
                 .Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 0.5f)
                 .Where(m => m.UniqueID != this.UniqueID);
-            var havePath = (bool)Invoke<MonsterAI>(Instance, "HavePath", destination) && remainingDistance < 50;
+            var havePath = (bool)Invoke<MonsterAI>(Instance, "FindPath", destination) && remainingDistance < 50;
             if (!nearbyMobs.Any() && havePath)
             {
                 return (bool)Invoke<MonsterAI>(Instance, "MoveTo", dt, destination, distance, running);
