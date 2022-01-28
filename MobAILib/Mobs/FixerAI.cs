@@ -89,10 +89,10 @@ namespace RagnarsRokare.MobAI
             m_config = config as FixerAIConfig;
             m_containers = new MaxStack<Container>(Intelligence);
 
-            if (instance.m_consumeHeal == 0.0f)
+            instance.m_onConsumedItem = (i) =>
             {
-                instance.m_consumeHeal = Character.GetMaxHealth() * 0.25f;
-            }
+                Character.Heal(Character.GetMaxHealth() * 0.25f);
+            };
 
             if (m_startPosition == Vector3.zero)
             {

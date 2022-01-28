@@ -142,7 +142,7 @@ namespace RagnarsRokare.MobAI
             Interactable extObject = assignment.AssignmentObject.GetComponent(assignment.TypeOfAssignment.ComponentType) as Interactable;
             if (null == extObject) return false;
             assignment.AssignmentTimeout = Time.time + assignment.TypeOfAssignment.TimeBeforeAssignmentCanBeRepeated;
-            return extObject.Interact(aiBase.Character as Humanoid, false);
+            return extObject.Interact(aiBase.Character as Humanoid, false, false);
         }
 
         public bool StartNewAssignment(MobAIBase aiBase, ref LinkedList<Assignment> KnownAssignments, AssignmentType[] acceptedAssignmentTypes)

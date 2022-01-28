@@ -340,7 +340,7 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.StopMoving();
                     Common.Dbgl("Pickable is close");
-                    if (m_pickable.Interact((aiBase.Character as Humanoid), false))
+                    if (m_pickable.Interact((aiBase.Character as Humanoid), false, false))
                     {
                         aiBase.Brain.Fire(Trigger.WaitForPickable);
                         return;
