@@ -69,9 +69,9 @@
     <Content Include="itemlist.txt" />
     <Content Include="Misc\AutoPickupSelectorBanner.png" />
     <Content Include="Misc\AutoPickupSelector_Screenshot.png" />
-    <Content Include="Misc\AutoPickupSelector_tile.png" />
+    <Content Include="Misc\icon.png" />
     <None Include="Misc\manifest.json" />
-    <None Include="readme.md" />
+    <None Include="Misc\README.md" />
     <Content Include="PieceList.txt" />
   </ItemGroup>
   <ItemGroup>
