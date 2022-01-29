@@ -97,6 +97,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###
+- Version 0.3.1  
+Updated to work with Valheim version 0.206.5  
+
 - Version 0.3.0  
 Added markers for mobs on map  
 Various tweaks and stability improvements  
