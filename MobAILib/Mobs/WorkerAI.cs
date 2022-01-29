@@ -90,6 +90,11 @@ namespace RagnarsRokare.MobAI
 
             m_config = config as WorkerAIConfig;
 
+            instance.m_onConsumedItem = (i) =>
+            {
+                Character.Heal(Character.GetMaxHealth() * 0.25f);
+            };
+
             m_assignment = new LinkedList<Assignment>();
             m_containers = new MaxStack<Container>(Intelligence);
             m_carrying = null;
