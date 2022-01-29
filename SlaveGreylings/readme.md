@@ -49,8 +49,11 @@ We hope you find this little mod fun!
 // Barg and Morg  
 
 
+0.8.4 Patch Notes:
+Rebuilt with Valheim v0.206.5
+
 0.8.3 Patch Notes:
-Rebuild with new (Hearth and Home) dll's.
+Rebuilt with new (Hearth and Home) dll's.
 
 0.8.2 Patch Notes:  
 Bugfix: Minimap and CharacterDamaged
