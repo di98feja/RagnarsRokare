@@ -97,6 +97,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###  
+- Version 0.3.5  
+ Rebuilt for Valheim v0.206.5
+
 - Version 0.3.4  
 Updated for Hearth&Home
 
