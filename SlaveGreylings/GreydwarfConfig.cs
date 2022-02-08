@@ -59,6 +59,7 @@ namespace RagnarsRokare.SlaveGreylings
             {"RR_ISBSearchItemsOnGround", "*searches the ground*"},
             {"RR_ISBReadNearbySign", "*looks at sign*"},
             {"RR_ISBReadNearbyStorageSign", "*looks at sign*"},
+            {"RR_ISBHarvestingCrop", "Looking for crops to harvest"},
             {"RR_SFISearchItemsOnGround","Look, there is a {0} on da grund"},
             {"RR_SFISearchForRandomContainer","Look a bin!"},
             {"RR_SFIMoveToGroundItem","Heading to {0}"},
@@ -69,7 +70,11 @@ namespace RagnarsRokare.SlaveGreylings
             {"Idle", "*looks bored*"},
             {"Flee", "Ahhh  big hurt!"},
             {"Follow", "Follow bossa"},
-            {"MoveAwayFrom", "Jajaja!"}
+            {"MoveAwayFrom", "Jajaja!"},
+            { "RR_BFARMMoveToCrop", "There is ripe {0}!" },
+            { "RR_BFARMHarvest", "Picking this {0}" },
+            { "RR_BFARMPlant", "Planting a {0}" },
+            { "RR_BFARMHarvestCompleted", "*looks pleased with itself*" },
         };
         public static HashSet<string> WorkableAssignments { get; set; }
 

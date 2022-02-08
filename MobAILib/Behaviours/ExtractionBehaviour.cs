@@ -139,8 +139,7 @@ namespace RagnarsRokare.MobAI
 
         private bool PerformExtraction(MobAIBase aiBase, Assignment assignment)
         {
-            Interactable extObject = assignment.AssignmentObject.GetComponent(assignment.TypeOfAssignment.ComponentType) as Interactable;
-            if (null == extObject) return false;
+            if (!(assignment.AssignmentObject.GetComponent(assignment.TypeOfAssignment.ComponentType) is Interactable extObject)) return false;
             assignment.AssignmentTimeout = Time.time + assignment.TypeOfAssignment.TimeBeforeAssignmentCanBeRepeated;
             return extObject.Interact(aiBase.Character as Humanoid, false, false);
         }

@@ -46,11 +46,11 @@ namespace RagnarsRokare.SlaveGreylings
     [HarmonyPatch(typeof(PlayerController), "FixedUpdate")]
     static class PlayerController_FixedUpdate_Patch
     {
-        private static float m_KeyDelay = 3.0f;
+        private static readonly float m_KeyDelay = 3.0f;
         private static float m_callHomeKeyTimer = 0f;
-        private static KeyCode m_callHomeKey;
+        private static readonly KeyCode m_callHomeKey;
         private static float m_updateSignFromContainerKeyTimer = 0f;
-        private static KeyCode m_updateSignFromContainerKey;
+        private static readonly KeyCode m_updateSignFromContainerKey;
 
         static PlayerController_FixedUpdate_Patch()
         {

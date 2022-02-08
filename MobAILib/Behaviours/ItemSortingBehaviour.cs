@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace RagnarsRokare.MobAI
@@ -33,6 +32,8 @@ namespace RagnarsRokare.MobAI
             public const string ReadNearbyStorageSign = Prefix + "ReadNearbyStorageSign";
             public const string WaitingForPickable = Prefix + "WaitingForPickable";
             public const string FindingExtractionTask = Prefix + "FindingExtractionTask";
+            public const string HarvestingCrop = Prefix + "HarvestingCrop";
+            public const string HarvestIngFailed = Prefix + "HarvestingFailed";
         }
 
         private class Trigger
@@ -58,6 +59,7 @@ namespace RagnarsRokare.MobAI
             public const string SignHasBeenRead = Prefix + "SignHasBeenRead";
             public const string WaitForPickable = Prefix + "WaitForPickable";
             public const string FindExtractionTask = Prefix + "FindExtractionTask";
+            public const string HarvestCrop = Prefix + "HarvestCrop";
         }
 
         // Input
@@ -71,6 +73,7 @@ namespace RagnarsRokare.MobAI
         public string StartState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
+        public string SearchForItemState { get; set; }
         public float OpenChestDelay { get; private set; } = 1;
         public float PutItemInChestFailedRetryTimeout { get; set; } = 120f;
         public float SearchDumpContainerRetryTimeout { get; set; } = 60f;
@@ -90,8 +93,10 @@ namespace RagnarsRokare.MobAI
             }
         }
         public float ReadSignDelay { get; private set; } = 1;
+        public float TryFarmingAgainTimeout { get; private set; } = 30;
 
         private ExtractionBehaviour m_extractionBehaviour;
+        private BasicFarmingBehaviour m_basicFarmingBehaviour;
 
         private Dictionary<string, IEnumerable<(StorageContainer container, int count)>> m_itemsDictionary;
         private Dictionary<string, float> m_putItemInContainerFailTimers;
@@ -104,6 +109,7 @@ namespace RagnarsRokare.MobAI
         private float m_pickableTimer;
         private float m_extractionBehaviourTimer;
         private float m_findRandomTaskTimer;
+        private float m_basicFarmingBehaviourTimer;
 
         private ItemDrop m_item;
         private Pickable m_pickable;
@@ -161,16 +167,29 @@ namespace RagnarsRokare.MobAI
             m_searchRadius = aiBase.Awareness * 5;
             m_knownContainers = new MaxStack<StorageContainer>(aiBase.Intelligence);
             m_putItemInContainerFailTimers = new Dictionary<string, float>();
-            m_extractionBehaviour = new ExtractionBehaviour();
-            m_extractionBehaviour.SuccessState = State.FindRandomTask;
-            m_extractionBehaviour.FailState = State.FindRandomTask;
-            m_extractionBehaviour.Configure(aiBase, aiBase.Brain, State.FindingExtractionTask);
-
             LoadItemDictionary();
             foreach (var container in m_itemsDictionary.Values.SelectMany(i => i.Select(c => c.container))?.Distinct(new Helpers.StorageContainerComparer()))
             {
                 m_knownContainers.Push(container);
             }
+            m_extractionBehaviour = new ExtractionBehaviour
+            {
+                SuccessState = State.FindRandomTask,
+                FailState = State.FindRandomTask
+            };
+            m_extractionBehaviour.Configure(aiBase, aiBase.Brain, State.FindingExtractionTask);
+
+            m_basicFarmingBehaviour = new BasicFarmingBehaviour
+            {
+                SuccessState = State.FindRandomTask,
+                FailState = State.HarvestIngFailed,
+                AcceptedContainerNames = AcceptedContainerNames,
+                //KnownContainers = m_knownContainers
+            };
+            m_basicFarmingBehaviour.Init();
+            m_basicFarmingBehaviour.Configure(aiBase, aiBase.Brain, State.HarvestingCrop);
+            m_basicFarmingBehaviour.SearchForItemsState = SearchForItemState;
+
             brain.Configure(State.Main)
                 .InitialTransition(State.FindRandomTask)
                 .SubstateOf(parentState)
@@ -193,6 +212,7 @@ namespace RagnarsRokare.MobAI
                 .Permit(Trigger.SearchDumpContainer, State.MoveToDumpContainer)
                 .Permit(Trigger.ItemFound, State.MoveToStorageContainer)
                 .Permit(Trigger.FindExtractionTask, State.FindingExtractionTask)
+                .Permit(Trigger.HarvestCrop, State.HarvestingCrop)
                 .OnEntry(t =>
                 {
                     //Common.Dbgl("Entered SearchForRandomContainer", "Sorter");
@@ -206,6 +226,23 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_extractionBehaviourTimer = Time.time + SearchForExtractionTaskTimeout;
+                });
+
+            brain.Configure(State.HarvestingCrop)
+                .SubstateOf(State.Main)
+                .InitialTransition(m_basicFarmingBehaviour.StartState)
+                .OnEntry(t =>
+                {
+                    m_aiBase.UpdateAiStatus(State.HarvestingCrop);
+                });
+
+            brain.Configure(State.HarvestIngFailed)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.Failed, State.FindRandomTask)
+                .OnEntry(t =>
+                {
+                    m_basicFarmingBehaviourTimer = Time.time + TryFarmingAgainTimeout;
+                    brain.Fire(Trigger.Failed);
                 });
 
             brain.Configure(State.MoveToContainer)
@@ -425,10 +462,23 @@ namespace RagnarsRokare.MobAI
                     Pickable pickable = Common.GetNearbyPickable(m_aiBase.Instance, m_aiBase.m_trainedAssignments, m_searchRadius, wantedItems);
                     if (pickable != null)
                     {
-                        m_pickable = pickable;
-                        m_startPosition = pickable.transform.position;
-                        Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", true, "Sorter");
-                        aiBase.Brain.Fire(Trigger.FoundPickable);
+                        if (m_basicFarmingBehaviour.IsHarvestableCrop(pickable))
+                        {
+
+                            if (Time.time > m_basicFarmingBehaviourTimer)
+                            {
+                                m_basicFarmingBehaviour.PickableToHarvest = pickable;
+                                Common.Dbgl($"Found harvestable crop: {pickable.GetHoverName()}", true, "Sorter");
+                                aiBase.Brain.Fire(Trigger.HarvestCrop);
+                            }
+                        }
+                        else
+                        {
+                            m_pickable = pickable;
+                            m_startPosition = pickable.transform.position;
+                            Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", true, "Sorter");
+                            aiBase.Brain.Fire(Trigger.FoundPickable);
+                        }
                         return;
                     }
 
@@ -480,6 +530,12 @@ namespace RagnarsRokare.MobAI
             if (aiBase.Brain.IsInState(State.FindingExtractionTask))
             {
                 m_extractionBehaviour.Update(aiBase, dt);
+                return;
+            }
+
+            if (aiBase.Brain.IsInState(State.HarvestingCrop))
+            {
+                m_basicFarmingBehaviour.Update(aiBase, dt);
                 return;
             }
 
@@ -882,11 +938,11 @@ namespace RagnarsRokare.MobAI
                 {
                     newItemsDict.Add(key, containersForItem);
                 }
-                foreach (var nullContainer in m_itemsDictionary[key].Where(c => c.container?.Container == null))
+                foreach (var (container, count) in m_itemsDictionary[key].Where(c => c.container?.Container == null))
                 {
-                    if (m_knownContainers.Contains(nullContainer.container))
+                    if (m_knownContainers.Contains(container))
                     {
-                        m_knownContainers.Remove(nullContainer.container);
+                        m_knownContainers.Remove(container);
                     }
                 }
             }

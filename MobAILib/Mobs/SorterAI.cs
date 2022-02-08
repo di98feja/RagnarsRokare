@@ -61,7 +61,7 @@ namespace RagnarsRokare.MobAI
         readonly IFightBehaviour fightBehaviour;
         readonly EatingBehaviour eatingBehaviour;
 
-        SorterAIConfig m_config;
+        readonly SorterAIConfig m_config;
 
         public SorterAI() : base()
         { }
@@ -89,23 +89,33 @@ namespace RagnarsRokare.MobAI
             UpdateTrigger = Brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
+            BasicFarmingBehaviour basicFarmingBehaviour = new BasicFarmingBehaviour();
+            basicFarmingBehaviour.Init();
+
             searchForItemsBehaviour = new SearchForItemsBehaviour();
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems);
-            itemSortingBehaviour = new ItemSortingBehaviour();
+            itemSortingBehaviour = new ItemSortingBehaviour
+            {
+                MaxSearchTime = m_config.MaxSearchTime,
+                AcceptedContainerNames = m_config.IncludedContainers,
+                SuccessState = State.Idle,
+                FailState = State.Idle,
+                SearchForItemState = State.SearchForItems
+            };
             itemSortingBehaviour.Configure(this, Brain, State.Sorting);
-            itemSortingBehaviour.MaxSearchTime = m_config.MaxSearchTime;
-            itemSortingBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
-            itemSortingBehaviour.SuccessState = State.Idle;
-            itemSortingBehaviour.FailState = State.Idle;
+
             fightBehaviour = Activator.CreateInstance(FightingBehaviourSelector.Invoke(this)) as IFightBehaviour;
             fightBehaviour.Configure(this, Brain, State.Fight);
-            eatingBehaviour = new EatingBehaviour();
+
+            eatingBehaviour = new EatingBehaviour
+            {
+                HungryTimeout = m_config.PostTameFeedDuration,
+                SearchForItemsState = State.SearchForItems,
+                SuccessState = State.Idle,
+                FailState = State.Idle,
+                HealPercentageOnConsume = 0.2f
+            };
             eatingBehaviour.Configure(this, Brain, State.Hungry);
-            eatingBehaviour.HungryTimeout = m_config.PostTameFeedDuration;
-            eatingBehaviour.SearchForItemsState = State.SearchForItems;
-            eatingBehaviour.SuccessState = State.Idle;
-            eatingBehaviour.FailState = State.Idle;
-            eatingBehaviour.HealPercentageOnConsume = 0.2f;
 
             string serializedDumpChest = NView.GetZDO().GetString(Constants.Z_SavedDumpChest);
             itemSortingBehaviour.DumpContainer = StorageContainer.DeSerialize(serializedDumpChest);

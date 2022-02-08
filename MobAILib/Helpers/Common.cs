@@ -304,7 +304,7 @@ namespace RagnarsRokare.MobAI
             return false;
         }
 
-        private static RaycastHit[] m_tempRaycastHits = new RaycastHit[128];
+        private static readonly RaycastHit[] m_tempRaycastHits = new RaycastHit[128];
 
         public static bool Alarmed(BaseAI instance, float Awareness)
         {

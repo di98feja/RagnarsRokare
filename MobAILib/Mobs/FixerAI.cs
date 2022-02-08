@@ -74,7 +74,7 @@ namespace RagnarsRokare.MobAI
         readonly IFightBehaviour fightBehaviour;
         readonly EatingBehaviour eatingBehaviour;
 
-        FixerAIConfig m_config;
+        readonly FixerAIConfig m_config;
 
         public FixerAI() : base()
         { }
@@ -333,7 +333,7 @@ namespace RagnarsRokare.MobAI
 
             Brain.Configure(State.TurnToFaceAssignment)
                 .SubstateOf(State.Assigned)
-                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) =>  (bool)m_assignment.Peek() ? Common.TurnToFacePosition(this, m_assignment.Peek().transform.position) : true );
+                .PermitIf(UpdateTrigger, State.CheckRepairState, (arg) => m_assignment.Peek() ? Common.TurnToFacePosition(this, m_assignment.Peek().transform.position) : true );
 
             Brain.Configure(State.CheckRepairState)
                 .SubstateOf(State.Assigned)
