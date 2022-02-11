@@ -36,7 +36,7 @@ These are the default values
 - **SorterAI**  
 Makes the character pickup items and put them in containers that already contain an item of the same type or that has the item noted on a sign  
 close to the container. It will also pickup whatever items is in an assigned "dump" container and sort them. They can also be taught to interact with  
-with pickable objects like branches, flint and berries.  
+with pickable objects like branches, flint and berries and tend to your crops.  
 **SorterAIConfig**  
 These are the default values  
     public int PostTameFeedDuration = 1000;  
@@ -97,6 +97,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###  
+- Version 0.3.6  
+ Added Basic Farming Behaviour  
+
 - Version 0.3.5  
  Rebuilt for Valheim v0.206.5
 

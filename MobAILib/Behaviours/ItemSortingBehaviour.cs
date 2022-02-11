@@ -188,7 +188,7 @@ namespace RagnarsRokare.MobAI
             };
             m_basicFarmingBehaviour.Init();
             m_basicFarmingBehaviour.Configure(aiBase, aiBase.Brain, State.HarvestingCrop);
-            m_basicFarmingBehaviour.SearchForItemsState = SearchForItemState;
+            //m_basicFarmingBehaviour.SearchForItemsState = SearchForItemState;
 
             brain.Configure(State.Main)
                 .InitialTransition(State.FindRandomTask)

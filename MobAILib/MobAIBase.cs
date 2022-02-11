@@ -198,11 +198,21 @@ namespace RagnarsRokare.MobAI
             return false;
         }
 
+        /// <summary>
+        /// Move towards destination avoiding fire along the way
+        /// </summary>
+        /// <param name="destination">Where to</param>
+        /// <param name="dt">delta time</param>
+        /// <param name="distance">distance from destination to accept as "reached"</param>
+        /// <param name="running">run or walk</param>
+        /// <returns>True if character is closer than distance from destination, false otherwise</returns>
         public bool MoveAndAvoidFire(Vector3 destination, float dt, float distance, bool running = false)
         {
             if (AvoidFire(dt)) return false;
 
             var remainingDistance = Vector3.Distance(Character.transform.position, destination);
+            if (remainingDistance < distance) return true;
+
             running = remainingDistance > 5;
             var nearbyMobs = MobManager.AliveMobs.Values
                 .Where(c => c.HasInstance())
@@ -211,12 +221,13 @@ namespace RagnarsRokare.MobAI
             var findPath = (bool)Invoke<MonsterAI>(Instance, "FindPath", destination) && remainingDistance < 50;
             if (!nearbyMobs.Any() && findPath)
             {
-                return (bool)Invoke<MonsterAI>(Instance, "MoveTo", dt, destination, distance, running);
+                Invoke<MonsterAI>(Instance, "MoveTo", dt, destination, 0f, running);
             }
             else
             {
-                return (bool)Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, distance, running);
+                Invoke<MonsterAI>(Instance, "MoveAndAvoid", dt, destination, 0f, running);
             }
+            return false;
         }
 
         protected Player GetPlayer(ZDOID characterID)

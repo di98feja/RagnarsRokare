@@ -136,6 +136,12 @@ namespace RagnarsRokare.MobAI
             return randomAssignment;
         }
 
+        [System.Obsolete]
+        public static Container FindRandomNearbyContainer(BaseAI instance, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius)
+        {
+            return FindRandomNearbyContainer(instance, knownContainers as IEnumerable<Container>, m_acceptedContainerNames, containerSearchRadius, Vector2.zero);
+        }
+
         public static Container FindRandomNearbyContainer(BaseAI instance, MaxStack<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius, Vector3 centerPoint)
         {
             return FindRandomNearbyContainer(instance, knownContainers as IEnumerable<Container>, m_acceptedContainerNames, containerSearchRadius, centerPoint);

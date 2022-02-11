@@ -303,7 +303,7 @@ namespace RagnarsRokare.MobAI
                     //Common.Dbgl("Container = null");
                     return;
                 }
-                if (aiBase.MoveAndAvoidFire(KnownContainers.Peek().transform.position, dt, 1.0f))
+                if (aiBase.MoveAndAvoidFire(KnownContainers.Peek().transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.ContainerIsClose + Postfix);
@@ -322,8 +322,8 @@ namespace RagnarsRokare.MobAI
                     //Debug.Log("GroundItem = null");
                     return;
                 }
-                aiBase.MoveAndAvoidFire(m_groundItem.transform.position, dt, 0.5f);
-                if (Vector3.Distance(aiBase.Instance.transform.position, m_groundItem.transform.position) < 1.5)
+                
+                if (aiBase.MoveAndAvoidFire(m_groundItem.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.GroundItemIsClose + Postfix);

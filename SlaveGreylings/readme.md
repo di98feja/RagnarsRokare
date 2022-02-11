@@ -48,6 +48,8 @@ In order to keep build the creatures behaviour, we have been using Stateless sta
 We hope you find this little mod fun!  
 // Barg and Morg  
 
+0.8.5 Patch Notes:  
+Added support for Basic Farming Behaviour  
 
 0.8.4 Patch Notes:
 Rebuilt with Valheim v0.206.5
@@ -63,6 +65,14 @@ Bugfix: Missing method exception fixed
 
 0.8.0 Patch Notes:  
 * This update requires MobAILib version 0.3.*  
+
+From the book of Barg:  
+##################################  
+Morg came by this afternoon and thanked me for harvesting and replating his garden.  
+I was much confused because I had done no such thing. The mystery was solved later when we  
+watched one of the Greydwarves pick and plant crops like it was no extraordinary thing at all.
+It did look pretty pleased with itself though, these critters is starting to scare me.
+
 From the book of Barg:  
 ##################################   
 Today 100 days has passed since Odin put us on this faschinating world.

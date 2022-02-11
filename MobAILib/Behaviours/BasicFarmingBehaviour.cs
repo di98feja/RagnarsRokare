@@ -350,8 +350,8 @@ namespace RagnarsRokare.MobAI
                 aiBase.Brain.Fire(Trigger.CropNotFound);
                 return false;
             }
-            float distance = Time.time > m_closeEnoughTimer ? 0 : 1;
-            if (aiBase.MoveAndAvoidFire(PickableToHarvest.transform.position, dt, 1.5f + distance))
+            float distance = Time.time > m_closeEnoughTimer ? 0 : 0.5f;
+            if (aiBase.MoveAndAvoidFire(PickableToHarvest.transform.position, dt, 0.5f + distance))
             {
                 aiBase.StopMoving();
                 return true;
