@@ -119,8 +119,20 @@ namespace RagnarsRokare.MobAI
             else
             {
                 MobsRegister.Add(uniqueId, (mobAIName, mobAIConfig, fightBehaviourSelector));
-                SetUniqueId(character, uniqueId);
+                var nview = GetNView(character);
+                SetUniqueId(nview, uniqueId);
+                AnnounceRegisteredMobToPeers(nview, uniqueId);
             }
+        }
+
+        private static void AnnounceRegisteredMobToPeers(ZNetView nview, string uniqueId)
+        {
+            nview.InvokeRPC(ZNetView.Everybody, Constants.Z_MobRegistered, uniqueId, nview.GetZDO().m_uid);
+        }
+
+        private static void AnnounceUnregisteredMobToPeers(ZNetView nview, string uniqueId)
+        {
+            nview.InvokeRPC(ZNetView.Everybody, Constants.Z_MobUnRegistered, uniqueId, nview.GetZDO().m_uid);
         }
 
         /// <summary>
@@ -129,6 +141,11 @@ namespace RagnarsRokare.MobAI
         /// <param name="uniqueId">The uniqueId used to register mob</param>
         public static void UnregisterMob(string uniqueId)
         {
+            var nview = GetNView(AliveMobs[uniqueId].Character);
+            if (nview != null && nview.IsValid())
+            {
+                AnnounceUnregisteredMobToPeers(nview, uniqueId);
+            }
             if (AliveMobs.ContainsKey(uniqueId))
             {
                 AliveMobs.Remove(uniqueId);
@@ -137,6 +154,7 @@ namespace RagnarsRokare.MobAI
             {
                 MobsRegister.Remove(uniqueId);
             }
+
         }
 
         /// <summary>
@@ -174,10 +192,14 @@ namespace RagnarsRokare.MobAI
             return mobAIBase;
         }
 
-        private static void SetUniqueId(Character character, string uniqueId)
+        private static void SetUniqueId(ZNetView nview, string uniqueId)
         {
-            var nview = typeof(Character).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(character) as ZNetView;
             nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
+        }
+
+        private static ZNetView GetNView(Character character)
+        {
+            return typeof(Character).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(character) as ZNetView;
         }
 
         #endregion

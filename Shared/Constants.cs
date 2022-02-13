@@ -11,6 +11,8 @@ namespace RagnarsRokare
         public const string Z_UpdateCharacterHUD = "RR_UpdateCharacterHUD";
         public const string Z_CallHomeCommand = "RR_CallHomeCommand";
         public const string Z_MobCommand = "RR_MobCommand";
+        public const string Z_MobRegistered = "RR_MobRegistered";
+        public const string Z_MobUnRegistered = "RR_MobUnRegistered";
         public const string Z_trainedAssignments = "RR_trainedAssignments";
         public const string Z_updateTrainedAssignments = "RR_updateTrainedAssignments";
         public const string Z_AddAssignment = "RR_AddAssignment";
