@@ -121,18 +121,21 @@ namespace RagnarsRokare.MobAI
                 MobsRegister.Add(uniqueId, (mobAIName, mobAIConfig, fightBehaviourSelector));
                 var nview = GetNView(character);
                 SetUniqueId(nview, uniqueId);
+                //nview.Register<string, ZDOID>(Constants.Z_MobRegistered, (a, b, c) => { });
+                //nview.Register<string, ZDOID>(Constants.Z_MobUnRegistered, (a, b, c) => { });
                 AnnounceRegisteredMobToPeers(nview, uniqueId);
             }
         }
 
         private static void AnnounceRegisteredMobToPeers(ZNetView nview, string uniqueId)
         {
-            nview.InvokeRPC(ZNetView.Everybody, Constants.Z_MobRegistered, uniqueId, nview.GetZDO().m_uid);
+            Debug.Log("AnnounceRegisteredMobToPeers");
+            ZRoutedRpc.instance.InvokeRoutedRPC(Constants.Z_MobRegistered, uniqueId, nview.GetZDO().m_uid);
         }
 
         private static void AnnounceUnregisteredMobToPeers(ZNetView nview, string uniqueId)
         {
-            nview.InvokeRPC(ZNetView.Everybody, Constants.Z_MobUnRegistered, uniqueId, nview.GetZDO().m_uid);
+            ZRoutedRpc.instance.InvokeRoutedRPC(Constants.Z_MobUnRegistered, uniqueId, nview.GetZDO().m_uid);
         }
 
         /// <summary>
