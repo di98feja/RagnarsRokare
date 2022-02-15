@@ -145,6 +145,7 @@ namespace RagnarsRokare.MobAI
 
         private void RegisterRPCMethods()
         {
+            NView.Unregister(Constants.Z_AddAssignment);
             NView.Register(Constants.Z_AddAssignment, (long source, string assignment) =>
             {
                 if (NView.IsOwner())
@@ -169,6 +170,7 @@ namespace RagnarsRokare.MobAI
                     }
                 }
             });
+            NView.Unregister(Constants.Z_updateTrainedAssignments);
             NView.Register<string, string>(Constants.Z_updateTrainedAssignments, (long source, string uniqueID, string trainedAssignments) =>
             {
                 if (NView.IsOwner()) return;

@@ -137,6 +137,7 @@ namespace RagnarsRokare.MobAI
 
         private void RegisterRPCMethods()
         {
+            NView.Unregister(Constants.Z_updateTrainedAssignments); 
             NView.Register<string, string>(Constants.Z_updateTrainedAssignments, (long source, string uniqueID, string trainedAssignments) =>
             {
                 if (NView.IsOwner()) return;
