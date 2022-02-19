@@ -97,6 +97,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###  
+- Version 0.3.7  
+ Bugfix  
+
 - Version 0.3.6  
  Added Basic Farming Behaviour  
 

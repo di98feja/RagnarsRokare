@@ -49,8 +49,6 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 case "Greyling":
                     {
-                        Debug.Log($"QueensJam:{ObjectDB.instance.GetItemByName("QueensJam").m_itemData.m_shared.m_name}");
-                        Debug.Log($"Raspberry:{ObjectDB.instance.GetItemByName("Raspberry").m_itemData.m_shared.m_name}");
                         return new MobConfig
                         {
                             PostTameConsumables = CreateDropItemList(GreydwarfConfig.PostTameConsumables),
