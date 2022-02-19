@@ -9,7 +9,7 @@ namespace RagnarsRokare.MobAI.Server
         {
             static void Postfix(ref ZDOMan __instance)
             {
-                MobManager.LoadMobs(__instance);
+                AdoptedZonesManager.LoadMobs(__instance);
             }
         }
     }

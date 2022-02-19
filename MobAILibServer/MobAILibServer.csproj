@@ -60,7 +60,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MobAILibServer.cs" />
-    <Compile Include="MobManager.cs" />
+    <Compile Include="AdoptedZonesManager.cs" />
     <Compile Include="Patches\Character_patch.cs" />
     <Compile Include="Patches\ZDOMan_patch.cs" />
     <Compile Include="Patches\ZoneSystem_patch.cs" />

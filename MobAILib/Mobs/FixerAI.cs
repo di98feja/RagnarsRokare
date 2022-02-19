@@ -99,7 +99,7 @@ namespace RagnarsRokare.MobAI
                 m_startPosition = instance.transform.position;
             }
 
-            var loadedAssignments = NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
+            var loadedAssignments = string.Empty;// NView.GetZDO().GetString(Constants.Z_SavedAssignmentList);
             if (!string.IsNullOrEmpty(loadedAssignments))
             {
                 var assignmentList = loadedAssignments.Split(',');

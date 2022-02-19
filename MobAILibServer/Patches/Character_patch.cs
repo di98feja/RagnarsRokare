@@ -10,8 +10,8 @@ namespace RagnarsRokare.MobAI.Server
             static void Postfix(Character __instance, ref ZNetView ___m_nview)
             {
                 //if (!___m_nview.IsValid()) return;
-                ___m_nview.Register<string, ZDOID>(Constants.Z_MobRegistered, MobManager.RPC_RegisterMob);
-                ___m_nview.Register<string, ZDOID>(Constants.Z_MobUnRegistered, MobManager.RPC_UnRegisterMob);
+                ___m_nview.Register<string, ZDOID>(Constants.Z_MobRegistered, AdoptedZonesManager.RPC_RegisterMob);
+                ___m_nview.Register<string, ZDOID>(Constants.Z_MobUnRegistered, AdoptedZonesManager.RPC_UnRegisterMob);
             }
         }
     }

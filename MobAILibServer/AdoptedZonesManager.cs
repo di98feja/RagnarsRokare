@@ -1,14 +1,22 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
 namespace RagnarsRokare.MobAI.Server
 {
-    internal static class MobManager
+    internal static class AdoptedZonesManager
     {
         public static Dictionary<string, ZDOID> AllMobZDOs = new Dictionary<string, ZDOID>();
         private static int UniqueIdHash = Constants.Z_CharacterId.GetStableHashCode();
+
+        internal static void RegisterRPCs()
+        {
+            ZRoutedRpc.instance.Register<string, ZDOID>(Constants.Z_MobRegistered, RPC_RegisterMob);
+            ZRoutedRpc.instance.Register<string, ZDOID>(Constants.Z_MobUnRegistered, RPC_UnRegisterMob);
+        }
+
         private static Dictionary<long, IList<Vector2i>> m_mobZoneToPeerAdoption = new Dictionary<long, IList<Vector2i>>();
 
         public static IEnumerable<ZDO> GetAllMobZDOs()
@@ -57,9 +65,6 @@ namespace RagnarsRokare.MobAI.Server
                 AllMobZDOs.Add(mob.GetString(UniqueIdHash), mob.m_uid);
             }
             Debug.Log($"Loaded {allMobs.Count()} mobs");
-
-            ZRoutedRpc.instance.Register<string, ZDOID>(Constants.Z_MobRegistered, RPC_RegisterMob);
-            ZRoutedRpc.instance.Register<string, ZDOID>(Constants.Z_MobUnRegistered, RPC_UnRegisterMob);
         }
 
         public static IEnumerable<Vector2i> GetAdoptedZones(long peerId)
@@ -115,6 +120,11 @@ namespace RagnarsRokare.MobAI.Server
                     peerIndex = 0;
                 }
             }
+            foreach (var peer in allPeers)
+            {
+                Debug.Log($"Sending Peer ({peer.m_uid}) {m_mobZoneToPeerAdoption[peer.m_uid].Count} adopted zones");
+                ZRoutedRpc.instance.InvokeRoutedRPC(peer.m_uid, Constants.Z_AdoptedZonesEvent, string.Join("|", m_mobZoneToPeerAdoption[peer.m_uid]));
+            }
         }
 
         /// <summary>
@@ -135,9 +145,16 @@ namespace RagnarsRokare.MobAI.Server
             foreach (var mob in allMobs)
             {
                 var zone = ZoneSystem.instance.GetZone(mob.GetPosition());
-                if (!mobZones.Contains(zone))
+                for (int x = -1; x <=1; x++)
                 {
-                    mobZones.Add(zone);
+                    for (int y = -1; y <=1; y++)
+                    {
+                        var z = new Vector2i(zone.x + x, zone.y + y);
+                        if (!mobZones.Contains(z))
+                        {
+                            mobZones.Add(z);
+                        }
+                    }
                 }
             }
             return mobZones;

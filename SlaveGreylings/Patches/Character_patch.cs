@@ -70,10 +70,7 @@ namespace RagnarsRokare.SlaveGreylings
                         {
                             __instance.m_name = givenName;
                         }
-                        //if (__instance.name.Contains("Greydwarf_Elite"))
-                        //{
-                        //    var piece = __instance.gameObject.AddComponent<Piece>();
-                        //}
+                        Debug.Log($"{givenName} woke up");
                     }
                     else
                     {
