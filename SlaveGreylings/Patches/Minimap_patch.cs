@@ -8,6 +8,7 @@ namespace RagnarsRokare.SlaveGreylings
 {
     public partial class SlaveGreylings
     {
+
         [HarmonyPatch(typeof(Minimap), "UpdateDynamicPins")]
         static class Minimap_UpdateDynamicPins_Patch
         {

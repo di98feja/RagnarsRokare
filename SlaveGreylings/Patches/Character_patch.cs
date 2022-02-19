@@ -38,18 +38,15 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 if (MobConfigManager.IsControllableMob(__instance.name))
                 {
-                    string uniqueId = GetOrCreateUniqueId(___m_nview);
-                    var mobInfo = MobConfigManager.GetMobConfig(__instance.name);
-                    Tameable tameable = GetOrAddTameable(__instance);
-                    tameable.m_tamingTime = mobInfo.TamingTime;
-                    tameable.m_commandable = true;
-
-                    AddVisualEquipmentCapability(__instance);
-
-                    ___m_nview.Register<string, string>(Constants.Z_UpdateCharacterHUD, RPC_UpdateCharacterName);
                     var ai = __instance.GetBaseAI() as MonsterAI;
+                    var mobInfo = MobConfigManager.GetMobConfig(__instance.name);
                     if (__instance.IsTamed())
                     {
+                        string uniqueId = GetOrCreateUniqueId(___m_nview);
+
+                        AddVisualEquipmentCapability(__instance);
+                        ___m_nview.Register<string, string>(Constants.Z_UpdateCharacterHUD, RPC_UpdateCharacterName);
+
                         try
                         {
                             MobManager.RegisterMob(__instance, uniqueId, mobInfo.AIType, mobInfo.AIConfig);
@@ -69,15 +66,16 @@ namespace RagnarsRokare.SlaveGreylings
                         if (!string.IsNullOrEmpty(givenName))
                         {
                             __instance.m_name = givenName;
+                            Debug.Log($"{givenName} woke up");
                         }
-                        Debug.Log($"{givenName} woke up");
                     }
                     else
                     {
+                        Tameable tameable = GetOrAddTameable(__instance);
+                        tameable.m_tamingTime = mobInfo.TamingTime;
+                        tameable.m_commandable = true;
                         tameable.m_fedDuration = mobInfo.PreTameFeedDuration;
                         ai.m_consumeItems.Clear();
-                        //Debug.Log($"Mob:{__instance.name}");
-                        //Debug.Log($"consumeItem = {string.Join(",",mobInfo.PreTameConsumables?.Select(i => i.m_itemData.m_dropPrefab))?? string.Empty}");
                         ai.m_consumeItems.AddRange(mobInfo.PreTameConsumables);
                     }
                 }

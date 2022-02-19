@@ -53,7 +53,7 @@ namespace RagnarsRokare.SlaveGreylings
                 if (!___m_nview.IsOwner()) return false;
                 if (__instance.IsSleeping())
                 {
-                    Invoke(__instance, "UpdateSleep", new object[] { dt });
+                    Common.Invoke<MonsterAI>(__instance, "UpdateSleep", dt);
                     Common.Dbgl($"{___m_character.GetHoverName()}: Sleep updated", true);
                     return false;
                 }
@@ -62,11 +62,6 @@ namespace RagnarsRokare.SlaveGreylings
                 mobAI.UpdateAI(dt);
 
                 return false;
-            }
-
-            private static object Invoke(MonsterAI instance, string methodName, object[] argumentList)
-            {
-                return typeof(MonsterAI).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
             }
 
             private static MobAIBase GetOrCreateMob(string uniqueId, MonsterAI instance, ZNetView nview)

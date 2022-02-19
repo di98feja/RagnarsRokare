@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using RagnarsRokare.MobAI.ServerPeer;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -19,7 +20,7 @@ namespace RagnarsRokare.MobAI
                 var zone = new Vector2i(x, y);
                 m_adoptedZones.Add(zone);
             }
-            Debug.Log($"Adopted zones:{string.Join("|", m_adoptedZones)}");
+            //Debug.Log($"Adopted zones:{string.Join("|", m_adoptedZones)}");
         }
 
         [HarmonyPatch(typeof(ZoneSystem), "Start")]
@@ -28,9 +29,16 @@ namespace RagnarsRokare.MobAI
             static void Postfix()
             {
                 ZRoutedRpc.instance.Register<string>(Constants.Z_AdoptedZonesEvent, AdoptedZoneEvent_RPC);
+                if (ZNet.instance.IsServer())
+                {
+                    AdoptedZonesManager.RegisterRPCs();
+                }
             }
         }
 
+        /// <summary>
+        /// Incude adopted zones when keeping local zones alive
+        /// </summary>
         [HarmonyPatch(typeof(ZoneSystem), "CreateLocalZones")]
         static class ZoneSystem_CreateLocalZones_Patch
         {
@@ -44,6 +52,9 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        /// <summary>
+        /// Include adopted zones when creating and destroying local game objects
+        /// </summary>
         [HarmonyPatch(typeof(ZNetScene), "CreateDestroyObjects")]
         public class CreateDestroyObjects_Patch
         {
