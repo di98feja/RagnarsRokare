@@ -98,6 +98,8 @@ namespace RagnarsRokare.MobAI
         private ItemDrop.ItemData m_seedToPlant;
         private Vector3 m_cropPosition;
         private MobAIBase m_aiBase;
+        private bool m_hasBeenInitialized = false;
+        private int m_initTryCount = 0;
 
         /// <summary>
         /// This method finds the PieceTable from the cultivator and stores the sapling Pieces in the Crops array so we can create instances of them later
@@ -109,6 +111,13 @@ namespace RagnarsRokare.MobAI
             if (pieceTable == null)
             {
                 Debug.LogWarning($"_cultivatorPieceTable not found");
+                m_initTryCount++;
+                return false;
+            }
+            if (ObjectDB.instance == null)
+            {
+                Debug.LogWarning("No ObjectDB instance in BasicFarmingBehaviour.Init()");
+                m_initTryCount++;
                 return false;
             }
             var resultCrops = new List<Crop>();
@@ -128,6 +137,7 @@ namespace RagnarsRokare.MobAI
                 }
             }
             Crops = resultCrops.ToArray();
+            m_hasBeenInitialized = true;
             return true;
         }
 
@@ -151,6 +161,14 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     Common.Dbgl("Entered BasicFarmingBehaviour", true, "BasicFarming");
+                    if (!m_hasBeenInitialized && m_initTryCount < 5)
+                    {
+                        m_hasBeenInitialized = Init();
+                        if (m_initTryCount == 5)
+                        {
+                            Debug.LogError("Unable to init BasicFarmingBehaviour");
+                        }
+                    }
                 });
 
             brain.Configure(State.Abandon)

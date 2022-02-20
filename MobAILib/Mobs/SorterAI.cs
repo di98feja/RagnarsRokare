@@ -89,9 +89,6 @@ namespace RagnarsRokare.MobAI
             UpdateTrigger = Brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = Brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
 
-            BasicFarmingBehaviour basicFarmingBehaviour = new BasicFarmingBehaviour();
-            basicFarmingBehaviour.Init();
-
             searchForItemsBehaviour = new SearchForItemsBehaviour();
             searchForItemsBehaviour.Configure(this, Brain, State.SearchForItems);
             itemSortingBehaviour = new ItemSortingBehaviour

@@ -120,7 +120,9 @@ namespace RagnarsRokare.MobAI
             {
                 MobsRegister.Add(uniqueId, (mobAIName, mobAIConfig, fightBehaviourSelector));
                 SetUniqueId(character, uniqueId);
+                SetControlledByMobAILibFlag(character);
             }
+
         }
 
         /// <summary>
@@ -131,6 +133,8 @@ namespace RagnarsRokare.MobAI
         {
             if (AliveMobs.ContainsKey(uniqueId))
             {
+                var mobToUnregister = AliveMobs[uniqueId].Character;
+                SetControlledByMobAILibFlag(mobToUnregister, false);
                 AliveMobs.Remove(uniqueId);
             }
             if (MobsRegister.ContainsKey(uniqueId))
@@ -180,6 +184,11 @@ namespace RagnarsRokare.MobAI
             nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
         }
 
+        private static void SetControlledByMobAILibFlag(Character character, bool state = true)
+        {
+            var nview = typeof(Character).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(character) as ZNetView;
+            nview.GetZDO().Set(Constants.Z_IsControlledByMobAILib, state);
+        }
         #endregion
     }
 }
