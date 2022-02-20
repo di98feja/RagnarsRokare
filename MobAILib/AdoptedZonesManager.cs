@@ -10,7 +10,7 @@ namespace RagnarsRokare.MobAI.ServerPeer
     internal static class AdoptedZonesManager
     {
         public static Dictionary<string, ZDOID> AllMobZDOs = new Dictionary<string, ZDOID>();
-        private static int UniqueIdHash = Constants.Z_CharacterId.GetStableHashCode();
+        private static int IsControlledByMobAILibHash = Constants.Z_IsControlledByMobAILib.GetStableHashCode();
 
         internal static void RegisterRPCs()
         {
@@ -69,10 +69,10 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 return;
             }
 
-            var allMobs = allZdos.Values.Where(z => !string.IsNullOrEmpty(z.GetString(UniqueIdHash)));
+            var allMobs = allZdos.Values.Where(z => z.GetBool(IsControlledByMobAILibHash));
             foreach (var mob in allMobs)
             {
-                AllMobZDOs.Add(mob.GetString(UniqueIdHash), mob.m_uid);
+                AllMobZDOs.Add(mob.GetString(IsControlledByMobAILibHash), mob.m_uid);
                 Debug.Log($"{mob.GetString(Constants.Z_GivenName)} loaded");
             }
             Debug.Log($"Loaded {allMobs.Count()} mobs");
