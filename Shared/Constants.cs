@@ -21,6 +21,7 @@ namespace RagnarsRokare
         public const string Z_SavedFoodPosition = "RR_SavedFoodPosition";
         public const string Z_SavedDumpChest = "RR_SavedDumpChest";
         public const string Z_SorterItemDict = "RR_SorterItemDict ";
+        public const string Z_IsControlledByMobAILib = "RR_IsControlledByMobAILib";
         public const string Z_AdoptedZonesEvent = "RR_AdoptedZonesEvent";
     }
 }

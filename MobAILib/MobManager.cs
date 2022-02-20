@@ -131,6 +131,7 @@ namespace RagnarsRokare.MobAI
         {
             Debug.Log("AnnounceRegisteredMobToPeers");
             ZRoutedRpc.instance.InvokeRoutedRPC(Constants.Z_MobRegistered, uniqueId, nview.GetZDO().m_uid);
+
         }
 
         private static void AnnounceUnregisteredMobToPeers(ZNetView nview, string uniqueId)
@@ -151,6 +152,8 @@ namespace RagnarsRokare.MobAI
             }
             if (AliveMobs.ContainsKey(uniqueId))
             {
+                var mobToUnregister = AliveMobs[uniqueId].Character;
+                SetControlledByMobAILibFlag(mobToUnregister, false);
                 AliveMobs.Remove(uniqueId);
             }
             if (MobsRegister.ContainsKey(uniqueId))
@@ -200,6 +203,11 @@ namespace RagnarsRokare.MobAI
             nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
         }
 
+        private static void SetControlledByMobAILibFlag(Character character, bool state = true)
+        {
+            var nview = typeof(Character).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(character) as ZNetView;
+            nview.GetZDO().Set(Constants.Z_IsControlledByMobAILib, state);
+        }
         private static ZNetView GetNView(Character character)
         {
             return typeof(Character).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(character) as ZNetView;
