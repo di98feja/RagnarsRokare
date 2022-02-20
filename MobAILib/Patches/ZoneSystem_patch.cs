@@ -13,8 +13,11 @@ namespace RagnarsRokare.MobAI
         internal static void AdoptedZoneEvent_RPC(long sender, string zones)
         {
             m_adoptedZones.Clear();
+            if (string.IsNullOrEmpty(zones)) return;
+            
             foreach (string z in zones.Split('|'))
             {
+                Debug.Log($"zone string: {z}");
                 int x = int.Parse(z.Split(',').First());
                 int y = int.Parse(z.Split(',').Last());
                 var zone = new Vector2i(x, y);

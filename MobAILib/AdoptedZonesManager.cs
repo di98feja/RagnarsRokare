@@ -73,7 +73,9 @@ namespace RagnarsRokare.MobAI.ServerPeer
             var allMobs = allZdos.Values.Where(z => z.GetBool(IsControlledByMobAILibHash));
             foreach (var mob in allMobs)
             {
-                AllMobZDOs.Add(mob.GetString(UniqueIdHash), mob.m_uid);
+                Debug.Log($"MobId {mob.GetString(UniqueIdHash)}, ZDOid:{mob.m_uid}");
+
+                //AllMobZDOs.Add(mob.GetString(UniqueIdHash), mob.m_uid);
                 Debug.Log($"{mob.GetString(Constants.Z_GivenName)} loaded");
             }
             Debug.Log($"Loaded {allMobs.Count()} mobs");
