@@ -108,6 +108,7 @@ namespace RagnarsRokare.MobAI.ServerPeer
             {
                 RemoveActiveZones(mobZonesToAdopt, peer.m_refPos);
             }
+
             if (mobZonesToAdopt.Count == 0) return;
 
             int peerIndex = 0;
@@ -129,7 +130,7 @@ namespace RagnarsRokare.MobAI.ServerPeer
             }
             foreach (var peer in peerIds)
             {
-                //Debug.Log($"Sending Peer ({ZNet.instance.GetPeer(peer)?.m_playerName ?? "Myself"}) {m_mobZoneToPeerAdoption[peer].Count} adopted zones");
+                Debug.Log($"Sending Peer ({ZNet.instance.GetPeer(peer)?.m_playerName ?? "Myself"}) {m_mobZoneToPeerAdoption[peer].Count} adopted zones");
                 ZRoutedRpc.instance.InvokeRoutedRPC(peer, Constants.Z_AdoptedZonesEvent, string.Join("|", m_mobZoneToPeerAdoption[peer]));
             }
         }

@@ -27,7 +27,7 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 m_nview.ClaimOwnership();
                 m_nview.GetZDO().Set(Constants.Z_GivenName, text);
-                Character_Awake_Patch.BroadcastUpdateCharacterName(ref m_nview, text);
+                BroadcastUpdateCharacterName(ref m_nview, text);
             }
         }
 

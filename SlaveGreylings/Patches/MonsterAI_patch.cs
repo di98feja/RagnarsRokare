@@ -15,13 +15,14 @@ namespace RagnarsRokare.SlaveGreylings
                 if (MobConfigManager.IsControllableMob(__instance.name))
                 {
                     var mobInfo = MobConfigManager.GetMobConfig(__instance.name);
-                    __instance.m_consumeItems.Clear();
-                    __instance.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
-                    __instance.m_consumeSearchRange = 50;
                     ___m_character.m_faction = Character.Faction.Players;
+                    string uniqueId = GetOrCreateUniqueId(___m_nview);
+
+                    AddVisualEquipmentCapability(___m_character);
+                    ___m_nview.Register<string, string>(Constants.Z_UpdateCharacterHUD, RPC_UpdateCharacterName);
+
                     try
                     {
-                        var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
                         MobManager.RegisterMob(___m_character, uniqueId, mobInfo.AIType, mobInfo.AIConfig);
                     }
                     catch (ArgumentException e)
@@ -29,7 +30,13 @@ namespace RagnarsRokare.SlaveGreylings
                         Debug.LogError($"Failed to register Mob AI ({mobInfo.AIType}). {e.Message}");
                         return;
                     }
-
+                    ___m_character.m_faction = Character.Faction.Players;
+                    var ai = ___m_character.GetBaseAI() as MonsterAI; 
+                    ai.m_consumeItems.Clear();
+                    ai.m_consumeItems.AddRange(mobInfo.PostTameConsumables);
+                    ai.m_consumeSearchRange = mobInfo.AIConfig.Awareness * 5;
+                    ai.m_randomMoveRange = mobInfo.AIConfig.Mobility * 2;
+                    ai.m_randomMoveInterval = 15 - mobInfo.AIConfig.Mobility;
                 }
             }
         }

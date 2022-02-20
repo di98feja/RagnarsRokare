@@ -80,69 +80,57 @@ namespace RagnarsRokare.SlaveGreylings
                     }
                 }
             }
-
-            private static Tameable GetOrAddTameable(Character __instance)
+        }
+        private static Tameable GetOrAddTameable(Character __instance)
+        {
+            var tameable = __instance.gameObject.GetComponent<Tameable>();
+            if (tameable == null)
             {
-                var tameable = __instance.gameObject.GetComponent<Tameable>();
-                if (tameable == null)
-                {
-                    tameable = __instance.gameObject.AddComponent<Tameable>();
-                }
-
-                return tameable;
+                tameable = __instance.gameObject.AddComponent<Tameable>();
             }
 
-            private static string GetOrCreateUniqueId(ZNetView ___m_nview)
+            return tameable;
+        }
+
+        public static void AddVisualEquipmentCapability(Character __instance)
+        {
+            var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+            if (visEquipment == null)
             {
-                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
-                if (string.IsNullOrEmpty(uniqueId))
-                {
-                    uniqueId = System.Guid.NewGuid().ToString();
-                    ___m_nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
-                }
-                return uniqueId;
+                __instance.gameObject.AddComponent<VisEquipment>();
+                visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+                //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
+                var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
+                visEquipment.m_rightHand = rightHand;
+            }
+        }
+
+        public static void BroadcastUpdateCharacterName(ref ZNetView nview, string text)
+        {
+            nview.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, nview.GetZDO().GetString(Constants.Z_CharacterId), text);
+        }
+
+        public static void RPC_UpdateCharacterName(long sender, string uniqueId, string text)
+        {
+            if (!MobManager.IsAliveMob(uniqueId)) return;
+            Character greylingToUpdate;
+            try
+            {
+                greylingToUpdate = MobManager.AliveMobs[uniqueId].Character;
+            }
+            catch (System.Exception)
+            {
+                return;
             }
 
-            public static void AddVisualEquipmentCapability(Character __instance)
-            {
-                var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
-                if (visEquipment == null)
-                {
-                    __instance.gameObject.AddComponent<VisEquipment>();
-                    visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
-                    //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
-                    var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
-                    visEquipment.m_rightHand = rightHand;
-                }
-            }
-
-            public static void BroadcastUpdateCharacterName(ref ZNetView nview, string text)
-            {
-                nview.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, nview.GetZDO().GetString(Constants.Z_CharacterId), text);
-            }
-
-            public static void RPC_UpdateCharacterName(long sender, string uniqueId, string text)
-            {
-                if (!MobManager.IsAliveMob(uniqueId)) return;
-                Character greylingToUpdate;
-                try
-                {
-                    greylingToUpdate = MobManager.AliveMobs[uniqueId].Character;
-                }
-                catch (System.Exception)
-                {
-                    return;
-                }
-
-                greylingToUpdate.m_name = text;
-                var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
-                var hudsDict = hudsDictObject as System.Collections.IDictionary;
-                if (!hudsDict.Contains(greylingToUpdate)) return;
-                var hudObject = hudsDict[greylingToUpdate];
-                var hudText = hudObject.GetType().GetField("m_name", BindingFlags.Public | BindingFlags.Instance).GetValue(hudObject) as Text;
-                if (hudText == null) return;
-                hudText.text = text;
-            }
+            greylingToUpdate.m_name = text;
+            var hudsDictObject = EnemyHud.instance.GetType().GetField("m_huds", BindingFlags.GetField | BindingFlags.NonPublic | BindingFlags.Instance).GetValue(EnemyHud.instance);
+            var hudsDict = hudsDictObject as System.Collections.IDictionary;
+            if (!hudsDict.Contains(greylingToUpdate)) return;
+            var hudObject = hudsDict[greylingToUpdate];
+            var hudText = hudObject.GetType().GetField("m_name", BindingFlags.Public | BindingFlags.Instance).GetValue(hudObject) as Text;
+            if (hudText == null) return;
+            hudText.text = text;
         }
     }
 }
