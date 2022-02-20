@@ -121,6 +121,7 @@ namespace RagnarsRokare.MobAI
                 MobsRegister.Add(uniqueId, (mobAIName, mobAIConfig, fightBehaviourSelector));
                 var nview = GetNView(character);
                 SetUniqueId(nview, uniqueId);
+                SetControlledByMobAILibFlag(nview);
                 //nview.Register<string, ZDOID>(Constants.Z_MobRegistered, (a, b, c) => { });
                 //nview.Register<string, ZDOID>(Constants.Z_MobUnRegistered, (a, b, c) => { });
                 AnnounceRegisteredMobToPeers(nview, uniqueId);
@@ -145,15 +146,14 @@ namespace RagnarsRokare.MobAI
         /// <param name="uniqueId">The uniqueId used to register mob</param>
         public static void UnregisterMob(string uniqueId)
         {
-            var nview = GetNView(AliveMobs[uniqueId].Character);
-            if (nview != null && nview.IsValid())
-            {
-                AnnounceUnregisteredMobToPeers(nview, uniqueId);
-            }
             if (AliveMobs.ContainsKey(uniqueId))
             {
-                var mobToUnregister = AliveMobs[uniqueId].Character;
-                SetControlledByMobAILibFlag(mobToUnregister, false);
+                var nview = GetNView(AliveMobs[uniqueId].Character);
+                if (nview != null && nview.IsValid())
+                {
+                    AnnounceUnregisteredMobToPeers(nview, uniqueId);
+                    SetControlledByMobAILibFlag(nview, false);
+                }
                 AliveMobs.Remove(uniqueId);
             }
             if (MobsRegister.ContainsKey(uniqueId))
@@ -203,13 +203,14 @@ namespace RagnarsRokare.MobAI
             nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
         }
 
-        private static void SetControlledByMobAILibFlag(Character character, bool state = true)
+        private static void SetControlledByMobAILibFlag(ZNetView nview, bool state = true)
         {
-            var nview = typeof(Character).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(character) as ZNetView;
             nview.GetZDO().Set(Constants.Z_IsControlledByMobAILib, state);
         }
+
         private static ZNetView GetNView(Character character)
         {
+            if (character == null) return null;
             return typeof(Character).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(character) as ZNetView;
         }
 
