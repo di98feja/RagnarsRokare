@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -9,7 +8,9 @@ namespace RagnarsRokare.MobAI.Server
     internal static class AdoptedZonesManager
     {
         public static Dictionary<string, ZDOID> AllMobZDOs = new Dictionary<string, ZDOID>();
-        private static int UniqueIdHash = Constants.Z_CharacterId.GetStableHashCode();
+        private static int IsControlledByMobAILibHash = Constants.Z_IsControlledByMobAILib.GetStableHashCode();
+        private static int CharacterIdHash = Constants.Z_CharacterId.GetStableHashCode();
+        private static int UniqueIdHash = Constants.Z_UniqueId.GetStableHashCode();
 
         internal static void RegisterRPCs()
         {
@@ -17,20 +18,29 @@ namespace RagnarsRokare.MobAI.Server
             ZRoutedRpc.instance.Register<string, ZDOID>(Constants.Z_MobUnRegistered, RPC_UnRegisterMob);
         }
 
-        private static Dictionary<long, IList<Vector2i>> m_mobZoneToPeerAdoption = new Dictionary<long, IList<Vector2i>>();
+        private static Dictionary<long, AdoptedZones> m_mobZoneToPeerAdoption = new Dictionary<long, AdoptedZones>();
 
         public static IEnumerable<ZDO> GetAllMobZDOs()
         {
+            List<string> deadZDOs = new List<string>();
+            List<ZDO> aliveZDOs = new List<ZDO>();
             foreach (var mob in AllMobZDOs)
             {
                 var mobZdo = ZDOMan.instance.GetZDO(mob.Value);
-                if (mobZdo == null)
+                if (mobZdo == null || !mobZdo.IsValid())
                 {
-                    AllMobZDOs.Remove(mob.Key);
+
+                    deadZDOs.Add(mob.Key);
+                    Debug.Log("Removed one dead Mob");
                     continue;
                 }
-                yield return mobZdo;
+                aliveZDOs.Add(mobZdo);
             }
+            foreach (var mob in deadZDOs)
+            {
+                AllMobZDOs.Remove(mob);
+            }
+            return aliveZDOs;
         }
 
         public static void RPC_RegisterMob(long sender, string uniqueId, ZDOID zdoId)
@@ -59,15 +69,20 @@ namespace RagnarsRokare.MobAI.Server
                 return;
             }
 
-            var allMobs = allZdos.Values.Where(z => !string.IsNullOrEmpty(z.GetString(UniqueIdHash)));
+            var allMobs = allZdos.Values.Where(z => z.GetBool(IsControlledByMobAILibHash));
             foreach (var mob in allMobs)
             {
-                AllMobZDOs.Add(mob.GetString(UniqueIdHash), mob.m_uid);
+                string uniqueId = mob.GetString(UniqueIdHash);
+                string characterId = mob.GetString(CharacterIdHash);
+                string mobId = string.IsNullOrEmpty(uniqueId) ? characterId : uniqueId;
+                Debug.Log($"MobId {mobId}, ZDOid:{mob.m_uid}");
+                AllMobZDOs.Add(mobId, mob.m_uid);
+                Debug.Log($"{mob.GetString(Constants.Z_GivenName)} loaded");
             }
             Debug.Log($"Loaded {allMobs.Count()} mobs");
         }
 
-        public static IEnumerable<Vector2i> GetAdoptedZones(long peerId)
+        public static AdoptedZones GetAdoptedZones(long peerId)
         {
             if (m_mobZoneToPeerAdoption.ContainsKey(peerId))
             {
@@ -75,7 +90,7 @@ namespace RagnarsRokare.MobAI.Server
             }
             else
             {
-                return Enumerable.Empty<Vector2i>();
+                return new AdoptedZones();
             }
         }
 
@@ -85,45 +100,96 @@ namespace RagnarsRokare.MobAI.Server
         /// </summary>
         internal static void ResetAdoptedZones()
         {
-            m_mobZoneToPeerAdoption.Clear();
-            var allPeers = ZNet.instance.GetPeers().Where(p => !p.m_server);
-            if (!allPeers.Any()) return;
+            foreach (var az in m_mobZoneToPeerAdoption.Values)
+            {
+                az.Reset();
+            }
+            var allPeers = ZNet.instance.GetPeers();
+            if (!allPeers.Any() && ZNet.instance.IsDedicated()) return;
 
             var mobZonesToAdopt = CreateSetOfMobZones();
-            Debug.Log($"{mobZonesToAdopt.Count} mob zones up for adoption({string.Join("|", mobZonesToAdopt)})");
+            //Debug.Log($"{mobZonesToAdopt.Count} mob zones up for adoption({string.Join("|", mobZonesToAdopt)})");
+            var reverseMap = BuildReverseMapping();
+
+            RemoveActiveZones(mobZonesToAdopt, ZNet.instance.GetReferencePosition(), reverseMap);
             foreach (var peer in allPeers)
             {
-                Vector2i peerCenterZone = ZoneSystem.instance.GetZone(peer.m_refPos);
-                Debug.Log($"Peer {peer.m_uid} is in {peerCenterZone}");
-                var commonZones = mobZonesToAdopt.Where(z => ZNetScene.instance.InActiveArea(z, peerCenterZone)).ToArray();
-
-                foreach (var commonZone in commonZones)
-                {
-                    mobZonesToAdopt.Remove(commonZone);
-                    Debug.Log($"{commonZone} already cared for");
-                }
+                RemoveActiveZones(mobZonesToAdopt, peer.m_refPos, reverseMap);
             }
-            if (mobZonesToAdopt.Count == 0) return;
+            RemoveDeadZones(mobZonesToAdopt, reverseMap);
+            RemoveAlreadyAdoptedZones(ref mobZonesToAdopt, reverseMap);
 
-            int peerIndex = 0;
+            var peerIds = allPeers.Select(p => p.m_uid).ToList();
+            if (!ZNet.instance.IsDedicated())
+            {
+                peerIds.Add(ZDOMan.instance.GetMyID());
+            }
+
+            var newPeers = peerIds.Where(p => !m_mobZoneToPeerAdoption.ContainsKey(p));
+            foreach (var peer in newPeers)
+            {
+                m_mobZoneToPeerAdoption.Add(peer, new AdoptedZones());
+            }
+
             foreach (var zone in mobZonesToAdopt)
             {
-                var currentPeer = allPeers.ElementAt(peerIndex++);
-                if (!m_mobZoneToPeerAdoption.ContainsKey(currentPeer.m_uid))
+                var peerWithLeastAdoptedZones = m_mobZoneToPeerAdoption.OrderBy(z => z.Value.CurrentZones.Count).First().Key;
+                m_mobZoneToPeerAdoption[peerWithLeastAdoptedZones].AddZone(zone);
+            }
+
+            foreach (var peer in peerIds)
+            {
+                Debug.Log($"Sending Peer ({ZNet.instance.GetPeer(peer)?.m_playerName ?? "Myself"}) {m_mobZoneToPeerAdoption[peer].CurrentZones.Count} adopted zones");
+                ZRoutedRpc.instance.InvokeRoutedRPC(peer, Constants.Z_AdoptedZonesEvent, string.Join("|", m_mobZoneToPeerAdoption[peer].CurrentZones));
+            }
+        }
+
+        private static void RemoveDeadZones(HashSet<Vector2i> mobZonesToAdopt, Dictionary<Vector2i, long> reverseMap)
+        {
+            foreach (var zone in reverseMap.Keys)
+            {
+                if (!mobZonesToAdopt.Contains(zone))
                 {
-                    m_mobZoneToPeerAdoption.Add(currentPeer.m_uid, new List<Vector2i>());
-                }
-                m_mobZoneToPeerAdoption[currentPeer.m_uid].Add(zone);
-                Debug.Log($"{currentPeer.m_uid} adopted {zone}");
-                if (peerIndex == allPeers.Count())
-                {
-                    peerIndex = 0;
+                    m_mobZoneToPeerAdoption[reverseMap[zone]].RemoveZone(zone);
                 }
             }
-            foreach (var peer in allPeers)
+        }
+
+        private static void RemoveAlreadyAdoptedZones(ref HashSet<Vector2i> mobZonesToAdopt, Dictionary<Vector2i, long> reverseMap)
+        {
+            foreach (var zone in reverseMap.Keys)
             {
-                Debug.Log($"Sending Peer ({peer.m_uid}) {m_mobZoneToPeerAdoption[peer.m_uid].Count} adopted zones");
-                ZRoutedRpc.instance.InvokeRoutedRPC(peer.m_uid, Constants.Z_AdoptedZonesEvent, string.Join("|", m_mobZoneToPeerAdoption[peer.m_uid]));
+                if (mobZonesToAdopt.Contains(zone))
+                {
+                    mobZonesToAdopt.Remove(zone);
+                }
+            }
+        }
+
+        private static void RemoveActiveZones(HashSet<Vector2i> mobZonesToAdopt, Vector3 refPos, Dictionary<Vector2i, long> reverseMap)
+        {
+            Vector2i peerCenterZone = ZoneSystem.instance.GetZone(refPos);
+            foreach (Vector2i zone in GetActiveArea(peerCenterZone))
+            {
+                if (reverseMap.ContainsKey(zone))
+                {
+                    m_mobZoneToPeerAdoption[reverseMap[zone]].RemoveZone(zone);
+                }
+                if (mobZonesToAdopt.Contains(zone))
+                {
+                    mobZonesToAdopt.Remove(zone);
+                }
+            }
+        }
+
+        private static IEnumerable<Vector2i> GetActiveArea(Vector2i peerCenterZone)
+        {
+            for (int x = -1; x <= 1; x++)
+            {
+                for (int y = -1; y <= 1; y++)
+                {
+                    yield return new Vector2i(peerCenterZone.x + x, peerCenterZone.y + y);
+                }
             }
         }
 
@@ -132,7 +198,7 @@ namespace RagnarsRokare.MobAI.Server
         /// </summary>
         public static IEnumerable<Vector2i> CreateSetOfAllAdoptedZones()
         {
-            return m_mobZoneToPeerAdoption.SelectMany(z => z.Value);
+            return m_mobZoneToPeerAdoption.SelectMany(z => z.Value.CurrentZones);
         }
 
         /// <summary>
@@ -141,13 +207,13 @@ namespace RagnarsRokare.MobAI.Server
         public static HashSet<Vector2i> CreateSetOfMobZones()
         {
             var allMobs = GetAllMobZDOs();
-            var mobZones =  new HashSet<Vector2i>();
+            var mobZones = new HashSet<Vector2i>();
             foreach (var mob in allMobs)
             {
                 var zone = ZoneSystem.instance.GetZone(mob.GetPosition());
-                for (int x = -1; x <=1; x++)
+                for (int x = -1; x <= 1; x++)
                 {
-                    for (int y = -1; y <=1; y++)
+                    for (int y = -1; y <= 1; y++)
                     {
                         var z = new Vector2i(zone.x + x, zone.y + y);
                         if (!mobZones.Contains(z))
@@ -158,6 +224,44 @@ namespace RagnarsRokare.MobAI.Server
                 }
             }
             return mobZones;
+        }
+
+        private static Dictionary<Vector2i, long> BuildReverseMapping()
+        {
+            return m_mobZoneToPeerAdoption.SelectMany(kvp => kvp.Value.CurrentZones
+            .Select(z => new KeyValuePair<Vector2i, long>(z, kvp.Key))).ToDictionary(x => x.Key, x => x.Value);
+        }
+
+        public class AdoptedZones
+        {
+            public List<Vector2i> CurrentZones { get; set; } = new List<Vector2i>();
+            public List<Vector2i> AddedZones { get; set; } = new List<Vector2i>();
+            public List<Vector2i> RemovedZones { get; set; } = new List<Vector2i>();
+
+            public void Reset()
+            {
+                AddedZones.Clear();
+                RemovedZones.Clear();
+            }
+
+            public bool HasZone(Vector2i z)
+            {
+                return CurrentZones.Contains(z);
+            }
+
+            public void AddZone(Vector2i z)
+            {
+                if (HasZone(z)) return;
+                CurrentZones.Add(z);
+                AddedZones.Add(z);
+            }
+
+            public void RemoveZone(Vector2i z)
+            {
+                if (!HasZone(z)) return;
+                CurrentZones.Remove(z);
+                RemovedZones.Add(z);
+            }
         }
     }
 }
