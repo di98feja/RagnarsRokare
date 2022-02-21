@@ -40,6 +40,8 @@ namespace RagnarsRokare.SlaveGreylings
                 {
                     var ai = __instance.GetBaseAI() as MonsterAI;
                     var mobInfo = MobConfigManager.GetMobConfig(__instance.name);
+                    Tameable tameable = GetOrAddTameable(__instance);
+                    tameable.m_commandable = true;
                     if (__instance.IsTamed())
                     {
                         string uniqueId = GetOrCreateUniqueId(___m_nview);
@@ -71,9 +73,7 @@ namespace RagnarsRokare.SlaveGreylings
                     }
                     else
                     {
-                        Tameable tameable = GetOrAddTameable(__instance);
                         tameable.m_tamingTime = mobInfo.TamingTime;
-                        tameable.m_commandable = true;
                         tameable.m_fedDuration = mobInfo.PreTameFeedDuration;
                         ai.m_consumeItems.Clear();
                         ai.m_consumeItems.AddRange(mobInfo.PreTameConsumables);
