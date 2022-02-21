@@ -155,7 +155,7 @@ namespace RagnarsRokare.MobAI
                 Debug.Log($"{instance.Character.GetHoverName()} was hungry for to long and forgot learned tasks.");
                 instance.Character.m_name = "Leonard";
                 instance.NView.GetZDO().Set(Constants.Z_GivenName, instance.Character.m_name);
-                instance.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, instance.NView.GetZDO().GetString(Constants.Z_CharacterId), instance.Character.m_name);
+                instance.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, instance.NView.GetZDO().GetString(Constants.Z_UniqueId), instance.Character.m_name);
             }
             if (instance.Brain.State == State.Hungry)
             {

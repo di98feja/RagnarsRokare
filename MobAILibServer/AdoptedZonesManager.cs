@@ -9,7 +9,7 @@ namespace RagnarsRokare.MobAI.Server
     internal static class AdoptedZonesManager
     {
         public static Dictionary<string, ZDOID> AllMobZDOs = new Dictionary<string, ZDOID>();
-        private static int UniqueIdHash = Constants.Z_CharacterId.GetStableHashCode();
+        private static int UniqueIdHash = Constants.Z_UniqueId.GetStableHashCode();
 
         internal static void RegisterRPCs()
         {

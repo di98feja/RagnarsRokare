@@ -95,7 +95,7 @@ namespace RagnarsRokare.MobAI
         {
             get
             {
-                return NView.GetZDO().GetString(Constants.Z_CharacterId);
+                return NView.GetZDO().GetString(Constants.Z_UniqueId);
             }
         }
 
