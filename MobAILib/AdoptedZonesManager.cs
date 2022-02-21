@@ -76,7 +76,14 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 string characterId = mob.GetString(CharacterIdHash);
                 string mobId = string.IsNullOrEmpty(uniqueId) ? characterId : uniqueId;
                 Debug.Log($"MobId {mobId}, ZDOid:{mob.m_uid}");
-                AllMobZDOs.Add(mobId, mob.m_uid);
+                if (AllMobZDOs.ContainsKey(mobId))
+                {
+                    Debug.Log($"Duplicate Mob Id:{mobId}:{mob.m_uid}. Already registered on {mob.m_uid}");
+                }
+                else
+                {
+                    AllMobZDOs.Add(mobId, mob.m_uid);
+                }
                 Debug.Log($"{mob.GetString(Constants.Z_GivenName)} loaded");
             }
             Debug.Log($"Loaded {allMobs.Count()} mobs");
