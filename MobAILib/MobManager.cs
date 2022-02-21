@@ -200,7 +200,7 @@ namespace RagnarsRokare.MobAI
 
         private static void SetUniqueId(ZNetView nview, string uniqueId)
         {
-            nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
+            nview.GetZDO().Set(Constants.Z_UniqueId, uniqueId);
         }
 
         private static void SetControlledByMobAILibFlag(ZNetView nview, bool state = true)

@@ -17,7 +17,7 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 if (!___m_nview.IsValid()) return;
 
-                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_UniqueId);
                 if (string.IsNullOrEmpty(uniqueId)) return;
 
                 if (MobManager.IsAliveMob(uniqueId))
@@ -107,7 +107,7 @@ namespace RagnarsRokare.SlaveGreylings
 
         public static void BroadcastUpdateCharacterName(ref ZNetView nview, string text)
         {
-            nview.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, nview.GetZDO().GetString(Constants.Z_CharacterId), text);
+            nview.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, nview.GetZDO().GetString(Constants.Z_UniqueId), text);
         }
 
         public static void RPC_UpdateCharacterName(long sender, string uniqueId, string text)

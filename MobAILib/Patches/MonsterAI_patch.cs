@@ -44,7 +44,7 @@ namespace RagnarsRokare.SlaveGreylings
                 ref float ___m_jumpInterval, ref float ___m_jumpTimer, ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted)
             {
                 if (!___m_nview.IsValid()) return true;
-                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_UniqueId);
                 if (string.IsNullOrEmpty(uniqueId)) return true;
                 if (!MobManager.IsRegisteredMob(uniqueId)) return true;
 
