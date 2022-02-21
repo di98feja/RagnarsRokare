@@ -57,11 +57,15 @@ namespace RagnarsRokare.SlaveGreylings
 
         private static string GetOrCreateUniqueId(ZNetView ___m_nview)
         {
-            var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+            var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_UniqueId);
             if (string.IsNullOrEmpty(uniqueId))
             {
-                uniqueId = System.Guid.NewGuid().ToString();
-                ___m_nview.GetZDO().Set(Constants.Z_CharacterId, uniqueId);
+                uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_CharacterId);
+                if (string.IsNullOrEmpty(uniqueId))
+                {
+                    uniqueId = System.Guid.NewGuid().ToString();
+                }
+                ___m_nview.GetZDO().Set(Constants.Z_UniqueId, uniqueId);
             }
             return uniqueId;
         }
