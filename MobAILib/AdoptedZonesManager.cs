@@ -1,6 +1,4 @@
-﻿using HarmonyLib;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
@@ -11,6 +9,7 @@ namespace RagnarsRokare.MobAI.ServerPeer
     {
         public static Dictionary<string, ZDOID> AllMobZDOs = new Dictionary<string, ZDOID>();
         private static int IsControlledByMobAILibHash = Constants.Z_IsControlledByMobAILib.GetStableHashCode();
+        private static int CharacterIdHash = Constants.Z_CharacterId.GetStableHashCode();
         private static int UniqueIdHash = Constants.Z_UniqueId.GetStableHashCode();
 
         internal static void RegisterRPCs()
@@ -73,9 +72,11 @@ namespace RagnarsRokare.MobAI.ServerPeer
             var allMobs = allZdos.Values.Where(z => z.GetBool(IsControlledByMobAILibHash));
             foreach (var mob in allMobs)
             {
-                Debug.Log($"MobId {mob.GetString(UniqueIdHash)}, ZDOid:{mob.m_uid}");
-
-                //AllMobZDOs.Add(mob.GetString(UniqueIdHash), mob.m_uid);
+                string uniqueId = mob.GetString(UniqueIdHash);
+                string characterId = mob.GetString(CharacterIdHash);
+                string mobId = string.IsNullOrEmpty(uniqueId) ? characterId : uniqueId;
+                Debug.Log($"MobId {mobId}, ZDOid:{mob.m_uid}");
+                AllMobZDOs.Add(mobId, mob.m_uid);
                 Debug.Log($"{mob.GetString(Constants.Z_GivenName)} loaded");
             }
             Debug.Log($"Loaded {allMobs.Count()} mobs");
@@ -96,7 +97,6 @@ namespace RagnarsRokare.MobAI.ServerPeer
         /// <summary>
         /// Redistribute mob zones among all peers
         /// Mob zones inside peer active areas is not distributed.
-        /// This implementation differs from the dedicated server
         /// This method is only called by the peer acting as server
         /// </summary>
         internal static void ResetAdoptedZones()
@@ -106,6 +106,8 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 az.Reset();
             }
             var allPeers = ZNet.instance.GetPeers();
+            if (!allPeers.Any() && ZNet.instance.IsDedicated()) return;
+
             var mobZonesToAdopt = CreateSetOfMobZones();
             //Debug.Log($"{mobZonesToAdopt.Count} mob zones up for adoption({string.Join("|", mobZonesToAdopt)})");
             var reverseMap = BuildReverseMapping();
@@ -119,7 +121,10 @@ namespace RagnarsRokare.MobAI.ServerPeer
             RemoveAlreadyAdoptedZones(ref mobZonesToAdopt, reverseMap);
 
             var peerIds = allPeers.Select(p => p.m_uid).ToList();
-            peerIds.Add(ZDOMan.instance.GetMyID());
+            if (!ZNet.instance.IsDedicated())
+            {
+                peerIds.Add(ZDOMan.instance.GetMyID());
+            }
 
             var newPeers = peerIds.Where(p => !m_mobZoneToPeerAdoption.ContainsKey(p));
             foreach (var peer in newPeers)

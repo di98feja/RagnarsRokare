@@ -59,9 +59,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Common.cs" />
     <Compile Include="MobAILibServer.cs" />
     <Compile Include="AdoptedZonesManager.cs" />
-    <Compile Include="Patches\ZDOMan_patch.cs" />
+    <Compile Include="Patches\ServerSidePatches.cs" />
     <Compile Include="Patches\ZoneSystem_patch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
