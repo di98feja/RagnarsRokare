@@ -89,6 +89,13 @@ namespace RagnarsRokare.MobAI.ServerPeer
             Debug.Log($"Loaded {allMobs.Count()} mobs");
         }
 
+        internal static void UnloadMobs()
+        {
+            Debug.Log("Unloading AdoptedZonesManager");
+            AllMobZDOs.Clear();
+            m_mobZoneToPeerAdoption.Clear();
+        }
+
         public static AdoptedZones GetAdoptedZones(long peerId)
         {
             if (m_mobZoneToPeerAdoption.ContainsKey(peerId))

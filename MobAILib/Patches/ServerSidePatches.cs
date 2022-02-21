@@ -178,5 +178,14 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 AdoptedZonesManager.LoadMobs(__instance);
             }
         }
+
+        [HarmonyPatch(typeof(ZDOMan), "ShutDown")]
+        static class ZDOMan_ShutDown_Patch
+        {
+            static void Postfix(ref ZDOMan __instance)
+            {
+                AdoptedZonesManager.UnloadMobs();
+            }
+        }
     }
 }
