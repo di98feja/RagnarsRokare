@@ -62,7 +62,6 @@ namespace RagnarsRokare.MobAI.ServerPeer
 
                 var thread = new Thread(new ThreadStart(ReleaseNearbyZDOsAsync));
                 thread.Start();
-                ReleaseNearbyZDOsAsync();
                 return false;
             }
 
