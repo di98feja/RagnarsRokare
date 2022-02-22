@@ -60,7 +60,6 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 }
                 ___m_releaseZDOTimer = 0f;
                 AdoptedZonesManager.ResetAdoptedZones();
-
                 var thread = new Thread(new ThreadStart(ReleaseNearbyZDOsAsync));
                 thread.Start();
                 return false;
@@ -74,7 +73,7 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 {
                     ReleaseNearbyZDOS(ZNet.instance.GetReferencePosition(), ZDOMan.instance.GetMyID());
                     Type t = m_zdoPeerType;
-                    var peers = typeof(ZDOMan).GetField("m_peers").GetValue(ZDOMan.instance) as IEnumerable<object>;
+                    var peers = typeof(ZDOMan).GetField("m_peers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(ZDOMan.instance) as IEnumerable<object>;
                     foreach (var peer in peers)
                     {
                         var p = m_zdoPeerType.GetField("m_peer").GetValue(peer) as ZNetPeer;

@@ -126,10 +126,13 @@ namespace RagnarsRokare.MobAI.ServerPeer
             //Debug.Log($"{mobZonesToAdopt.Count} mob zones up for adoption({string.Join("|", mobZonesToAdopt)})");
             var reverseMap = BuildReverseMapping();
 
-            RemoveActiveZones(mobZonesToAdopt, ZNet.instance.GetReferencePosition(), reverseMap);
+            if (!ZNet.instance.IsDedicated())
+            {
+                RemoveActiveZones(mobZonesToAdopt, ZNet.instance.GetReferencePosition(), ZDOMan.instance.GetMyID(), reverseMap);
+            }
             foreach (var peer in allPeers)
             {
-                RemoveActiveZones(mobZonesToAdopt, peer.m_refPos, reverseMap);
+                RemoveActiveZones(mobZonesToAdopt, peer.m_refPos, peer.m_uid, reverseMap);
             }
             RemoveDeadZones(mobZonesToAdopt, reverseMap);
             RemoveAlreadyAdoptedZones(ref mobZonesToAdopt, reverseMap);
@@ -181,14 +184,22 @@ namespace RagnarsRokare.MobAI.ServerPeer
             }
         }
 
-        private static void RemoveActiveZones(HashSet<Vector2i> mobZonesToAdopt, Vector3 refPos, Dictionary<Vector2i,long> reverseMap)
+        private static void RemoveActiveZones(HashSet<Vector2i> mobZonesToAdopt, Vector3 refPos, long peerId, Dictionary<Vector2i,long> reverseMap)
         {
             Vector2i peerCenterZone = ZoneSystem.instance.GetZone(refPos);
             foreach (Vector2i zone in GetActiveArea(peerCenterZone))
             {
                 if (reverseMap.ContainsKey(zone))
                 {
-                    m_mobZoneToPeerAdoption[reverseMap[zone]].RemoveZone(zone);
+                    if (peerId == reverseMap[zone])
+                    {
+                        // Remove zone without adding to Remove list
+                        m_mobZoneToPeerAdoption[reverseMap[zone]].CurrentZones.Remove(zone);
+                    }
+                    else
+                    {
+                        m_mobZoneToPeerAdoption[reverseMap[zone]].RemoveZone(zone);
+                    }
                 }
                 if (mobZonesToAdopt.Contains(zone))
                 {

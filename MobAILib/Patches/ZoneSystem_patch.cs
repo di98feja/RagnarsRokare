@@ -17,7 +17,6 @@ namespace RagnarsRokare.MobAI
             
             foreach (string z in zones.Split('|'))
             {
-                Debug.Log($"zone string: {z}");
                 int x = int.Parse(z.Split(',').First());
                 int y = int.Parse(z.Split(',').Last());
                 var zone = new Vector2i(x, y);
