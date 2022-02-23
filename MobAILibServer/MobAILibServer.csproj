@@ -69,6 +69,7 @@
     <ProjectReference Include="..\Common\Common.csproj">
       <Project>{bf9b6ff9-2033-4c43-a6fd-6c547aa27245}</Project>
       <Name>Common</Name>
+      <Private>False</Private>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

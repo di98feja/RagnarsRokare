@@ -21,5 +21,6 @@
         public const string Z_SorterItemDict = "RR_SorterItemDict ";
         public const string Z_IsControlledByMobAILib = "RR_IsControlledByMobAILib";
         public const string Z_AdoptedZonesEvent = "RR_AdoptedZonesEvent";
+        public const string Z_RegisteredMobsChangedEvent = "RR_RegisteredMobsChangedEvent";
     }
 }

@@ -9,6 +9,36 @@ namespace RagnarsRokare.SlaveGreylings
     public partial class SlaveGreylings
     {
 
+        private static List<ZDO> m_allMobZDOs = new List<ZDO>();
+
+        internal static void RegisteredMobsChangedEvent_RPC(long sender, ZPackage pkg)
+        {
+            Debug.Log("Got RegisteredMobsChangedEvent to Minimap_patch");
+            m_allMobZDOs.Clear();
+            bool endOfStream = false;
+            while (!endOfStream)
+            {
+                try
+                {
+                    m_allMobZDOs.Add(ZDOMan.instance.GetZDO(pkg.ReadZDOID()));
+                }
+                catch (System.IO.EndOfStreamException)
+                { 
+                    endOfStream = true;
+                }
+            }
+            Debug.Log($"Minimap now track {m_allMobZDOs.Count} mobs");
+        }
+
+        [HarmonyPatch(typeof(ZoneSystem), "Start")]
+        static class ZoneSystem_Start_Patch
+        {
+            static void Postfix()
+            {
+                ZRoutedRpc.instance.Register<ZPackage>(Constants.Z_RegisteredMobsChangedEvent, RegisteredMobsChangedEvent_RPC);
+            }
+        }
+
         [HarmonyPatch(typeof(Minimap), "UpdateDynamicPins")]
         static class Minimap_UpdateDynamicPins_Patch
         {
@@ -17,21 +47,20 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 try
                 {
-                    foreach (var mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()))
+                    foreach (var zdo in m_allMobZDOs)
                     {
-                        if (!mob.Value.NView?.IsValid() ?? false) continue;
-
-                        var pos = mob.Value.Character.transform.position;
-                        var name = mob.Value.NView.GetZDO().GetString(Constants.Z_GivenName);
-                        if (!m_mobPins.ContainsKey(mob.Key))
+                        var pos = zdo.GetPosition();
+                        var name = zdo.GetString(Constants.Z_GivenName);
+                        var key = zdo.GetString(Constants.Z_UniqueId);
+                        if (!m_mobPins.ContainsKey(key))
                         {
                             var pin = Minimap.instance.AddPin(pos, Minimap.PinType.Icon3, name, false, false);
-                            m_mobPins.Add(mob.Key, pin);
+                            m_mobPins.Add(key, pin);
                         }
                         else
                         {
-                            m_mobPins[mob.Key].m_pos = pos;
-                            m_mobPins[mob.Key].m_name = name;
+                            m_mobPins[key].m_pos = pos;
+                            m_mobPins[key].m_name = name;
                         }
                     }
                     var idsToRemove = m_mobPins.Where(m => MobManager.AliveMobs.Any(a => (!a.Value.HasInstance()) && (a.Key == m.Key))).Select(m => (m.Key, m.Value)).ToArray();

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using HarmonyLib;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +9,16 @@ namespace RagnarsRokare.MobAI
 {
     public static class MobManager
     {
+        [HarmonyPatch(typeof(ZDOMan), "ShutDown")]
+        static class ZDOMan_ShutDown_Patch
+        {
+            static void Postfix(ref ZDOMan __instance)
+            {
+                AliveMobs.Clear();
+                MobsRegister.Clear();
+            }
+        }
+
         #region MobControllers
         private static readonly Dictionary<string, MobAIInfo> m_mobAIs = new Dictionary<string, MobAIInfo>();
 

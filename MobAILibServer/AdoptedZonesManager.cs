@@ -49,6 +49,7 @@ namespace RagnarsRokare.MobAI.Server
             if (AllMobZDOs.ContainsKey(uniqueId)) return;
             AllMobZDOs.Add(uniqueId, zdoId);
             Debug.Log($"Added mob {uniqueId}:{zdoId}");
+            FireMobRegisterChangedEvent();
         }
 
         public static void RPC_UnRegisterMob(long sender, string uniqueId, ZDOID zdoId)
@@ -57,6 +58,7 @@ namespace RagnarsRokare.MobAI.Server
             {
                 AllMobZDOs.Remove(uniqueId);
                 Debug.Log($"Removed mob {uniqueId}");
+                FireMobRegisterChangedEvent();
             }
         }
 
@@ -86,7 +88,24 @@ namespace RagnarsRokare.MobAI.Server
                 }
                 Debug.Log($"{mob.GetString(Constants.Z_GivenName)} loaded");
             }
+
+            FireMobRegisterChangedEvent();
+
             Debug.Log($"Loaded {allMobs.Count()} mobs");
+        }
+
+        private static void FireMobRegisterChangedEvent()
+        {
+            ZPackage pkg = new ZPackage();
+            foreach (var zdoId in AllMobZDOs.Values)
+            {
+                pkg.Write(zdoId);
+            }
+
+            foreach (var peer in GetAllPeersIds())
+            {
+                ZRoutedRpc.instance.InvokeRoutedRPC(peer, Constants.Z_RegisteredMobsChangedEvent, pkg);
+            }
         }
 
         internal static void UnloadMobs()
@@ -136,12 +155,7 @@ namespace RagnarsRokare.MobAI.Server
             }
             RemoveDeadZones(mobZonesToAdopt, reverseMap);
             RemoveAlreadyAdoptedZones(ref mobZonesToAdopt, reverseMap);
-
-            var peerIds = allPeers.Select(p => p.m_uid).ToList();
-            if (!ZNet.instance.IsDedicated())
-            {
-                peerIds.Add(ZDOMan.instance.GetMyID());
-            }
+            List<long> peerIds = GetAllPeersIds();
 
             var newPeers = peerIds.Where(p => !m_mobZoneToPeerAdoption.ContainsKey(p));
             foreach (var peer in newPeers)
@@ -160,6 +174,18 @@ namespace RagnarsRokare.MobAI.Server
                 Debug.Log($"Sending Peer ({ZNet.instance.GetPeer(peer)?.m_playerName ?? "Myself"}) {m_mobZoneToPeerAdoption[peer].CurrentZones.Count} adopted zones");
                 ZRoutedRpc.instance.InvokeRoutedRPC(peer, Constants.Z_AdoptedZonesEvent, string.Join("|", m_mobZoneToPeerAdoption[peer].CurrentZones));
             }
+        }
+
+        private static List<long> GetAllPeersIds()
+        {
+            var allPeers = ZNet.instance.GetPeers();
+            var peerIds = allPeers.Select(p => p.m_uid).ToList();
+            if (!ZNet.instance.IsDedicated())
+            {
+                peerIds.Add(ZDOMan.instance.GetMyID());
+            }
+
+            return peerIds;
         }
 
         private static void RemoveDeadZones(HashSet<Vector2i> mobZonesToAdopt, Dictionary<Vector2i, long> reverseMap)
