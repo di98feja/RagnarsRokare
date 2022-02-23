@@ -13,8 +13,8 @@ namespace RagnarsRokare.MobAI
             {
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
-                    string interactName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
-                    string prefabName = Common.GetPrefabName(__instance.transform.parent.gameObject.name);
+                    string interactName = Utils.GetPrefabName(__instance.transform.parent.gameObject.name);
+                    string prefabName = Utils.GetPrefabName(__instance.transform.parent.gameObject.name);
                     if (!mob.CanWorkAssignment(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Can not operate the {interactName}!");
@@ -76,7 +76,7 @@ namespace RagnarsRokare.MobAI
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = __instance.GetHoverName();
-                    string prefabName = Common.GetPrefabName(__instance.gameObject.name);
+                    string prefabName = Utils.GetPrefabName(__instance.gameObject.name);
                     if (!mob.CanWorkAssignment(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Can not operate the {interactName}!");
@@ -139,7 +139,7 @@ namespace RagnarsRokare.MobAI
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = __instance.GetHoverName();
-                    string prefabName = Common.GetPrefabName(__instance.gameObject.name);
+                    string prefabName = Utils.GetPrefabName(__instance.gameObject.name);
                     if (!mob.CanWorkAssignment(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Can not operate the {interactName}!");
@@ -202,7 +202,7 @@ namespace RagnarsRokare.MobAI
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
                     string interactName = __instance.GetHoverName();
-                    string prefabName = Common.GetPrefabName(__instance.gameObject.name);
+                    string prefabName = Utils.GetPrefabName(__instance.gameObject.name);
                     if (mob.m_trainedAssignments.Contains(prefabName))
                     {
                         Player.m_localPlayer.Message(MessageHud.MessageType.TopLeft, $"{mob.Character.GetHoverName()}: Already know how to operate the {interactName}!");

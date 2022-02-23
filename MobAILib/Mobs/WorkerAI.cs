@@ -414,7 +414,7 @@ namespace RagnarsRokare.MobAI
                     }
                     else if (isCarryingMatchingOre)
                     {
-                        m_assignment.First().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Common.GetPrefabName(m_carrying.m_dropPrefab.name) });
+                        m_assignment.First().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Utils.GetPrefabName(m_carrying.m_dropPrefab.name) });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else
@@ -509,7 +509,7 @@ namespace RagnarsRokare.MobAI
 
             if (Brain.State == State.Idle)
             {
-                Common.Invoke<BaseAI>(Instance, "RandomMovementArroundPoint", dt, m_startPosition, 5, false);
+                Utils.Invoke<BaseAI>(Instance, "RandomMovementArroundPoint", dt, m_startPosition, 5, false);
                 return;
             }
         }

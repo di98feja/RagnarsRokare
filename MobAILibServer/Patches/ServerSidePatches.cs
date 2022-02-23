@@ -1,12 +1,11 @@
 ﻿using HarmonyLib;
-using RagnarsRokare.MobAI.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using UnityEngine;
 
-namespace RagnarsRokare.MobAI.ServerPeer
+namespace RagnarsRokare.MobAI.Server
 {
     public partial class MobAILibServer
     {
@@ -26,10 +25,10 @@ namespace RagnarsRokare.MobAI.ServerPeer
                     var peerAdoptedZones = AdoptedZonesManager.GetAdoptedZones(peer.m_uid);
                     foreach (var zone in peerAdoptedZones.CurrentZones)
                     {
-                        if (!(bool)Common.Invoke<ZoneSystem>(__instance, "IsZoneGenerated", zone))
+                        if (!(bool)Utils.Invoke<ZoneSystem>(__instance, "IsZoneGenerated", zone))
                         {
                             Debug.Log($"Spawning zone {zone} as Ghost");
-                            Common.Invoke<ZoneSystem>(__instance, "SpawnZone", zone, ZoneSystem.SpawnMode.Ghost, null);
+                            Utils.Invoke<ZoneSystem>(__instance, "SpawnZone", zone, ZoneSystem.SpawnMode.Ghost, null);
                         }
                     }
                 }
@@ -60,6 +59,7 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 }
                 ___m_releaseZDOTimer = 0f;
                 AdoptedZonesManager.ResetAdoptedZones();
+
                 var thread = new Thread(new ThreadStart(ReleaseNearbyZDOsAsync));
                 thread.Start();
                 return false;
@@ -73,7 +73,8 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 {
                     ReleaseNearbyZDOS(ZNet.instance.GetReferencePosition(), ZDOMan.instance.GetMyID());
                     Type t = m_zdoPeerType;
-                    var peers = typeof(ZDOMan).GetField("m_peers", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(ZDOMan.instance) as IEnumerable<object>;
+                    var peers = typeof(ZDOMan).GetField("m_peers", System.Reflection.BindingFlags.NonPublic|System.Reflection.BindingFlags.Instance).GetValue(ZDOMan.instance) as IEnumerable<object>;
+
                     foreach (var peer in peers)
                     {
                         var p = m_zdoPeerType.GetField("m_peer").GetValue(peer) as ZNetPeer;
@@ -90,11 +91,11 @@ namespace RagnarsRokare.MobAI.ServerPeer
             {
                 Vector2i zone = ZoneSystem.instance.GetZone(refPosition);
                 var adoptedZones = AdoptedZonesManager.GetAdoptedZones(uid);
-                Debug.Log($"{uid} have  added {adoptedZones.AddedZones.Count} zones, removed {adoptedZones.RemovedZones.Count} to a total of {adoptedZones.CurrentZones.Count}");
+                //Debug.Log($"{uid} have  added {adoptedZones.AddedZones.Count} zones, removed {adoptedZones.RemovedZones.Count} to a total of {adoptedZones.CurrentZones.Count}");
                 foreach (var adoptedZone in adoptedZones.AddedZones)
                 {
                     var addedAdoptedObjects = new List<ZDO>();
-                    Common.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", adoptedZone, addedAdoptedObjects);
+                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", adoptedZone, addedAdoptedObjects);
                     foreach (ZDO zdo in addedAdoptedObjects)
                     {
                         zdo.SetOwner(uid);
@@ -103,13 +104,12 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 foreach (var adoptedZone in adoptedZones.RemovedZones)
                 {
                     var removedAdoptedObjects = new List<ZDO>();
-                    Common.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", adoptedZone, removedAdoptedObjects);
+                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", adoptedZone, removedAdoptedObjects);
                     foreach (ZDO zdo in removedAdoptedObjects)
                     {
                         zdo.SetOwner(0L);
                     }
                 }
-
                 List<ZDO> m_tempNearObjects = Traverse.Create(ZDOMan.instance).Field("m_tempNearObjects").GetValue<List<ZDO>>();
                 m_tempNearObjects.Clear();
                 ZDOMan.instance.FindSectorObjects(zone, ZoneSystem.instance.m_activeArea, 0, m_tempNearObjects, null);
@@ -155,11 +155,11 @@ namespace RagnarsRokare.MobAI.ServerPeer
                     ZDOMan.instance.FindSectorObjects(zone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, toSync, ___m_tempToSyncDistant);
                     foreach (var az in AdoptedZonesManager.GetAdoptedZones(p.m_uid).CurrentZones)
                     {
-                        Common.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, toSync);
+                        Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, toSync);
                     }
-                    Common.Invoke<ZDOMan>(ZDOMan.instance, "ServerSortSendZDOS", toSync, refPos, peer);
+                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "ServerSortSendZDOS", toSync, refPos, peer);
                     toSync.AddRange(___m_tempToSyncDistant);
-                    Common.Invoke<ZDOMan>(ZDOMan.instance, "AddForceSendZdos", peer, toSync);
+                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "AddForceSendZdos", peer, toSync);
                     return false;
                 }
                 return true;
@@ -187,6 +187,5 @@ namespace RagnarsRokare.MobAI.ServerPeer
                 AdoptedZonesManager.UnloadMobs();
             }
         }
-
     }
 }

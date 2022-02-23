@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{E8841106-9C5B-4E9C-A5A4-7FE4395D7314}</ProjectGuid>
+    <ProjectGuid>{BF9B6FF9-2033-4C43-A6FD-6C547AA27245}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MobAILibServer</RootNamespace>
-    <AssemblyName>RagnarsRokare.MobAILibServer</AssemblyName>
+    <RootNamespace>Common</RootNamespace>
+    <AssemblyName>RagnarsRokare.Common</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -31,18 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="0Harmony">
-      <HintPath>..\Libs\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="assembly_utils">
-      <HintPath>..\Libs\assembly_utils.dll</HintPath>
-    </Reference>
-    <Reference Include="assembly_valheim">
-      <HintPath>..\Libs\assembly_valheim.dll</HintPath>
-    </Reference>
-    <Reference Include="BepInEx">
-      <HintPath>..\Libs\BepInEx.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -51,25 +39,11 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine">
-      <HintPath>..\Libs\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Libs\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdoptedZonesManager.cs" />
-    <Compile Include="MobAILibServer.cs" />
-    <Compile Include="Patches\ServerSidePatches.cs" />
-    <Compile Include="Patches\ZoneSystem_patch.cs" />
+    <Compile Include="Utils.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Common\Common.csproj">
-      <Project>{bf9b6ff9-2033-4c43-a6fd-6c547aa27245}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

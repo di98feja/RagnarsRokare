@@ -523,7 +523,7 @@ namespace RagnarsRokare.MobAI
                         return;
                     }
                 }
-                Common.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition);
+                Utils.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition);
                 return;
             }
 
@@ -738,7 +738,7 @@ namespace RagnarsRokare.MobAI
                     Dictionary<string, int> chestInventory = new Dictionary<string, int>();
                     foreach (ItemDrop.ItemData item in foundItems)
                     {
-                        string key = Common.GetPrefabName(item.m_shared.m_name);
+                        string key = Utils.GetPrefabName(item.m_shared.m_name);
                         Common.Dbgl($"Key: {key}", true, "Sorter");
                         if (chestInventory.ContainsKey(key))
                         {
@@ -804,8 +804,8 @@ namespace RagnarsRokare.MobAI
                         m_carriedItem = item;
                         (aiBase.Character as Humanoid).GetInventory().MoveItemToThis(DumpContainer.Container.GetInventory(), item);
                         (aiBase.Character as Humanoid).EquipItem(item);
-                        Common.Invoke<Container>(DumpContainer.Container, "Save");
-                        Common.Invoke<Inventory>(DumpContainer.Container.GetInventory(), "Changed");
+                        Utils.Invoke<Container>(DumpContainer.Container, "Save");
+                        Utils.Invoke<Inventory>(DumpContainer.Container.GetInventory(), "Changed");
 
                         m_aiBase.UpdateAiStatus(State.GetItemFromDumpContainer, m_carriedItem.m_shared.m_name);
 

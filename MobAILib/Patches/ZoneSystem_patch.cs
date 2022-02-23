@@ -1,5 +1,5 @@
 ﻿using HarmonyLib;
-using RagnarsRokare.MobAI.ServerPeer;
+using RagnarsRokare.MobAI.Server;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -31,10 +31,6 @@ namespace RagnarsRokare.MobAI
             static void Postfix()
             {
                 ZRoutedRpc.instance.Register<string>(Constants.Z_AdoptedZonesEvent, AdoptedZoneEvent_RPC);
-                if (ZNet.instance.IsServer())
-                {
-                    AdoptedZonesManager.RegisterRPCs();
-                }
             }
         }
 
@@ -49,7 +45,7 @@ namespace RagnarsRokare.MobAI
                 if (___m_updateTimer > 0f) return;
                 foreach (var zone in m_adoptedZones)
                 {
-                    Common.Invoke<ZoneSystem>(__instance, "PokeLocalZone", zone);
+                    Utils.Invoke<ZoneSystem>(__instance, "PokeLocalZone", zone);
                 }
             }
         }
@@ -68,12 +64,12 @@ namespace RagnarsRokare.MobAI
                 ZDOMan.instance.FindSectorObjects(playerZone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 foreach (var zone in m_adoptedZones)
                 {
-                    Common.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, m_tempCurrentObjects);
+                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, m_tempCurrentObjects);
                 }
 
                 m_tempCurrentObjects = m_tempCurrentObjects.Distinct().ToList();
-                Common.Invoke<ZNetScene>(__instance, "CreateObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
-                Common.Invoke<ZNetScene>(__instance, "RemoveObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
+                Utils.Invoke<ZNetScene>(__instance, "CreateObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
+                Utils.Invoke<ZNetScene>(__instance, "RemoveObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 return false;
             }
         }

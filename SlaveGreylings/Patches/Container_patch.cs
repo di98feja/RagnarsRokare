@@ -14,7 +14,7 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 foreach (MobAIBase mob in MobManager.AliveMobs.Where(m => m.Value.HasInstance()).Where(m => (m.Value.Instance as MonsterAI).GetFollowTarget() == Player.m_localPlayer.gameObject).Select(m => m.Value))
                 {
-                    string interactName = Common.GetPrefabName(__instance.gameObject.name);
+                    string interactName = Utils.GetPrefabName(__instance.gameObject.name);
                     mob.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_MobCommand, Player.m_localPlayer.GetZDOID(), "AssignDumpContainer");
                 }
             }

@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RagnarsRokare.MobAI</RootNamespace>
-    <AssemblyName>MobAILib</AssemblyName>
+    <AssemblyName>RagnarsRokare.MobAILib</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -72,7 +72,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AdoptedZonesManager.cs" />
     <Compile Include="Behaviours\EatingBehaviour.cs" />
     <Compile Include="Behaviours\BasicFarmingBehaviour.cs" />
     <Compile Include="Behaviours\ExtractionBehaviour.cs" />
@@ -104,7 +103,6 @@
     <Compile Include="MobManager.cs" />
     <Compile Include="Patches\Assignments_Patch.cs" />
     <Compile Include="Patches\Character_patch.cs" />
-    <Compile Include="Patches\ServerSidePatches.cs" />
     <Compile Include="Patches\ZoneSystem_patch.cs" />
     <Compile Include="Patches\Humanoid_patch.cs" />
     <Compile Include="Patches\MonsterAI_patch.cs" />
@@ -124,7 +122,16 @@
     <Content Include="Misc\MobAILib.png" />
     <Content Include="Misc\MobAILibBanner.png" />
   </ItemGroup>
-  <Import Project="..\Shared\Shared.projitems" Label="Shared" />
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj">
+      <Project>{bf9b6ff9-2033-4c43-a6fd-6c547aa27245}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MobAILibServer\MobAILibServer.csproj">
+      <Project>{e8841106-9c5b-4e9c-a5a4-7fe4395d7314}</Project>
+      <Name>MobAILibServer</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)

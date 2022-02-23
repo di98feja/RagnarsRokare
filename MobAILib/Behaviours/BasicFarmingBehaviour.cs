@@ -12,7 +12,6 @@ Flax        Flax    Flax        sapling_flax
 */
 
 using Stateless;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -143,7 +142,7 @@ namespace RagnarsRokare.MobAI
 
         public bool IsHarvestableCrop(Pickable pickable)
         {
-            return Crops.Any(c => c.Pickable == Common.GetPrefabName(pickable.gameObject.name));
+            return Crops.Any(c => c.Pickable == RagnarsRokare.Utils.GetPrefabName(pickable.gameObject.name));
         }
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
@@ -271,7 +270,7 @@ namespace RagnarsRokare.MobAI
                     aiBase.Brain.Fire(Trigger.CropNotFound);
                     return;
                 }
-                m_cropToHarvest = Crops.Single(c => c.Pickable == Common.GetPrefabName(PickableToHarvest.gameObject.name));
+                m_cropToHarvest = Crops.Single(c => c.Pickable == RagnarsRokare.Utils.GetPrefabName(PickableToHarvest.gameObject.name));
                 m_cropPosition = PickableToHarvest.transform.position;
                 aiBase.Brain.Fire(Trigger.CropFound);
                 return;

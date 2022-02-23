@@ -9,7 +9,10 @@ namespace RagnarsRokare.MobAI.Server
         {
             static void Postfix()
             {
-                AdoptedZonesManager.RegisterRPCs();
+                if (ZNet.instance.IsServer())
+                {
+                    AdoptedZonesManager.RegisterRPCs();
+                }
             }
         }
    }

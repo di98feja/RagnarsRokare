@@ -1,6 +1,5 @@
 ﻿using RagnarsRokare.MobAI;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace RagnarsRokare.SlaveGreylings
@@ -20,7 +19,7 @@ namespace RagnarsRokare.SlaveGreylings
     {
         public static bool IsControllableMob(string mobType)
         {
-            var type = Common.GetPrefabName(mobType);
+            var type = Utils.GetPrefabName(mobType);
             if (type == "Greyling") return true;
             if (type == "Greydwarf_Elite") return true;
             if (type == "Greydwarf") return true;
@@ -44,7 +43,7 @@ namespace RagnarsRokare.SlaveGreylings
         public static MobConfig GetMobConfig(string mobType)
         {
             Debug.Log(mobType);
-            var type = Common.GetPrefabName(mobType);
+            var type = Utils.GetPrefabName(mobType);
             switch (type)
             {
                 case "Greyling":

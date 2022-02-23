@@ -2,7 +2,6 @@
 using BepInEx.Configuration;
 using HarmonyLib;
 using System.Reflection;
-using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
@@ -17,20 +16,8 @@ namespace RagnarsRokare.MobAI
 
         private void Awake()
         {
-            if (IsDedicated())
-            {
-                Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
-                PrintDebugLog = Config.Bind<bool>("General", "PrintDebugLog", false, "Extended logging, will produce A LOT of messages in the log and potentially have an impact on the frame rate.");
-            }
-            else
-            {
-                Debug.LogError("MobAILib Server can only run on a dedicated server");
-            }
-        }
-
-        public static bool IsDedicated()
-        {
-            return new ZNet().IsDedicated();
+            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+            PrintDebugLog = Config.Bind<bool>("General", "PrintDebugLog", false, "Extended logging, will produce A LOT of messages in the log and potentially have an impact on the frame rate.");
         }
     }
 }

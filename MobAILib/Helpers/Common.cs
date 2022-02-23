@@ -8,11 +8,6 @@ namespace RagnarsRokare.MobAI
 {
     public class Common
     {
-        public static object Invoke<T>(object instance, string methodName, params object[] argumentList)
-        {
-            return typeof(T).GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(instance, argumentList);
-        }
-
         public static ItemDrop GetNearbyItem(BaseAI instance, IEnumerable<ItemDrop.ItemData> acceptedItems, int range = 10)
         {
             return GetNearbyItem(instance, acceptedItems.Select(i => i.m_shared.m_name), range);
@@ -49,7 +44,7 @@ namespace RagnarsRokare.MobAI
                 .Select(c => c.transform?.GetComponentInParent<Pickable>())
                 .Where(p => p != null)
                 .Where(p => p.GetComponent<ZNetView>()?.IsValid() ?? false)
-                .Where(p => acceptedPickables.Contains(GetPrefabName(p.gameObject.name)))
+                .Where(p => acceptedPickables.Contains(Utils.GetPrefabName(p.gameObject.name)))
                 .Where(p => !string.IsNullOrEmpty(p.GetHoverText()))
                 .Where(p => p.transform?.position != null)
                 .Where(p => CanSeeTarget(instance, p.GetComponentsInChildren<Collider>()))
@@ -93,11 +88,11 @@ namespace RagnarsRokare.MobAI
             //Common.Dbgl($"Known assignments: {knownassignments.Select(a => a.TypeOfAssignment.Name).Join()}", "Extraction");
             //Common.Dbgl($"Accepted assignments: {acceptedAssignmentTypes.Select(a => a.Name).Join()}", "Extraction");
             //Common.Dbgl($"Can see:{pieceList.Select(p => $"{p.name}:{CanSeeTarget(instance, p.GetComponentInParent<StaticTarget>())}").Join()}", "Extraction");
-            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(GetPrefabName(p.name)))); //&& CanSeeTarget(instance, p.gameObject)
+            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => Utils.GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(Utils.GetPrefabName(p.name)))); //&& CanSeeTarget(instance, p.gameObject)
             //Common.Dbgl($"Assignments found 1: {allAssignablePieces.Select(n => n.name).Join()}", "Extraction");
             if (acceptedAssignmentTypes != null)
             {
-                allAssignablePieces = allAssignablePieces.Where(p => acceptedAssignmentTypes.Any(a => a.PieceName == GetPrefabName(p.name)));
+                allAssignablePieces = allAssignablePieces.Where(p => acceptedAssignmentTypes.Any(a => a.PieceName == Utils.GetPrefabName(p.name)));
             }
             // no assignments detekted, return false
             if (!allAssignablePieces.Any())
@@ -156,7 +151,7 @@ namespace RagnarsRokare.MobAI
             }
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(centerPoint, containerSearchRadius, pieceList);
-            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(GetPrefabName(p.name))); //&& CanSeeTarget(instance, p.gameObject)
+            var allcontainerPieces = pieceList.Where(p => m_acceptedContainerNames.Contains(Utils.GetPrefabName(p.name))); //&& CanSeeTarget(instance, p.gameObject)
             var containers = allcontainerPieces.Select(p => p.GetContainer()).Where(c => !knownContainers.Contains(c)).ToList();
             //Common.Dbgl($"Seen containers:{containers.Where(c => CanSeeTarget(instance, c.GetComponent<StaticTarget>()?.GetAllColliders()?.ToArray()))?.Count() ?? -1}", true, "Sorter");
             var seenContainers = containers.Where(c => CanSeeTarget(instance, c.GetStaticTarget()?.GetAllColliders()?.ToArray())).ToList();
@@ -194,18 +189,6 @@ namespace RagnarsRokare.MobAI
             }
             // select closest
             return matchingpieces.OrderBy(c => Vector3.Distance(position, c.gameObject.transform.position)).FirstOrDefault();
-        }
-
-        public static string GetPrefabName(string name)
-        {
-            char[] anyOf = new char[] { '(', ' ' };
-            int num = name.IndexOfAny(anyOf);
-            string result;
-            if (num >= 0)
-                result = name.Substring(0, num);
-            else
-                result = name;
-            return result;
         }
 
         public static ZNetView GetNView<T>(T obj)
@@ -326,10 +309,10 @@ namespace RagnarsRokare.MobAI
 
         public static bool TurnToFacePosition(MobAIBase mob, Vector3 position)
         {
-            bool isLookingAtTarget = (bool)Invoke<MonsterAI>(mob.Instance, "IsLookingAt", position, 10f);
+            bool isLookingAtTarget = (bool)Utils.Invoke<MonsterAI>(mob.Instance, "IsLookingAt", position, 10f);
             if (isLookingAtTarget) return true;
 
-            Invoke<MonsterAI>(mob.Instance, "LookAt", position);
+            Utils.Invoke<MonsterAI>(mob.Instance, "LookAt", position);
             return false;
         }
 

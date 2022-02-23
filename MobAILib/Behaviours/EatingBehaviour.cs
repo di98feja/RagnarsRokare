@@ -159,7 +159,7 @@ namespace RagnarsRokare.MobAI
             }
             if (instance.Brain.State == State.Hungry)
             {
-                Common.Invoke<BaseAI>(instance.Instance, "RandomMovement", dt, LastKnownFoodPosition);
+                Utils.Invoke<BaseAI>(instance.Instance, "RandomMovement", dt, LastKnownFoodPosition);
                 instance.Brain.Fire(UpdateTrigger, dt);
             }
         }

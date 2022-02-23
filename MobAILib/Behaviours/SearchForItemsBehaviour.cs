@@ -269,8 +269,8 @@ namespace RagnarsRokare.MobAI
                     {
                         m_aiBase.UpdateAiStatus(State.SearchForItem, FoundItem.m_shared.m_name);
                         KnownContainers.Peek().GetInventory().RemoveItem(FoundItem, 1);
-                        Common.Invoke<Container>(KnownContainers.Peek(), "Save");
-                        Common.Invoke<Inventory>(KnownContainers.Peek().GetInventory(), "Changed");
+                        Utils.Invoke<Container>(KnownContainers.Peek(), "Save");
+                        Utils.Invoke<Inventory>(KnownContainers.Peek().GetInventory(), "Changed");
 
                         brain.Fire(Trigger.ItemFound + Postfix);
                     }

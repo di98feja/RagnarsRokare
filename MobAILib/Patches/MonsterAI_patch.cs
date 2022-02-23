@@ -1,10 +1,8 @@
 ﻿using HarmonyLib;
-using RagnarsRokare.MobAI;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
-namespace RagnarsRokare.SlaveGreylings
+namespace RagnarsRokare.MobAI
 {
     public partial class MobAILib
     {
@@ -53,7 +51,7 @@ namespace RagnarsRokare.SlaveGreylings
                 if (!___m_nview.IsOwner()) return false;
                 if (__instance.IsSleeping())
                 {
-                    Common.Invoke<MonsterAI>(__instance, "UpdateSleep", dt);
+                    RagnarsRokare.Utils.Invoke<MonsterAI>(__instance, "UpdateSleep", dt);
                     Common.Dbgl($"{___m_character.GetHoverName()}: Sleep updated", true);
                     return false;
                 }

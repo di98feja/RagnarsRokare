@@ -557,7 +557,7 @@ namespace RagnarsRokare.MobAI
 
             if (Brain.State == State.Idle)
             {
-                Common.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
+                Utils.Invoke<BaseAI>(Instance, "RandomMovement", dt, m_startPosition);
                 return;
             }
         }

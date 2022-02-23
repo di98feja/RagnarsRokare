@@ -5,14 +5,14 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI.Server
 {
-    internal static class AdoptedZonesManager
+    public static class AdoptedZonesManager
     {
         public static Dictionary<string, ZDOID> AllMobZDOs = new Dictionary<string, ZDOID>();
         private static int IsControlledByMobAILibHash = Constants.Z_IsControlledByMobAILib.GetStableHashCode();
         private static int CharacterIdHash = Constants.Z_CharacterId.GetStableHashCode();
         private static int UniqueIdHash = Constants.Z_UniqueId.GetStableHashCode();
 
-        internal static void RegisterRPCs()
+        public static void RegisterRPCs()
         {
             ZRoutedRpc.instance.Register<string, ZDOID>(Constants.Z_MobRegistered, RPC_RegisterMob);
             ZRoutedRpc.instance.Register<string, ZDOID>(Constants.Z_MobUnRegistered, RPC_UnRegisterMob);
@@ -76,7 +76,14 @@ namespace RagnarsRokare.MobAI.Server
                 string characterId = mob.GetString(CharacterIdHash);
                 string mobId = string.IsNullOrEmpty(uniqueId) ? characterId : uniqueId;
                 Debug.Log($"MobId {mobId}, ZDOid:{mob.m_uid}");
-                AllMobZDOs.Add(mobId, mob.m_uid);
+                if (AllMobZDOs.ContainsKey(mobId))
+                {
+                    Debug.Log($"Duplicate Mob Id:{mobId}:{mob.m_uid}. Already registered on {mob.m_uid}");
+                }
+                else
+                {
+                    AllMobZDOs.Add(mobId, mob.m_uid);
+                }
                 Debug.Log($"{mob.GetString(Constants.Z_GivenName)} loaded");
             }
             Debug.Log($"Loaded {allMobs.Count()} mobs");
@@ -88,7 +95,6 @@ namespace RagnarsRokare.MobAI.Server
             AllMobZDOs.Clear();
             m_mobZoneToPeerAdoption.Clear();
         }
-
 
         public static AdoptedZones GetAdoptedZones(long peerId)
         {
@@ -103,8 +109,9 @@ namespace RagnarsRokare.MobAI.Server
         }
 
         /// <summary>
-        /// Redistribute mob zones among all peers (not server)
+        /// Redistribute mob zones among all peers
         /// Mob zones inside peer active areas is not distributed.
+        /// This method is only called by the peer acting as server
         /// </summary>
         internal static void ResetAdoptedZones()
         {
@@ -177,7 +184,7 @@ namespace RagnarsRokare.MobAI.Server
             }
         }
 
-        private static void RemoveActiveZones(HashSet<Vector2i> mobZonesToAdopt, Vector3 refPos, long peerId, Dictionary<Vector2i, long> reverseMap)
+        private static void RemoveActiveZones(HashSet<Vector2i> mobZonesToAdopt, Vector3 refPos, long peerId, Dictionary<Vector2i,long> reverseMap)
         {
             Vector2i peerCenterZone = ZoneSystem.instance.GetZone(refPos);
             foreach (Vector2i zone in GetActiveArea(peerCenterZone))
