@@ -516,17 +516,19 @@ namespace RagnarsRokare.MobAI
 
         public bool StartNewAssignment(BaseAI instance, ref LinkedList<Assignment> KnownAssignments)
         {
+            Debug.Log($"Num assignments before:{KnownAssignments.Count()}");
             Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Awareness * 5);
+            Debug.Log($"Num assignments after:{KnownAssignments.Count()}");
             if (newassignment != null)
             {
                 Common.Dbgl($"{Character.GetHoverName()}:Found new assignment:{newassignment.TypeOfAssignment.Name}", true, "Worker");
                 KnownAssignments.AddFirst(newassignment);
-                Debug.Log($"Num assignments:{KnownAssignments.Count}, First assignment:{KnownAssignments.First()?.TypeOfAssignment.Name}");
+                Common.Dbgl($"Num assignments:{KnownAssignments.Count}, First assignment:{KnownAssignments.First()?.TypeOfAssignment.Name}", true, "Worker");
                 return true;
             }
             else if(KnownAssignments.Any())
             {
-                KnownAssignments.OrderByDescending(a => a.AssignmentTimeout);
+                KnownAssignments.OrderBy(a => a.AssignmentTimeout);
                 KnownAssignments.First().AssignmentTimeout = 0;
                 Common.Dbgl($"{Character.GetHoverName()}:No new assignment found, checking old one:{KnownAssignments.First().TypeOfAssignment.Name}", true, "Worker");
                 return true;

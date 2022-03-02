@@ -564,6 +564,14 @@ namespace RagnarsRokare.MobAI
                 if (Time.time > m_currentSearchTimeout)
                 {
                     aiBase.StopMoving();
+                    m_container.Timestamp = 0f; // Timeout this container so it is remapped
+                    if (aiBase.Brain.IsInState(State.MoveToStorageContainer) && m_carriedItem != null)
+                    {
+                        var mob = (aiBase.Character as Humanoid);
+                        mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
+                        Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", true, "Sorter");
+                        m_carriedItem = null;
+                    }
                     aiBase.Brain.Fire(Trigger.ContainerNotFound);
                 }
                 return;

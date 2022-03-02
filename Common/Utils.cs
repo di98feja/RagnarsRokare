@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using UnityEngine;
 
 namespace RagnarsRokare
 {
@@ -21,6 +22,11 @@ namespace RagnarsRokare
             return result;
         }
 
-
+        public static float DistanceXZ(Vector3 v0, Vector3 v1)
+        {
+            float num = v1.x - v0.x;
+            float num2 = v1.z - v0.z;
+            return Mathf.Sqrt(num * num + num2 * num2);
+        }
     }
 }
