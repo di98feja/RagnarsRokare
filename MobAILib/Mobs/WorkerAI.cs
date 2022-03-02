@@ -526,7 +526,7 @@ namespace RagnarsRokare.MobAI
             }
             else if(KnownAssignments.Any())
             {
-                KnownAssignments.OrderBy(a => a.AssignmentTimeout);
+                KnownAssignments.OrderByDescending(a => a.AssignmentTimeout);
                 KnownAssignments.First().AssignmentTimeout = 0;
                 Common.Dbgl($"{Character.GetHoverName()}:No new assignment found, checking old one:{KnownAssignments.First().TypeOfAssignment.Name}", true, "Worker");
                 return true;
