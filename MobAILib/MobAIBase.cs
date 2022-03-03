@@ -210,7 +210,7 @@ namespace RagnarsRokare.MobAI
         {
             if (AvoidFire(dt)) return false;
 
-            var remainingDistance = Vector3.Distance(Character.transform.position, destination);
+            var remainingDistance = Utils.DistanceXZ(Character.transform.position, destination);
             if (remainingDistance < distance) return true;
 
             running = remainingDistance > 5;
