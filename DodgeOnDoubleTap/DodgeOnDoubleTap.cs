@@ -9,12 +9,11 @@ using UnityEngine;
 namespace RagnarsRokare_DodgeOnDoubleTap
 {
     [BepInPlugin(ModId, ModName, ModVersion)]
-    [BepInProcess("valheim.exe")]
     public class DodgeOnDoubleTap : BaseUnityPlugin
     {
         public const string ModId = "RagnarsRokare.DodgeOnDoubleTap";
         public const string ModName = "RagnarsRökare DodgeOnDoubleTapMod";
-        public const string ModVersion = "0.8";
+        public const string ModVersion = "0.9";
 
         private readonly Harmony harmony = new Harmony(ModId);
         public static ConfigEntry<int> DodgeTapHoldMax;
