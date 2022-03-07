@@ -193,6 +193,7 @@ namespace RagnarsRokare.MobAI
 
         public static ZNetView GetNView<T>(T obj)
         {
+            if (obj == null) return null;
             return typeof(T).GetField("m_nview", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(obj) as ZNetView;
         }
 

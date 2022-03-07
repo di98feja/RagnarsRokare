@@ -59,9 +59,15 @@ namespace RagnarsRokare.MobAI.Server
                 }
                 ___m_releaseZDOTimer = 0f;
                 AdoptedZonesManager.ResetAdoptedZones();
+                //foreach (var zid in AdoptedZonesManager.AllMobZDOs.Values)
+                //{
+                //    var z = ZDOMan.instance.GetZDO(zid);
+                //    ZDOMan.instance.ZDOSectorInvalidated(z);
+                //}
 
-                var thread = new Thread(new ThreadStart(ReleaseNearbyZDOsAsync));
-                thread.Start();
+                //var thread = new Thread(new ThreadStart(ReleaseNearbyZDOsAsync));
+                //thread.Start();
+                ReleaseNearbyZDOsAsync();
                 return false;
             }
 
@@ -99,6 +105,7 @@ namespace RagnarsRokare.MobAI.Server
                     foreach (ZDO zdo in addedAdoptedObjects)
                     {
                         zdo.SetOwner(uid);
+                        ZDOMan.instance.ForceSendZDO(uid, zdo.m_uid);
                     }
                 }
                 foreach (var adoptedZone in adoptedZones.RemovedZones)
@@ -141,30 +148,31 @@ namespace RagnarsRokare.MobAI.Server
         /// Add the adopted zones to the list of ZDOs that is beeing sent to the peers
         /// This method is only called when the client is acting as server.
         /// </summary>
-        [HarmonyPatch(typeof(ZDOMan), "CreateSyncList")]
-        static class ZDOMan_CreateSyncList_Patch
-        {
-            static bool Prefix(object peer, ref List<ZDO> toSync, ref List<ZDO> ___m_tempToSyncDistant)
-            {
-                if (ZNet.instance.IsServer())
-                {
-                    var p = m_zdoPeerType.GetField("m_peer").GetValue(peer) as ZNetPeer;
-                    Vector3 refPos = p.GetRefPos();
-                    Vector2i zone = ZoneSystem.instance.GetZone(refPos);
-                    ___m_tempToSyncDistant.Clear();
-                    ZDOMan.instance.FindSectorObjects(zone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, toSync, ___m_tempToSyncDistant);
-                    foreach (var az in AdoptedZonesManager.GetAdoptedZones(p.m_uid).CurrentZones)
-                    {
-                        Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, toSync);
-                    }
-                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "ServerSortSendZDOS", toSync, refPos, peer);
-                    toSync.AddRange(___m_tempToSyncDistant);
-                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "AddForceSendZdos", peer, toSync);
-                    return false;
-                }
-                return true;
-            }
-        }
+        //[HarmonyPatch(typeof(ZDOMan), "CreateSyncList")]
+        //static class ZDOMan_CreateSyncList_Patch
+        //{
+        //    static bool Prefix(object peer, ref List<ZDO> toSync, ref List<ZDO> ___m_tempToSyncDistant)
+        //    {
+        //        if (ZNet.instance.IsServer())
+        //        {
+        //            var p = m_zdoPeerType.GetField("m_peer").GetValue(peer) as ZNetPeer;
+        //            Vector3 refPos = p.GetRefPos();
+        //            Vector2i zone = ZoneSystem.instance.GetZone(refPos);
+        //            ___m_tempToSyncDistant.Clear();
+        //            ZDOMan.instance.FindSectorObjects(zone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, toSync, ___m_tempToSyncDistant);
+        //            foreach (var az in AdoptedZonesManager.GetAdoptedZones(p.m_uid).CurrentZones)
+        //            {
+        //                Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, toSync);
+        //            }
+        //            Utils.Invoke<ZDOMan>(ZDOMan.instance, "ServerSortSendZDOS", toSync, refPos, peer);
+        //            toSync.AddRange(___m_tempToSyncDistant);
+        //            Utils.Invoke<ZDOMan>(ZDOMan.instance, "AddForceSendZdos", peer, toSync);
+        //            Debug.Log($"Sending {p.m_uid} {toSync.Count} objs");
+        //            return false;
+        //        }
+        //        return true;
+        //    }
+        //}
 
         /// <summary>
         /// After loading the game data, init mobs

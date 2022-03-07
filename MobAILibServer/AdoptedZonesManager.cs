@@ -94,11 +94,13 @@ namespace RagnarsRokare.MobAI.Server
             Debug.Log($"Loaded {allMobs.Count()} mobs");
         }
 
-        private static void FireMobRegisterChangedEvent()
+        internal static void FireMobRegisterChangedEvent()
         {
             ZPackage pkg = new ZPackage();
             foreach (var zdoId in AllMobZDOs.Values)
             {
+     //           Debug.Log($"{zdoId.id}|{zdoId.userID}");
+
                 pkg.Write(zdoId);
             }
 

@@ -62,12 +62,14 @@ namespace RagnarsRokare.MobAI
                 List<ZDO> m_tempCurrentDistantObjects = new List<ZDO>();
                 Vector2i playerZone = ZoneSystem.instance.GetZone(ZNet.instance.GetReferencePosition());
                 ZDOMan.instance.FindSectorObjects(playerZone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, m_tempCurrentObjects, m_tempCurrentDistantObjects);
+                //Debug.Log($"Playerzone objs:{m_tempCurrentObjects.Count}");
                 foreach (var zone in m_adoptedZones)
                 {
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, m_tempCurrentObjects);
                 }
 
                 m_tempCurrentObjects = m_tempCurrentObjects.Distinct().ToList();
+                //Debug.Log($"m_tempCurrentObjects:{m_tempCurrentObjects.Count}");
                 Utils.Invoke<ZNetScene>(__instance, "CreateObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 Utils.Invoke<ZNetScene>(__instance, "RemoveObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 return false;

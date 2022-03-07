@@ -516,7 +516,7 @@ namespace RagnarsRokare.MobAI
 
         public bool StartNewAssignment(BaseAI instance, ref LinkedList<Assignment> KnownAssignments)
         {
-            Debug.Log($"Num assignments before:{KnownAssignments.Count()}");
+            Debug.Log($"KnownAssignments:{string.Join(",", KnownAssignments.Select(a => a.TypeOfAssignment.Name))}");
             Assignment newassignment = Common.FindRandomNearbyAssignment(instance, m_trainedAssignments, KnownAssignments, Awareness * 5);
             Debug.Log($"Num assignments after:{KnownAssignments.Count()}");
             if (newassignment != null)
@@ -528,8 +528,14 @@ namespace RagnarsRokare.MobAI
             }
             else if(KnownAssignments.Any())
             {
-                KnownAssignments.OrderBy(a => a.AssignmentTimeout);
-                KnownAssignments.First().AssignmentTimeout = 0;
+                var assignment = KnownAssignments.OrderBy(a => a.AssignmentTimeout).Where(a => a.AssignmentObject != null).FirstOrDefault();
+                if (assignment == null)
+                {
+                    Common.Dbgl($"{Character.GetHoverName()}:No valid assignments found, going back to Idle", true, "Worker");
+                    return false;
+                }
+                KnownAssignments.Remove(assignment);
+                KnownAssignments.AddFirst(assignment);
                 Common.Dbgl($"{Character.GetHoverName()}:No new assignment found, checking old one:{KnownAssignments.First().TypeOfAssignment.Name}", true, "Worker");
                 return true;
             }
@@ -549,7 +555,7 @@ namespace RagnarsRokare.MobAI
                 Common.Dbgl("AssignmentObject is null", true, "Worker");
                 m_assignment.RemoveFirst();
                 Brain.Fire(Trigger.LeaveAssignment);
-                return true;
+                return false;
             }
             bool assignmentIsInvalid = m_assignment.First().AssignmentObject?.GetComponent<ZNetView>()?.IsValid() == false;
             if (assignmentIsInvalid)
@@ -557,7 +563,7 @@ namespace RagnarsRokare.MobAI
                 Common.Dbgl("AssignmentObject is invalid", true, "Worker");
                 m_assignment.RemoveFirst();
                 Brain.Fire(Trigger.LeaveAssignment);
-                return true;
+                return false;
             }
             float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? m_assignment.First().TypeOfAssignment.InteractDist : m_assignment.First().TypeOfAssignment.InteractDist + 1;
             return MoveAndAvoidFire(m_assignment.First().Position, dt, distance);

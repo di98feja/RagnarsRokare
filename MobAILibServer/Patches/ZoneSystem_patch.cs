@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using System;
 
 namespace RagnarsRokare.MobAI.Server
 {
@@ -12,6 +13,10 @@ namespace RagnarsRokare.MobAI.Server
                 if (ZNet.instance.IsServer())
                 {
                     AdoptedZonesManager.RegisterRPCs();
+                    ZRoutedRpc.instance.m_onNewPeer = (Action<long>)Delegate.Combine(ZRoutedRpc.instance.m_onNewPeer, (Action<long>)((l) => 
+                    {
+                        AdoptedZonesManager.FireMobRegisterChangedEvent();
+                    }));
                 }
             }
         }
