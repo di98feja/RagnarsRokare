@@ -1,8 +1,6 @@
 ﻿using HarmonyLib;
-using RagnarsRokare.MobAI.Server;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
@@ -46,6 +44,7 @@ namespace RagnarsRokare.MobAI
                 foreach (var zone in m_adoptedZones)
                 {
                     Utils.Invoke<ZoneSystem>(__instance, "PokeLocalZone", zone);
+                    //Debug.Log($"Poke zone {zone}");
                 }
             }
         }
@@ -62,14 +61,22 @@ namespace RagnarsRokare.MobAI
                 List<ZDO> m_tempCurrentDistantObjects = new List<ZDO>();
                 Vector2i playerZone = ZoneSystem.instance.GetZone(ZNet.instance.GetReferencePosition());
                 ZDOMan.instance.FindSectorObjects(playerZone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, m_tempCurrentObjects, m_tempCurrentDistantObjects);
-                //Debug.Log($"Playerzone objs:{m_tempCurrentObjects.Count}");
+                var c = m_tempCurrentObjects.Count;
+                //var zdosInSectors = typeof(ZDOMan).GetField("m_objectsBySector", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(ZDOMan.instance) as List<ZDO>[];
                 foreach (var zone in m_adoptedZones)
                 {
+                    //int i = (int)Utils.Invoke<ZDOMan>(ZDOMan.instance, "SectorToIndex", zone);
+                    //Debug.Log($"zone {zone} is index {i}");
+                    //Debug.Log($"ZDOs in sector:{zdosInSectors[i]?.Count ?? -1}");
+                    //Debug.Log($"OwnedBy me:{zdosInSectors[i]?.Where(z => z.IsOwner()).Count() ?? -1}");
+                    //int numBefore = m_tempCurrentObjects.Count;
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, m_tempCurrentObjects);
+                    //Debug.Log($"Finding objs in {zone}: {m_tempCurrentObjects.Count - numBefore}");
                 }
 
-                m_tempCurrentObjects = m_tempCurrentObjects.Distinct().ToList();
-                //Debug.Log($"m_tempCurrentObjects:{m_tempCurrentObjects.Count}");
+                //Debug.Log($"AdoptedObjects:{m_tempCurrentObjects.Count - c}");
+                //m_tempCurrentObjects = m_tempCurrentObjects.Distinct().ToList();
+                //Debug.Log($"Distinct AdoptedObjects:{m_tempCurrentObjects.Count - c}");
                 Utils.Invoke<ZNetScene>(__instance, "CreateObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 Utils.Invoke<ZNetScene>(__instance, "RemoveObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 return false;

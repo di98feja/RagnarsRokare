@@ -59,11 +59,6 @@ namespace RagnarsRokare.MobAI.Server
                 }
                 ___m_releaseZDOTimer = 0f;
                 AdoptedZonesManager.ResetAdoptedZones();
-                //foreach (var zid in AdoptedZonesManager.AllMobZDOs.Values)
-                //{
-                //    var z = ZDOMan.instance.GetZDO(zid);
-                //    ZDOMan.instance.ZDOSectorInvalidated(z);
-                //}
 
                 //var thread = new Thread(new ThreadStart(ReleaseNearbyZDOsAsync));
                 //thread.Start();
@@ -97,8 +92,8 @@ namespace RagnarsRokare.MobAI.Server
             {
                 Vector2i zone = ZoneSystem.instance.GetZone(refPosition);
                 var adoptedZones = AdoptedZonesManager.GetAdoptedZones(uid);
-                //Debug.Log($"{uid} have  added {adoptedZones.AddedZones.Count} zones, removed {adoptedZones.RemovedZones.Count} to a total of {adoptedZones.CurrentZones.Count}");
-                foreach (var adoptedZone in adoptedZones.AddedZones)
+                Debug.Log($"{uid} have  added {adoptedZones.AddedZones.Count} zones, removed {adoptedZones.RemovedZones.Count} to a total of {adoptedZones.CurrentZones.Count}");
+                foreach (var adoptedZone in adoptedZones.CurrentZones)
                 {
                     var addedAdoptedObjects = new List<ZDO>();
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", adoptedZone, addedAdoptedObjects);
@@ -107,6 +102,7 @@ namespace RagnarsRokare.MobAI.Server
                         zdo.SetOwner(uid);
                         ZDOMan.instance.ForceSendZDO(uid, zdo.m_uid);
                     }
+                    //Debug.Log($"ForceSend {addedAdoptedObjects.Count} objs for zone {adoptedZone}");
                 }
                 foreach (var adoptedZone in adoptedZones.RemovedZones)
                 {
@@ -128,14 +124,14 @@ namespace RagnarsRokare.MobAI.Server
 
                     if (zdo.m_owner == uid)
                     {
-                        if (!ZNetScene.instance.InActiveArea(zdoSector, zone))
+                        if (!ZNetScene.instance.InActiveArea(zdoSector, zone) && !adoptedZones.CurrentZones.Contains(zdoSector))
                         {
                             zdo.SetOwner(0L);
                         }
                     }
                     else if (zdo.m_owner == 0L || !new Traverse(ZDOMan.instance).Method("IsInPeerActiveArea", new object[] { zdoSector, zdo.m_owner }).GetValue<bool>())
                     {
-                        if (ZNetScene.instance.InActiveArea(zdoSector, zone))
+                        if (ZNetScene.instance.InActiveArea(zdoSector, zone) || adoptedZones.CurrentZones.Contains(zdoSector))
                         {
                             zdo.SetOwner(uid);
                         }
