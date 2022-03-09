@@ -148,6 +148,7 @@ namespace RagnarsRokare.MobAI
 
         private static void AnnounceUnregisteredMobToPeers(ZNetView nview, string uniqueId)
         {
+            Debug.Log("AnnounceUnRegisteredMobToPeers");
             ZRoutedRpc.instance.InvokeRoutedRPC(Constants.Z_MobUnRegistered, uniqueId, nview.GetZDO().m_uid);
         }
 

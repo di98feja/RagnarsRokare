@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
@@ -20,7 +21,7 @@ namespace RagnarsRokare.MobAI
                 var zone = new Vector2i(x, y);
                 m_adoptedZones.Add(zone);
             }
-            //Debug.Log($"Adopted zones:{string.Join("|", m_adoptedZones)}");
+            Debug.Log($"Adopted zones:{string.Join("|", m_adoptedZones)}");
         }
 
         [HarmonyPatch(typeof(ZoneSystem), "Start")]
@@ -57,7 +58,7 @@ namespace RagnarsRokare.MobAI
         {
             private static bool Prefix(ZNetScene __instance)
             {
-                List<ZDO> m_tempCurrentObjects = new List<ZDO>();
+                    List<ZDO> m_tempCurrentObjects = new List<ZDO>();
                 List<ZDO> m_tempCurrentDistantObjects = new List<ZDO>();
                 Vector2i playerZone = ZoneSystem.instance.GetZone(ZNet.instance.GetReferencePosition());
                 ZDOMan.instance.FindSectorObjects(playerZone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, m_tempCurrentObjects, m_tempCurrentDistantObjects);

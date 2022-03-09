@@ -409,11 +409,13 @@ namespace RagnarsRokare.MobAI
                     UpdateAiStatus(State.UnloadToAssignment, m_assignment.First().TypeOfAssignment.Name);
                     if (isCarryingFuel)
                     {
+                        Debug.Log("AddFuelRPC");
                         m_assignment.First().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddFuel", new object[] { });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
                     else if (isCarryingMatchingOre)
                     {
+                        Debug.Log("AddOreRPC");
                         m_assignment.First().AssignmentObject.GetComponent<ZNetView>().InvokeRPC("AddOre", new object[] { Utils.GetPrefabName(m_carrying.m_dropPrefab.name) });
                         (Character as Humanoid).GetInventory().RemoveOneItem(m_carrying);
                     }
