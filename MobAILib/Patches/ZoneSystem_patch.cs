@@ -14,12 +14,17 @@ namespace RagnarsRokare.MobAI
             m_adoptedZones.Clear();
             if (string.IsNullOrEmpty(zones)) return;
             
+            var objectsBySector = typeof(ZDOMan).GetField("m_objectsBySector", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(ZDOMan.instance) as List<ZDO>[];
+
             foreach (string z in zones.Split('|'))
             {
                 int x = int.Parse(z.Split(',').First());
                 int y = int.Parse(z.Split(',').Last());
                 var zone = new Vector2i(x, y);
                 m_adoptedZones.Add(zone);
+
+                int sector = (int)Utils.Invoke<ZDOMan>(ZDOMan.instance, "SectorToIndex", zone);
+                Debug.Log($"{zone} has {objectsBySector[sector]?.Count}({objectsBySector[sector]?.Count(m => m.IsOwner())}) ZDOs and {objectsBySector[sector]?.Where(zdo => ZNetScene.instance.HaveInstance(zdo)).Count()} instances");
             }
             Debug.Log($"Adopted zones:{string.Join("|", m_adoptedZones)}");
         }

@@ -58,6 +58,7 @@ namespace RagnarsRokare.MobAI.Server
                     return false;
                 }
                 ___m_releaseZDOTimer = 0f;
+
                 AdoptedZonesManager.ResetAdoptedZones();
 
                 //var thread = new Thread(new ThreadStart(ReleaseNearbyZDOsAsync));
@@ -163,7 +164,7 @@ namespace RagnarsRokare.MobAI.Server
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "ServerSortSendZDOS", toSync, refPos, peer);
                     toSync.AddRange(___m_tempToSyncDistant);
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "AddForceSendZdos", peer, toSync);
-                    Debug.Log($"Sending {p.m_uid} {toSync.Count} objs");
+                    //Debug.Log($"Sending {p.m_uid} {toSync.Count} objs");
                     return false;
                 }
                 return true;

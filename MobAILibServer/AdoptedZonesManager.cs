@@ -144,7 +144,7 @@ namespace RagnarsRokare.MobAI.Server
             if (!allPeers.Any() && ZNet.instance.IsDedicated()) return;
 
             var mobZonesToAdopt = CreateSetOfMobZones();
-            //Debug.Log($"{mobZonesToAdopt.Count} mob zones up for adoption({string.Join("|", mobZonesToAdopt)})");
+            Debug.Log($"{mobZonesToAdopt.Count} mob zones up for adoption({string.Join("|", mobZonesToAdopt)})");
             var reverseMap = BuildReverseMapping();
 
             if (!ZNet.instance.IsDedicated())
@@ -158,6 +158,7 @@ namespace RagnarsRokare.MobAI.Server
             RemoveDeadZones(mobZonesToAdopt, reverseMap);
             RemoveAlreadyAdoptedZones(ref mobZonesToAdopt, reverseMap);
             List<long> peerIds = GetAllPeersIds();
+            Debug.Log($"{mobZonesToAdopt.Count} mob zones left after pruning({string.Join("|", mobZonesToAdopt)}), to split on {peerIds.Count} peers");
 
             var newPeers = peerIds.Where(p => !m_mobZoneToPeerAdoption.ContainsKey(p));
             foreach (var peer in newPeers)

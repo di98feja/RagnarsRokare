@@ -51,7 +51,7 @@ namespace RagnarsRokare.SlaveGreylings
                     foreach (var zid in m_allMobZDOIDs)
                     {
                         var zdo = ZDOMan.instance.GetZDO(zid);
-                        if (!zdo?.IsValid() ?? true) continue;
+                        if (!(zdo?.IsValid() ?? false)) continue;
                         var pos = zdo.GetPosition();
                         var name = zdo.GetString(Constants.Z_GivenName);
 

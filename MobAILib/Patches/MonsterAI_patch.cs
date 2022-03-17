@@ -60,7 +60,7 @@ namespace RagnarsRokare.MobAI
 
                 BaseAI_UpdateAI_ReversePatch.UpdateAI(__instance, dt, ___m_nview, ref ___m_jumpInterval, ref ___m_jumpTimer, ref ___m_randomMoveUpdateTimer, ref ___m_timeSinceHurt, ref ___m_alerted);
                 mobAI.UpdateAI(dt);
-
+                __instance.GetComponentInParent<ZSyncTransform>()?.SyncNow();
                 return false;
             }
 
