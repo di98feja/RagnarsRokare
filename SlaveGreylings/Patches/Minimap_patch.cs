@@ -66,7 +66,7 @@ namespace RagnarsRokare.SlaveGreylings
                             m_mobPins[zid].m_name = name;
                         }
                     }
-                    var idsToRemove = m_mobPins.Where(m => !m_allMobZDOIDs.Any(z => z == m.Key)).Select(m => (m.Key, m.Value));
+                    var idsToRemove = m_mobPins.Where(m => !m_allMobZDOIDs.Any(z => z == m.Key)).Select(m => (m.Key, m.Value)).ToArray();
                     foreach (var pin in idsToRemove)
                     {
                         m_mobPins.Remove(pin.Key);

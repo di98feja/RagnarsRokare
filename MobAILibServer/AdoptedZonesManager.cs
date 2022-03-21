@@ -24,14 +24,17 @@ namespace RagnarsRokare.MobAI.Server
         {
             List<string> deadZDOs = new List<string>();
             List<ZDO> aliveZDOs = new List<ZDO>();
+            bool mobsChanged = false;
             foreach (var mob in AllMobZDOs)
             {
+
                 var mobZdo = ZDOMan.instance.GetZDO(mob.Value);
                 if (mobZdo == null || !mobZdo.IsValid())
                 {
 
                     deadZDOs.Add(mob.Key);
                     Debug.Log("Removed one dead Mob");
+                    mobsChanged = true;
                     continue;
                 }
                 aliveZDOs.Add(mobZdo);
@@ -39,6 +42,10 @@ namespace RagnarsRokare.MobAI.Server
             foreach (var mob in deadZDOs)
             {
                 AllMobZDOs.Remove(mob);
+            }
+            if (mobsChanged)
+            {
+                FireMobRegisterChangedEvent();
             }
             return aliveZDOs;
         }
