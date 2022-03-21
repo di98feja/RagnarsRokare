@@ -71,6 +71,7 @@ namespace RagnarsRokare.SlaveGreylings
                     {
                         m_mobPins.Remove(pin.Key);
                         Minimap.instance.RemovePin(pin.Value);
+                        Minimap.instance.AddPin(pin.Value.m_pos, Minimap.PinType.Death, pin.Value.m_name, true, false);
                     }
                 }
                 catch (System.Exception e)
