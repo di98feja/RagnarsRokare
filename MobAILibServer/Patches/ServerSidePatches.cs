@@ -93,7 +93,7 @@ namespace RagnarsRokare.MobAI.Server
             {
                 Vector2i zone = ZoneSystem.instance.GetZone(refPosition);
                 var adoptedZones = AdoptedZonesManager.GetAdoptedZones(uid);
-                Debug.Log($"{uid} have  added {adoptedZones.AddedZones.Count} zones, removed {adoptedZones.RemovedZones.Count} to a total of {adoptedZones.CurrentZones.Count}");
+                //Debug.Log($"{uid} have  added {adoptedZones.AddedZones.Count} zones, removed {adoptedZones.RemovedZones.Count} to a total of {adoptedZones.CurrentZones.Count}");
                 foreach (var adoptedZone in adoptedZones.CurrentZones)
                 {
                     var addedAdoptedObjects = new List<ZDO>();
@@ -101,9 +101,8 @@ namespace RagnarsRokare.MobAI.Server
                     foreach (ZDO zdo in addedAdoptedObjects)
                     {
                         zdo.SetOwner(uid);
-                        //ZDOMan.instance.ForceSendZDO(uid, zdo.m_uid);
                     }
-                    //Debug.Log($"ForceSend {addedAdoptedObjects.Count} objs for zone {adoptedZone}");
+                    //Debug.Log($"Peer {ZNet.instance.GetPeer(uid)?.m_playerName ?? "Myself"} now own {addedAdoptedObjects.Count} ZDOs in {adoptedZone}");
                 }
                 foreach (var adoptedZone in adoptedZones.RemovedZones)
                 {
@@ -157,10 +156,13 @@ namespace RagnarsRokare.MobAI.Server
                     Vector2i zone = ZoneSystem.instance.GetZone(refPos);
                     ___m_tempToSyncDistant.Clear();
                     ZDOMan.instance.FindSectorObjects(zone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, toSync, ___m_tempToSyncDistant);
-                    foreach (var az in AdoptedZonesManager.GetAdoptedZones(p.m_uid).CurrentZones)
+                    //var c = toSync.Count;
+                    foreach (var az in AdoptedZonesManager.CreateSetOfAllAdoptedZones())
                     {
-                        Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, toSync);
+                        Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", az, toSync);
                     }
+                    toSync = toSync.Distinct().ToList();
+                    //Debug.Log($"AdoptedObjects:{toSync.Count - c}");
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "ServerSortSendZDOS", toSync, refPos, peer);
                     toSync.AddRange(___m_tempToSyncDistant);
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "AddForceSendZdos", peer, toSync);

@@ -204,6 +204,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
+                    Debug.Log($"{Character.m_name}: ConfigureFight, OnExit()");
                     ItemDrop.ItemData currentWeapon = (Character as Humanoid).GetCurrentWeapon();
                     if (null != currentWeapon)
                     {

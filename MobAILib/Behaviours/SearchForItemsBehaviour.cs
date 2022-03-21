@@ -303,7 +303,7 @@ namespace RagnarsRokare.MobAI
                     //Common.Dbgl("Container = null");
                     return;
                 }
-                if (aiBase.MoveAndAvoidFire(KnownContainers.Peek().transform.position, dt, 1.5f))
+                if (aiBase.MoveAndAvoidFire(KnownContainers.Peek().transform.position, dt, 2.0f))
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.ContainerIsClose + Postfix);

@@ -24,9 +24,9 @@ namespace RagnarsRokare.MobAI
                 m_adoptedZones.Add(zone);
 
                 int sector = (int)Utils.Invoke<ZDOMan>(ZDOMan.instance, "SectorToIndex", zone);
-                Debug.Log($"{zone} has {objectsBySector[sector]?.Count}({objectsBySector[sector]?.Count(m => m.IsOwner())}) ZDOs and {objectsBySector[sector]?.Where(zdo => ZNetScene.instance.HaveInstance(zdo)).Count()} instances");
+                //Debug.Log($"{zone} has {objectsBySector[sector]?.Count}({objectsBySector[sector]?.Count(m => m.IsOwner())}) ZDOs and {objectsBySector[sector]?.Where(zdo => ZNetScene.instance.HaveInstance(zdo)).Count()} instances");
             }
-            Debug.Log($"Adopted zones:{string.Join("|", m_adoptedZones)}");
+            //Debug.Log($"Adopted zones:{string.Join("|", m_adoptedZones)}");
         }
 
         [HarmonyPatch(typeof(ZoneSystem), "Start")]
@@ -81,7 +81,7 @@ namespace RagnarsRokare.MobAI
                 }
 
                 //Debug.Log($"AdoptedObjects:{m_tempCurrentObjects.Count - c}");
-                //m_tempCurrentObjects = m_tempCurrentObjects.Distinct().ToList();
+                m_tempCurrentObjects = m_tempCurrentObjects.Distinct().ToList();
                 //Debug.Log($"Distinct AdoptedObjects:{m_tempCurrentObjects.Count - c}");
                 Utils.Invoke<ZNetScene>(__instance, "CreateObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 Utils.Invoke<ZNetScene>(__instance, "RemoveObjects", m_tempCurrentObjects, m_tempCurrentDistantObjects);

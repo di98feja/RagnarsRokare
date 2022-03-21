@@ -84,8 +84,10 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
+                    Debug.Log($"{aiBase.Character.m_name}: FightBehaviour, OnExit()");
                     aiBase.StopMoving();
                     aiBase.TargetCreature = null;
+                    Utils.Invoke<MonsterAI>(aiBase.Instance, "SetAlerted", false);
                 });
 
             brain.Configure(State.IdentifyEnemy)

@@ -141,6 +141,15 @@ namespace RagnarsRokare.MobAI.Server
                 az.Reset();
             }
             var allPeers = ZNet.instance.GetPeers();
+            if (m_mobZoneToPeerAdoption.Any(p => !allPeers.Any(ap => ap.m_uid == p.Key)))
+            {
+                var peersToRemove = m_mobZoneToPeerAdoption.Where(p => !allPeers.Any(ap => ap.m_uid == p.Key)).Select(p => p.Key).ToArray();
+                foreach(var peer in peersToRemove)
+                {
+                    Debug.Log($"Peer {peer} has disconnected, removed from adoption list");
+                    m_mobZoneToPeerAdoption.Remove(peer);
+                }
+            }
             if (!allPeers.Any() && ZNet.instance.IsDedicated()) return;
 
             var mobZonesToAdopt = CreateSetOfMobZones();

@@ -787,8 +787,11 @@ namespace RagnarsRokare.MobAI
                 {
                     Common.Dbgl($"Can't put {m_carriedItem.m_shared.m_name} in container, drop on ground", true, "Sorter");
                     mob.DropItem((aiBase.Character as Humanoid).GetInventory(), m_carriedItem, m_carriedItem.m_stack);
-                    m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
-                    //Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
+                    if (!m_putItemInContainerFailTimers.ContainsKey(m_carriedItem.m_shared.m_name))
+                    {
+                        m_putItemInContainerFailTimers.Add(m_carriedItem.m_shared.m_name, Time.time + PutItemInChestFailedRetryTimeout);
+                        //Debug.LogWarning($"Put {m_carriedItem.m_shared.m_name} on timeout");
+                    }
                 }
                 Common.Dbgl($"Item Keys: {string.Join(",", m_itemsDictionary.Keys)}", true, "Sorter");
                 m_carriedItem = null;
@@ -835,7 +838,7 @@ namespace RagnarsRokare.MobAI
             {
                 if (m_item == null || Common.GetNView(m_item)?.IsValid() != true || Common.GetNView(m_item)?.HasOwner() != true)
                 {
-                    Common.Dbgl($"GroundItem lost: {m_item == null}, {Common.GetNView(m_item)?.IsValid() != true}, {Common.GetNView(m_item)?.HasOwner() != true}", true);
+                    Common.Dbgl($"GroundItem lost: {m_item == null}, {Common.GetNView(m_item)?.IsValid() != true}", true);
                     aiBase.Brain.Fire(Trigger.GroundItemLost);
                     return;
                 }
