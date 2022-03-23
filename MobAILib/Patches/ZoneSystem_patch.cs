@@ -46,7 +46,7 @@ namespace RagnarsRokare.MobAI
         {
             static void Postfix(ZoneSystem __instance, ref float ___m_updateTimer)
             {
-                if (___m_updateTimer > 0f) return;
+                if (___m_updateTimer > 0f || (Player.m_localPlayer != null && Player.m_localPlayer.IsTeleporting())) return;
                 foreach (var zone in m_adoptedZones)
                 {
                     Utils.Invoke<ZoneSystem>(__instance, "PokeLocalZone", zone);
@@ -69,17 +69,19 @@ namespace RagnarsRokare.MobAI
                 ZDOMan.instance.FindSectorObjects(playerZone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 var c = m_tempCurrentObjects.Count;
                 //var zdosInSectors = typeof(ZDOMan).GetField("m_objectsBySector", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(ZDOMan.instance) as List<ZDO>[];
-                foreach (var zone in m_adoptedZones)
+                if (!(Player.m_localPlayer != null && Player.m_localPlayer.IsTeleporting()))
                 {
-                    //int i = (int)Utils.Invoke<ZDOMan>(ZDOMan.instance, "SectorToIndex", zone);
-                    //Debug.Log($"zone {zone} is index {i}");
-                    //Debug.Log($"ZDOs in sector:{zdosInSectors[i]?.Count ?? -1}");
-                    //Debug.Log($"OwnedBy me:{zdosInSectors[i]?.Where(z => z.IsOwner()).Count() ?? -1}");
-                    //int numBefore = m_tempCurrentObjects.Count;
-                    Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, m_tempCurrentObjects);
-                    //Debug.Log($"Finding objs in {zone}: {m_tempCurrentObjects.Count - numBefore}");
+                    foreach (var zone in m_adoptedZones)
+                    {
+                        //int i = (int)Utils.Invoke<ZDOMan>(ZDOMan.instance, "SectorToIndex", zone);
+                        //Debug.Log($"zone {zone} is index {i}");
+                        //Debug.Log($"ZDOs in sector:{zdosInSectors[i]?.Count ?? -1}");
+                        //Debug.Log($"OwnedBy me:{zdosInSectors[i]?.Where(z => z.IsOwner()).Count() ?? -1}");
+                        //int numBefore = m_tempCurrentObjects.Count;
+                        Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", zone, m_tempCurrentObjects);
+                        //Debug.Log($"Finding objs in {zone}: {m_tempCurrentObjects.Count - numBefore}");
+                    }
                 }
-
                 //Debug.Log($"AdoptedObjects:{m_tempCurrentObjects.Count - c}");
                 m_tempCurrentObjects = m_tempCurrentObjects.Distinct().ToList();
                 //Debug.Log($"Distinct AdoptedObjects:{m_tempCurrentObjects.Count - c}");
