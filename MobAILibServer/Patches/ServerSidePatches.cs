@@ -161,7 +161,7 @@ namespace RagnarsRokare.MobAI.Server
                     {
                         Utils.Invoke<ZDOMan>(ZDOMan.instance, "FindObjects", az, toSync);
                     }
-                    toSync = toSync.Distinct().ToList();
+                    //toSync = toSync.Distinct().ToList();
                     //Debug.Log($"AdoptedObjects:{toSync.Count - c}");
                     Utils.Invoke<ZDOMan>(ZDOMan.instance, "ServerSortSendZDOS", toSync, refPos, peer);
                     toSync.AddRange(___m_tempToSyncDistant);

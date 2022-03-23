@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    class SearchForItemsBehaviour : IBehaviour
+    public class SearchForItemsBehaviour : IBehaviour
     {
         private const string Prefix = "RR_SFI";
 

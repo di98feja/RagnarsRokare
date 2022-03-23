@@ -48,12 +48,16 @@ namespace RagnarsRokare.MobAI
         {
             try
             {
+                Debug.Log($"{mobAIType.Name}");
                 var instance = Activator.CreateInstance(mobAIType) as IMobAIType;
+                Debug.Log("2");
                 RegisterMobAI(instance);
+                Debug.Log("3");
             }
             catch (Exception e)
             {
                 Debug.LogWarning($"Failed to instanciate MobAIType type:{e.Message}");
+                throw;
             }
         }
 

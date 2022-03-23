@@ -97,11 +97,12 @@ namespace RagnarsRokare.SlaveGreylings
             var visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
             if (visEquipment == null)
             {
-                __instance.gameObject.AddComponent<VisEquipment>();
-                visEquipment = __instance.gameObject.GetComponent<VisEquipment>();
+                visEquipment = __instance.gameObject.AddComponent<VisEquipment>();
                 //_NetSceneRoot/Greyling(Clone)/Visual/Armature.001/root/spine1/spine2/spine3/r_shoulder/r_arm1/r_arm2/r_hand
                 var rightHand = __instance.gameObject.GetComponentsInChildren<Transform>().Where(c => c.name == "r_hand").Single();
                 visEquipment.m_rightHand = rightHand;
+                var humanoid = __instance.GetComponent<Humanoid>();
+                typeof(Humanoid).GetField("m_visEquipment", BindingFlags.NonPublic|BindingFlags.Instance).SetValue(humanoid, visEquipment);
             }
         }
 

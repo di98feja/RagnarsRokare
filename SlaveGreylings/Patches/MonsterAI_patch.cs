@@ -14,8 +14,7 @@ namespace RagnarsRokare.SlaveGreylings
             {
                 if (MobConfigManager.IsControllableMob(__instance.name))
                 {
-                    var mobInfo = MobConfigManager.GetMobConfig(__instance.name);
-                    ___m_character.m_faction = Character.Faction.Players;
+                    var mobInfo = MobConfigManager.GetMobConfig(___m_character.name);
                     string uniqueId = GetOrCreateUniqueId(___m_nview);
 
                     AddVisualEquipmentCapability(___m_character);
