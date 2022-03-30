@@ -44,7 +44,7 @@ namespace RagnarsRokare.MobAI
                 .Select(c => c.transform?.GetComponentInParent<Pickable>())
                 .Where(p => p != null)
                 .Where(p => p.GetComponent<ZNetView>()?.IsValid() ?? false)
-                .Where(p => acceptedPickables.Contains(Utils.GetPrefabName(p.gameObject.name)))
+                .Where(p => acceptedPickables.Contains(Utils.GetPrefabName(p.gameObject.name)) || acceptedPickables.Contains("Npc"))
                 .Where(p => !string.IsNullOrEmpty(p.GetHoverText()))
                 .Where(p => p.transform?.position != null)
                 .Where(p => CanSeeTarget(instance, p.GetComponentsInChildren<Collider>()))
