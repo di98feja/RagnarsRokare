@@ -48,6 +48,9 @@
     <Reference Include="BepInEx">
       <HintPath>..\Libs\BepInEx.dll</HintPath>
     </Reference>
+    <Reference Include="RagnarsRokare.HumanStub">
+      <HintPath>..\Libs\RagnarsRokare.HumanStub.dll</HintPath>
+    </Reference>
     <Reference Include="stateless, Version=4.0.0.0, Culture=neutral, PublicKeyToken=93038f0927583c9a, processorArchitecture=MSIL">
       <HintPath>..\packages\stateless.5.10.1\lib\net472\stateless.dll</HintPath>
     </Reference>
@@ -72,6 +75,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BehaviourSettingsBase.cs" />
+    <Compile Include="Behaviours\BehaviourFactory.cs" />
     <Compile Include="Behaviours\EatingBehaviour.cs" />
     <Compile Include="Behaviours\BasicFarmingBehaviour.cs" />
     <Compile Include="Behaviours\ExtractionBehaviour.cs" />
@@ -84,6 +89,7 @@
     <Compile Include="Helpers\StorageContainerComparer.cs" />
     <Compile Include="Helpers\ItemDataComparer.cs" />
     <Compile Include="Helpers\StorageContainer.cs" />
+    <Compile Include="IDynamicBehaviour.cs" />
     <Compile Include="MobAILib.cs" />
     <Compile Include="Mobs\ExampleAI.cs" />
     <Compile Include="Mobs\SorterAI.cs" />

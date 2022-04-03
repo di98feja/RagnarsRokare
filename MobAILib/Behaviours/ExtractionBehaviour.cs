@@ -1,11 +1,12 @@
 ﻿using Stateless;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    public class ExtractionBehaviour : IBehaviour
+    public class ExtractionBehaviour : IDynamicBehaviour
     {
         private const string Prefix = "RR_EXTR";
 
@@ -25,14 +26,15 @@ namespace RagnarsRokare.MobAI
             public const string TaskNotFound = Prefix + "TaskNotFound";
             public const string ExtractionSucceeded = Prefix + "ExtractionSucceeded";
             public const string ExtractionFailed = Prefix + "ExtractionFailed";
+            public const string Abort = Prefix + "Abort";
         }
 
         // Settings
-        public float MaxSearchTime { get; set; } = 60f;
         public string StartState => State.Main;
+        public float MaxSearchTime { get; set; } = 60f;
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public AssignmentType[] AcceptedAssignments { get; set; }
+        public AssignmentType[] AcceptedAssignments { get; set; } = null;
         public float CloseEnoughTimeout { get; private set; } = 30;
 
         // Timers
@@ -42,6 +44,11 @@ namespace RagnarsRokare.MobAI
         private MobAIBase m_aiBase;
         private int m_searchRadius;
         private LinkedList<Assignment> m_taskList;
+
+        public void Abort()
+        {
+            m_aiBase.Brain.Fire(Trigger.Abort);
+        }
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
@@ -53,6 +60,7 @@ namespace RagnarsRokare.MobAI
                 .InitialTransition(State.FindRandomTask)
                 .SubstateOf(parentState)
                 .PermitDynamic(Trigger.Failed, () => FailState)
+                .Permit(Trigger.Abort, FailState)
                 .OnEntry(t =>
                 {
                     Common.Dbgl("Entered ExtractionBehaviour", true, "Extraction");

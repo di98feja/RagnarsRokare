@@ -172,11 +172,9 @@ namespace RagnarsRokare.MobAI
             {
                 m_knownContainers.Push(container);
             }
-            m_extractionBehaviour = new ExtractionBehaviour
-            {
-                SuccessState = State.FindRandomTask,
-                FailState = State.FindRandomTask
-            };
+            m_extractionBehaviour = new ExtractionBehaviour();
+            m_extractionBehaviour.SuccessState = State.FindRandomTask;
+            m_extractionBehaviour.FailState = State.FindRandomTask;
             m_extractionBehaviour.Configure(aiBase, aiBase.Brain, State.FindingExtractionTask);
 
             m_basicFarmingBehaviour = new BasicFarmingBehaviour

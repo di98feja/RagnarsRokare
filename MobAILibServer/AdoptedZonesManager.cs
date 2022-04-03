@@ -78,7 +78,7 @@ namespace RagnarsRokare.MobAI.Server
                 return;
             }
 
-            var allMobs = allZdos.Values.Where(z => z.GetBool(IsControlledByMobAILibHash));
+            var allMobs = allZdos.Values.Where(z => z.GetBool(IsControlledByMobAILibHash)).Where(z => z.IsValid());
             foreach (var mob in allMobs)
             {
                 string uniqueId = mob.GetString(UniqueIdHash);
@@ -148,9 +148,9 @@ namespace RagnarsRokare.MobAI.Server
                 az.Reset();
             }
             var allPeers = ZNet.instance.GetPeers();
-            if (m_mobZoneToPeerAdoption.Any(p => !allPeers.Any(ap => ap.m_uid == p.Key)))
+            if (m_mobZoneToPeerAdoption.Any(p => !allPeers.Any(ap => ap.m_uid == p.Key) && p.Key != ZDOMan.instance.GetMyID()))
             {
-                var peersToRemove = m_mobZoneToPeerAdoption.Where(p => !allPeers.Any(ap => ap.m_uid == p.Key)).Select(p => p.Key).ToArray();
+                var peersToRemove = m_mobZoneToPeerAdoption.Where(p => !allPeers.Any(ap => ap.m_uid == p.Key) && p.Key != ZDOMan.instance.GetMyID()).Select(p => p.Key).ToArray();
                 foreach(var peer in peersToRemove)
                 {
                     Debug.Log($"Peer {peer} has disconnected, removed from adoption list");

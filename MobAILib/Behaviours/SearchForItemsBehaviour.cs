@@ -1,15 +1,16 @@
 ﻿using Stateless;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    public class SearchForItemsBehaviour : IBehaviour
+    public class SearchForItemsBehaviour : IDynamicBehaviour
     {
         private const string Prefix = "RR_SFI";
 
-        private class State
+        private class State 
         {
             public const string Main = Prefix + "Main";
             public const string SearchItemsOnGround = Prefix + "SearchItemsOnGround";
@@ -38,6 +39,7 @@ namespace RagnarsRokare.MobAI
             public const string FoundGroundItem = Prefix + "FoundGroundItem";
             public const string FoundPickable = Prefix + "FoundPickable";
             public const string WaitForPickable = Prefix + "WaitForPickable";
+            public const string Abort = Prefix + "Abort";
         }
 
         StateMachine<string, string>.TriggerWithParameters<ItemDrop> FoundGroundItemTrigger;
@@ -53,12 +55,13 @@ namespace RagnarsRokare.MobAI
         // Settings
         public float OpenChestDelay { get; private set; } = 1;
         public float MaxSearchTime { get; set; } = 60;
-        public string StartState { get { return State.Main + Postfix; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
         public Vector3 CenterPoint { get; set; }
         public bool IncludePickables { get; set; } = true;
         public string Postfix { get; set; } = string.Empty;
+
+        public string StartState { get { return State.Main + Postfix; } }
 
         private ItemDrop m_groundItem;
         private MobAIBase m_aiBase;
@@ -68,18 +71,22 @@ namespace RagnarsRokare.MobAI
         private Pickable m_pickable;
         private float m_pickableTimer;
 
+        public void Abort()
+        {
+            m_aiBase.Brain.Fire(Trigger.Abort);
+        }
+
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
-            FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(Trigger.FoundGroundItem+Postfix);
+            FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(Trigger.FoundGroundItem + Postfix);
             m_searchRadius = aiBase.Awareness * 5;
 
-
-
-            brain.Configure(State.Main+Postfix)
-                .InitialTransition(State.SearchItemsOnGround+Postfix)
+            brain.Configure(State.Main + Postfix)
+                .InitialTransition(State.SearchItemsOnGround + Postfix)
                 .SubstateOf(parentState)
-                .PermitDynamic(Trigger.Timeout+Postfix, () => FailState)
+                .PermitDynamic(Trigger.Timeout + Postfix, () => FailState)
+                .Permit(Trigger.Abort + Postfix, FailState + Postfix)
                 .OnEntry(t =>
                 {
                     m_currentSearchTime = 0f;
@@ -92,10 +99,10 @@ namespace RagnarsRokare.MobAI
                     m_aiBase.UpdateAiStatus(string.Empty);
                 });
 
-            brain.Configure(State.SearchItemsOnGround+Postfix)
-                .SubstateOf(State.Main+Postfix)
-                .Permit(FoundGroundItemTrigger.Trigger, State.MoveToGroundItem+Postfix)
-                .Permit(Trigger.Failed+Postfix, State.SearchForPickable+Postfix)
+            brain.Configure(State.SearchItemsOnGround + Postfix)
+                .SubstateOf(State.Main + Postfix)
+                .Permit(FoundGroundItemTrigger.Trigger, State.MoveToGroundItem + Postfix)
+                .Permit(Trigger.Failed + Postfix, State.SearchForPickable + Postfix)
                 .OnEntry(t =>
                 {
                     ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items.Select(i => i.m_shared.m_name), m_searchRadius);
@@ -105,13 +112,13 @@ namespace RagnarsRokare.MobAI
                         brain.Fire(FoundGroundItemTrigger, groundItem);
                         return;
                     }
-                    brain.Fire(Trigger.Failed+Postfix);
+                    brain.Fire(Trigger.Failed + Postfix);
                 });
 
-            brain.Configure(State.SearchForPickable+Postfix)
-                .SubstateOf(State.Main+Postfix)
-                .Permit(Trigger.FoundPickable+Postfix, State.MoveToPickable+Postfix)
-                .Permit(Trigger.Failed+Postfix, State.SearchForRandomContainer+Postfix)
+            brain.Configure(State.SearchForPickable + Postfix)
+                .SubstateOf(State.Main + Postfix)
+                .Permit(Trigger.FoundPickable + Postfix, State.MoveToPickable + Postfix)
+                .Permit(Trigger.Failed + Postfix, State.SearchForRandomContainer + Postfix)
                 .OnEntry(t =>
                 {
                     if (IncludePickables)
@@ -121,18 +128,18 @@ namespace RagnarsRokare.MobAI
                         {
                             m_pickable = pickable;
                             Common.Dbgl($"Found pickable: {m_pickable.GetHoverName()}", true);
-                            aiBase.Brain.Fire(Trigger.FoundPickable+Postfix);
+                            aiBase.Brain.Fire(Trigger.FoundPickable + Postfix);
                             return;
                         }
                     }
-                    brain.Fire(Trigger.Failed+Postfix);
+                    brain.Fire(Trigger.Failed + Postfix);
                 });
 
-            brain.Configure(State.SearchForRandomContainer+Postfix)
-                .SubstateOf(State.Main+Postfix)
-                .Permit(Trigger.ContainerFound+Postfix, State.MoveToContainer+Postfix)
-                .PermitDynamic(Trigger.ContainerNotFound+Postfix, () => FailState)
-                .PermitDynamic(Trigger.Failed+Postfix, () => FailState)
+            brain.Configure(State.SearchForRandomContainer + Postfix)
+                .SubstateOf(State.Main + Postfix)
+                .Permit(Trigger.ContainerFound + Postfix, State.MoveToContainer + Postfix)
+                .PermitDynamic(Trigger.ContainerNotFound + Postfix, () => FailState)
+                .PermitDynamic(Trigger.Failed + Postfix, () => FailState)
                 .OnEntry(t =>
                 {
                     if (KnownContainers.Any())
@@ -142,7 +149,7 @@ namespace RagnarsRokare.MobAI
                         {
                             KnownContainers.Remove(matchingContainer);
                             KnownContainers.Push(matchingContainer);
-                            brain.Fire(Trigger.ContainerFound+Postfix);
+                            brain.Fire(Trigger.ContainerFound + Postfix);
                             return;
                         }
                     }
@@ -152,48 +159,48 @@ namespace RagnarsRokare.MobAI
                     {
                         KnownContainers.Push(nearbyChest);
                         m_aiBase.UpdateAiStatus(State.SearchForRandomContainer);
-                        m_aiBase.Brain.Fire(Trigger.ContainerFound+Postfix);
+                        m_aiBase.Brain.Fire(Trigger.ContainerFound + Postfix);
                     }
                     else
                     {
                         KnownContainers.Clear();
-                        m_aiBase.Brain.Fire(Trigger.ContainerNotFound+Postfix);
+                        m_aiBase.Brain.Fire(Trigger.ContainerNotFound + Postfix);
                     }
                 });
 
-            brain.Configure(State.MoveToGroundItem+Postfix)
-                .SubstateOf(State.Main+Postfix)
-                .Permit(Trigger.GroundItemIsClose+Postfix, State.PickUpItemFromGround+Postfix)
-                .Permit(Trigger.Failed+Postfix, State.SearchItemsOnGround+Postfix)
+            brain.Configure(State.MoveToGroundItem + Postfix)
+                .SubstateOf(State.Main + Postfix)
+                .Permit(Trigger.GroundItemIsClose + Postfix, State.PickUpItemFromGround + Postfix)
+                .Permit(Trigger.Failed + Postfix, State.SearchItemsOnGround + Postfix)
                 .OnEntry(t =>
                 {
                     m_groundItem = t.Parameters[0] as ItemDrop;
                     if (m_groundItem == null || Common.GetNView(m_groundItem)?.IsValid() != true)
                     {
-                        brain.Fire(Trigger.Failed+Postfix);
+                        brain.Fire(Trigger.Failed + Postfix);
                         return;
                     }
                     m_aiBase.UpdateAiStatus(State.MoveToGroundItem, m_groundItem.m_itemData.m_shared.m_name);
                 });
 
-            brain.Configure(State.MoveToPickable+Postfix)
-                .SubstateOf(State.Main+Postfix)
-                .Permit(Trigger.WaitForPickable+Postfix, State.WaitingForPickable+Postfix)
-                .Permit(Trigger.Failed+Postfix, State.SearchItemsOnGround+Postfix)
+            brain.Configure(State.MoveToPickable + Postfix)
+                .SubstateOf(State.Main + Postfix)
+                .Permit(Trigger.WaitForPickable + Postfix, State.WaitingForPickable + Postfix)
+                .Permit(Trigger.Failed + Postfix, State.SearchItemsOnGround + Postfix)
                 .OnEntry(t =>
                 {
                     if (m_pickable == null || Common.GetNView(m_pickable)?.IsValid() != true)
                     {
-                        brain.Fire(Trigger.Failed+Postfix);
+                        brain.Fire(Trigger.Failed + Postfix);
                         return;
                     }
                     m_aiBase.UpdateAiStatus(State.MoveToPickable, m_pickable.GetHoverName());
                     m_pickableTimer = Time.time + 0.7f;
                 });
 
-            brain.Configure(State.WaitingForPickable+Postfix)
-                .SubstateOf(State.Main+Postfix)
-                .Permit(Trigger.GroundItemIsClose+Postfix, State.PickUpItemFromGround+Postfix)
+            brain.Configure(State.WaitingForPickable + Postfix)
+                .SubstateOf(State.Main + Postfix)
+                .Permit(Trigger.GroundItemIsClose + Postfix, State.PickUpItemFromGround + Postfix)
                 .Permit(Trigger.Failed + Postfix, State.SearchItemsOnGround + Postfix)
                 .OnEntry(t =>
                 {
@@ -322,7 +329,7 @@ namespace RagnarsRokare.MobAI
                     //Debug.Log("GroundItem = null");
                     return;
                 }
-                
+
                 if (aiBase.MoveAndAvoidFire(m_groundItem.transform.position, dt, 1.5f))
                 {
                     aiBase.StopMoving();

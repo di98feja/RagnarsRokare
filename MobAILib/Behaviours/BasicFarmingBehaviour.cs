@@ -148,8 +148,12 @@ namespace RagnarsRokare.MobAI
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
             m_aiBase = aiBase;
-            m_searchForItemsBehaviour = new SearchForItemsBehaviour();
+            m_searchForItemsBehaviour = BehaviourFactory.Create<SearchForItemsBehaviour>(aiBase, brain, State.FindCropSeed) as SearchForItemsBehaviour;
             m_searchForItemsBehaviour.Postfix = Prefix;
+            m_searchForItemsBehaviour.IncludePickables = false;
+            m_searchForItemsBehaviour.SuccessState = State.MoveToCrop;
+            m_searchForItemsBehaviour.FailState = State.Abandon;
+            m_searchForItemsBehaviour.IncludePickables = false;
             m_searchForItemsBehaviour.Configure(aiBase, brain, State.FindCropSeed);
             LookForItemTrigger = brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.SeedFound);
 
@@ -199,9 +203,6 @@ namespace RagnarsRokare.MobAI
                     m_searchForItemsBehaviour.KnownContainers = KnownContainers;
                     m_searchForItemsBehaviour.Items = new ItemDrop.ItemData[] { m_cropToHarvest.Seed };
                     m_searchForItemsBehaviour.AcceptedContainerNames = AcceptedContainerNames;
-                    m_searchForItemsBehaviour.SuccessState = State.MoveToCrop;
-                    m_searchForItemsBehaviour.FailState = State.Abandon;
-                    m_searchForItemsBehaviour.IncludePickables = false;
                     brain.Fire(Trigger.StartSearch);
                 });
 
