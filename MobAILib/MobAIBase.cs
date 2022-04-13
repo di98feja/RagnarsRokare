@@ -130,6 +130,25 @@ namespace RagnarsRokare.MobAI
             }
         }
 
+        public Vector3 StartPosition
+        {
+            get
+            {
+                if (NView?.IsValid() ?? false)
+                {
+                    return NView.GetZDO().GetVec3(Constants.Z_SavedStartPosition, Character.transform.position);
+                }
+                return Character.transform.position;
+            }
+            set
+            {
+                if (NView?.IsValid() ?? false)
+                {
+                    NView.GetZDO().Set(Constants.Z_SavedStartPosition, value);
+                }
+            }
+        }
+
         public bool IsHurt
         {
             get
@@ -266,6 +285,45 @@ namespace RagnarsRokare.MobAI
                 }
             }
             return newStatus;
+        }
+
+        public int HungerLevel
+        {
+            get
+            {
+                if (int.TryParse(NView.GetZDO()?.GetString(Constants.Z_HungerLevel), out int result))
+                {
+                    return result;
+                }
+                return 0;
+            }
+            set
+            {
+                var zdo = NView.GetZDO();
+                if (zdo?.IsOwner() ?? false)
+                {
+                    zdo.Set(Constants.Z_HungerLevel, value);
+                }
+            }
+        }
+
+        public MaxStack<Container> Containers
+        {
+            get
+            {
+                if (NView?.IsValid() ?? false)
+                {
+                    return NView.GetZDO().  (Constants.Z_Containers ,result);
+                }
+                return new MaxStack<Container>(10);
+            }
+            set
+            {
+                if (NView?.IsValid() ?? false)
+                {
+                    NView.GetZDO().Set(Constants.Z_Containers, value);
+                }
+            }
         }
     }
 }

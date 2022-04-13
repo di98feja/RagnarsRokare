@@ -59,7 +59,6 @@ namespace RagnarsRokare.MobAI
 
         // Settings
         public float HealPercentageOnConsume { get; set; }
-        public string SearchForItemsState;
         public string StartState { get { return State.Hungry; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
@@ -92,8 +91,10 @@ namespace RagnarsRokare.MobAI
             m_searchForItemsBehaviour.IncludePickables = false;
             m_searchForItemsBehaviour.SuccessState = State.HaveFoodItem;
             m_searchForItemsBehaviour.FailState = State.HaveNoFoodItem;
-            m_searchForItemsBehaviour.IncludePickables = false;
+            m_searchForItemsBehaviour.CenterPoint = aiBase.NView.transform.position;
             m_searchForItemsBehaviour.Configure(aiBase, brain, State.SearchForFood);
+
+
 
             UpdateTrigger = brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
@@ -106,6 +107,9 @@ namespace RagnarsRokare.MobAI
                     aiBase.StopMoving();
                     //Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
                     aiBase.UpdateAiStatus(State.Hungry);
+                    m_searchForItemsBehaviour.KnownContainers = aiBase .m_containers;
+                    m_searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
+                    m_searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
                 })
                 .OnExit(t =>
                 {
@@ -141,6 +145,7 @@ namespace RagnarsRokare.MobAI
                     m_hungryTimer = 0f;
                     HungryTimeout = 1000;
                     FailedToFindFood = 0;
+                    aiBase.HungerLevel = FailedToFindFood;
                     LastKnownFoodPosition = aiBase.Character.transform.position;
                     brain.Fire(Trigger.ConsumeItem);
                 })
@@ -155,6 +160,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     FailedToFindFood += 1;
+                    aiBase.HungerLevel = FailedToFindFood;
                     brain.Fire(Trigger.ItemNotFound);
                 });
 
@@ -163,16 +169,12 @@ namespace RagnarsRokare.MobAI
         public void Update(MobAIBase instance, float dt)
         {
             m_hungryTimer += dt;
-            if ((FailedToFindFood > 5) & (instance.Character.m_name != "Leonard"))
+
+            if (instance.Brain.State == m_searchForItemsBehaviour.StartState)
             {
-                instance.m_trainedAssignments = new List<string>();
-                instance.NView.GetZDO().Set(Constants.Z_trainedAssignments, instance.m_trainedAssignments.Join());
-                instance.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_updateTrainedAssignments, instance.UniqueID, instance.m_trainedAssignments.Join());
-                Debug.Log($"{instance.Character.GetHoverName()} was hungry for to long and forgot learned tasks.");
-                instance.Character.m_name = "Leonard";
-                instance.NView.GetZDO().Set(Constants.Z_GivenName, instance.Character.m_name);
-                instance.NView.InvokeRPC(ZNetView.Everybody, Constants.Z_UpdateCharacterHUD, instance.NView.GetZDO().GetString(Constants.Z_UniqueId), instance.Character.m_name);
+                m_searchForItemsBehaviour.Update(instance, dt);
             }
+
             if (instance.Brain.State == State.Hungry)
             {
                 Utils.Invoke<BaseAI>(instance.Instance, "RandomMovement", dt, LastKnownFoodPosition);

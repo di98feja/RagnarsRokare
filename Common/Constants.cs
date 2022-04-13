@@ -22,5 +22,8 @@
         public const string Z_IsControlledByMobAILib = "RR_IsControlledByMobAILib";
         public const string Z_AdoptedZonesEvent = "RR_AdoptedZonesEvent";
         public const string Z_RegisteredMobsChangedEvent = "RR_RegisteredMobsChangedEvent";
+        public const string Z_HungerLevel = "RR_HungerLevel";
+        public const string Z_SavedStartPosition = "RR_SavedStartPosition";
+        public const string Z_Containers = "RR_Containers";
     }
 }
