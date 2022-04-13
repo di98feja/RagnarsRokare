@@ -25,5 +25,6 @@
         public const string Z_HungerLevel = "RR_HungerLevel";
         public const string Z_SavedStartPosition = "RR_SavedStartPosition";
         public const string Z_Containers = "RR_Containers";
+        public const string Z_AcceptedContainerNames = "RR_AcceptedContainerNames";
     }
 }

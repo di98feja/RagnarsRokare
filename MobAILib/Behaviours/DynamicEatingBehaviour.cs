@@ -107,9 +107,9 @@ namespace RagnarsRokare.MobAI
                     aiBase.StopMoving();
                     //Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
                     aiBase.UpdateAiStatus(State.Hungry);
-                    //m_searchForItemsBehaviour.KnownContainers = aiBase .m_containers;
+                    m_searchForItemsBehaviour.KnownContainers = aiBase.Containers;
                     m_searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
-                    //m_searchForItemsBehaviour.AcceptedContainerNames = m_config.IncludedContainers;
+                    m_searchForItemsBehaviour.AcceptedContainerNames = aiBase.AcceptedContainerNames;
                 })
                 .OnExit(t =>
                 {

@@ -306,5 +306,10 @@ namespace RagnarsRokare.MobAI
                 }
             }
         }
+
+        public MaxStack<Container> Containers { get; set; }
+
+        public string[] AcceptedContainerNames { get; set; }
+
     }
 }
