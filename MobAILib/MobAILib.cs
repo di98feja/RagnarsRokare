@@ -14,7 +14,7 @@ namespace RagnarsRokare.MobAI
         private void Awake()
         {
             CommonConfig.Init(Config);
-            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
+            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), ModId);
         }
     }
 }

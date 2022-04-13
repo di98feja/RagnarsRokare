@@ -110,7 +110,6 @@
     <Compile Include="Patches\Assignments_Patch.cs" />
     <Compile Include="Patches\Character_patch.cs" />
     <Compile Include="Patches\ZoneSystem_patch.cs" />
-    <Compile Include="Patches\Humanoid_patch.cs" />
     <Compile Include="Patches\MonsterAI_patch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Behaviours\SearchForItemsBehaviour.cs" />

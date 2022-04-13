@@ -96,6 +96,7 @@
     <Compile Include="GreylingConfig.cs" />
     <Compile Include="MobConfigManager.cs" />
     <Compile Include="MobGui.cs" />
+    <Compile Include="Patches\Humanoid_patch.cs" />
     <Compile Include="Patches\Piece_patch.cs" />
     <Compile Include="Patches\Minimap_patch.cs" />
     <Compile Include="Patches\Sign_patch.cs" />

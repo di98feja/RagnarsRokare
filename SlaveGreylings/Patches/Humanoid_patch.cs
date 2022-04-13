@@ -1,9 +1,10 @@
 ﻿using HarmonyLib;
+using RagnarsRokare.MobAI;
 using System.Reflection;
 
-namespace RagnarsRokare.MobAI
+namespace RagnarsRokare.SlaveGreylings
 {
-    public partial class MobAILib
+    public partial class SlaveGreylings
     {
         [HarmonyPatch(typeof(Humanoid), "EquipItem")]
         public static class Humanoid_EquipItem_Patch
@@ -17,7 +18,8 @@ namespace RagnarsRokare.MobAI
                 ___m_rightItem.m_equiped = item != null;
                 ___m_visEquipment.SetRightItem(item?.m_dropPrefab?.name);
                 ___m_visEquipment.GetType().GetMethod("UpdateEquipmentVisuals", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(___m_visEquipment, new object[] { });
-                return false;            }
+                return false;
+            }
         }
     }
 }
