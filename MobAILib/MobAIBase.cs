@@ -306,24 +306,5 @@ namespace RagnarsRokare.MobAI
                 }
             }
         }
-
-        public MaxStack<Container> Containers
-        {
-            get
-            {
-                if (NView?.IsValid() ?? false)
-                {
-                    return NView.GetZDO().  (Constants.Z_Containers ,result);
-                }
-                return new MaxStack<Container>(10);
-            }
-            set
-            {
-                if (NView?.IsValid() ?? false)
-                {
-                    NView.GetZDO().Set(Constants.Z_Containers, value);
-                }
-            }
-        }
     }
 }
