@@ -225,14 +225,21 @@ namespace RagnarsRokare.MobAI
         /// <param name="distance">distance from destination to accept as "reached"</param>
         /// <param name="running">run or walk</param>
         /// <returns>True if character is closer than distance from destination, false otherwise</returns>
-        public bool MoveAndAvoidFire(Vector3 destination, float dt, float distance, bool running = false)
+        public bool MoveAndAvoidFire(Vector3 destination, float dt, float distance, bool running = false, bool walking = false)
         {
             if (AvoidFire(dt)) return false;
 
             var remainingDistance = Utils.DistanceXZ(Character.transform.position, destination);
             if (remainingDistance < distance) return true;
 
-            running = remainingDistance > 5;
+            if (walking)
+            {
+                running = false;
+            }
+            else if (!running)
+            {
+                running = remainingDistance > 5;
+            }
             var nearbyMobs = MobManager.AliveMobs.Values
                 .Where(c => c.HasInstance())
                 .Where(c => Vector3.Distance(c.Instance.transform.position, Instance.transform.position) < 1.0f)
