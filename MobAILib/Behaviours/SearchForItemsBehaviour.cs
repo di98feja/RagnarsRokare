@@ -81,6 +81,7 @@ namespace RagnarsRokare.MobAI
             m_aiBase = aiBase;
             FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(Trigger.FoundGroundItem + Postfix);
             m_searchRadius = aiBase.Awareness * 5;
+            AcceptedContainerNames = aiBase.AcceptedContainerNames;
 
             brain.Configure(State.Main + Postfix)
                 .InitialTransition(State.SearchItemsOnGround + Postfix)
@@ -91,12 +92,14 @@ namespace RagnarsRokare.MobAI
                 {
                     m_currentSearchTime = 0f;
                     Common.Dbgl("Entered SearchForItemsBehaviour", true);
+                    KnownContainers = aiBase.KnownContainers;
                 })
                 .OnExit(t =>
                 {
                     KnownContainers.Peek()?.SetInUse(inUse: false);
                     CenterPoint = Vector3.zero;
                     m_aiBase.UpdateAiStatus(string.Empty);
+                    aiBase.KnownContainers = KnownContainers;
                 });
 
             brain.Configure(State.SearchItemsOnGround + Postfix)

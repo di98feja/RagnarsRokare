@@ -91,8 +91,8 @@ namespace RagnarsRokare.MobAI
             m_searchForItemsBehaviour.IncludePickables = false;
             m_searchForItemsBehaviour.SuccessState = State.HaveFoodItem;
             m_searchForItemsBehaviour.FailState = State.HaveNoFoodItem;
-            m_searchForItemsBehaviour.CenterPoint = aiBase.NView.transform.position;
             m_searchForItemsBehaviour.Configure(aiBase, brain, State.SearchForFood);
+            m_searchForItemsBehaviour.CenterPoint = aiBase.NView.transform.position;
 
 
 
@@ -105,11 +105,9 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     aiBase.StopMoving();
-                    //Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
+                    Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
                     aiBase.UpdateAiStatus(State.Hungry);
-                    m_searchForItemsBehaviour.KnownContainers = aiBase.Containers;
                     m_searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
-                    m_searchForItemsBehaviour.AcceptedContainerNames = aiBase.AcceptedContainerNames;
                 })
                 .OnExit(t =>
                 {
@@ -121,7 +119,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     m_foodsearchtimer = 0f;
-                    //Debug.Log($"{aiBase.Character.GetHoverName()}Searching for consumeItems{(aiBase.Instance as MonsterAI).m_consumeItems.Count}");
+                    Debug.Log($"{aiBase.Character.GetHoverName()}Searching for consumeItems{(aiBase.Instance as MonsterAI).m_consumeItems.Count}");
                     //Debug.Log($"{aiBase.Character.GetHoverName()}: {string.Join(",", (aiBase.Instance as MonsterAI).m_consumeItems.Select(c => c?.name ?? "null"))}");
                     brain.Fire(LookForItemTrigger, (aiBase.Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData), State.HaveFoodItem, State.HaveNoFoodItem);
                 });
@@ -151,7 +149,7 @@ namespace RagnarsRokare.MobAI
                 })
                 .OnExit(t =>
                 {
-                    //Debug.Log($"Time {Time.time},{m_aiBase.Character.GetHoverName()}: Exit EatingBehaviour via to {SuccessState}");
+                    Debug.Log($"Time {Time.time},{m_aiBase.Character.GetHoverName()}: Exit EatingBehaviour via to {SuccessState}");
                 });
 
             brain.Configure(State.HaveNoFoodItem)
