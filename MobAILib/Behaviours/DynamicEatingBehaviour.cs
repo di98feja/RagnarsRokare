@@ -85,16 +85,14 @@ namespace RagnarsRokare.MobAI
             {
                 LastKnownFoodPosition = aiBase.Character.transform.position;
             }
-
             m_searchForItemsBehaviour = new SearchForItemsBehaviour();
             m_searchForItemsBehaviour.Postfix = Prefix;
             m_searchForItemsBehaviour.IncludePickables = false;
             m_searchForItemsBehaviour.SuccessState = State.HaveFoodItem;
             m_searchForItemsBehaviour.FailState = State.HaveNoFoodItem;
-            m_searchForItemsBehaviour.Configure(aiBase, brain, State.SearchForFood);
             m_searchForItemsBehaviour.CenterPoint = aiBase.NView.transform.position;
-
-
+            m_searchForItemsBehaviour.Items = (m_aiBase.Instance as MonsterAI).m_consumeItems.Select(i => i.m_itemData) as IEnumerable<ItemDrop.ItemData>;
+            m_searchForItemsBehaviour.Configure(aiBase, brain, State.SearchForFood);
 
             UpdateTrigger = brain.SetTriggerParameters<float>(Trigger.Update);
             LookForItemTrigger = brain.SetTriggerParameters<IEnumerable<ItemDrop.ItemData>, string, string>(Trigger.ItemFound);
@@ -107,7 +105,6 @@ namespace RagnarsRokare.MobAI
                     aiBase.StopMoving();
                     Debug.Log($"Time {Time.time}, {m_aiBase.Character.GetHoverName()}, m_hungryTimer{m_hungryTimer}");
                     aiBase.UpdateAiStatus(State.Hungry);
-                    m_searchForItemsBehaviour.Items = t.Parameters[0] as IEnumerable<ItemDrop.ItemData>;
                 })
                 .OnExit(t =>
                 {
@@ -118,6 +115,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(LookForItemTrigger.Trigger, () => m_searchForItemsBehaviour.StartState)
                 .OnEntry(t =>
                 {
+                    m_searchForItemsBehaviour.KnownContainers = m_aiBase.KnownContainers;
                     m_foodsearchtimer = 0f;
                     Debug.Log($"{aiBase.Character.GetHoverName()}Searching for consumeItems{(aiBase.Instance as MonsterAI).m_consumeItems.Count}");
                     //Debug.Log($"{aiBase.Character.GetHoverName()}: {string.Join(",", (aiBase.Instance as MonsterAI).m_consumeItems.Select(c => c?.name ?? "null"))}");

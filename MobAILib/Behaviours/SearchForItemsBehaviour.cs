@@ -92,7 +92,6 @@ namespace RagnarsRokare.MobAI
                 {
                     m_currentSearchTime = 0f;
                     Common.Dbgl("Entered SearchForItemsBehaviour", true);
-                    KnownContainers = aiBase.KnownContainers;
                 })
                 .OnExit(t =>
                 {
@@ -100,6 +99,7 @@ namespace RagnarsRokare.MobAI
                     CenterPoint = Vector3.zero;
                     m_aiBase.UpdateAiStatus(string.Empty);
                     aiBase.KnownContainers = KnownContainers;
+                    //Debug.Log("Exit SearchForItemsBehaviour");
                 });
 
             brain.Configure(State.SearchItemsOnGround + Postfix)
@@ -109,6 +109,7 @@ namespace RagnarsRokare.MobAI
                 .OnEntry(t =>
                 {
                     ItemDrop groundItem = Common.GetNearbyItem(m_aiBase.Instance, Items.Select(i => i.m_shared.m_name), m_searchRadius);
+                    //Debug.Log($"groundItem = {groundItem}");
                     if (groundItem != null)
                     {
                         m_aiBase.UpdateAiStatus(State.SearchItemsOnGround, groundItem.m_itemData.m_shared.m_name);
@@ -324,6 +325,7 @@ namespace RagnarsRokare.MobAI
 
             if (aiBase.Brain.IsInState(State.MoveToGroundItem + Postfix))
             {
+                //Debug.Log("MoveToGroundItem");
                 if (m_groundItem == null || m_groundItem?.GetComponent<ZNetView>()?.IsValid() != true)
                 {
                     m_groundItem = null;
@@ -337,7 +339,6 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.StopMoving();
                     aiBase.Brain.Fire(Trigger.GroundItemIsClose + Postfix);
-                    //Debug.Log("GroundItem is close");
                 }
                 return;
             }
