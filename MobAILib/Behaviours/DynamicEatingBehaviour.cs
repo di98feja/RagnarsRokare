@@ -166,12 +166,12 @@ namespace RagnarsRokare.MobAI
         {
             m_hungryTimer += dt;
 
-            if (instance.Brain.State == m_searchForItemsBehaviour.StartState)
+            if (instance.Brain.IsInState(m_searchForItemsBehaviour.StartState))
             {
                 m_searchForItemsBehaviour.Update(instance, dt);
             }
 
-            if (instance.Brain.State == State.Hungry)
+            if (instance.Brain.IsInState(State.Hungry))
             {
                 Utils.Invoke<BaseAI>(instance.Instance, "RandomMovement", dt, LastKnownFoodPosition);
                 instance.Brain.Fire(UpdateTrigger, dt);
