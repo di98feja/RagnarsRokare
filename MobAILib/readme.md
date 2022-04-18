@@ -97,6 +97,9 @@ So even if we love feedback we will not be able to suit everybodys wishes, atlea
 - More common behaviours
 
 ### Changelog ###  
+- Version 0.3.10  
+ Rebuilt for Valheim v0.208.1
+
 - Version 0.3.9  
   Mobs now Only check 2D distance when moving towards a target  
   Sorters drop held item if they cannot access container
