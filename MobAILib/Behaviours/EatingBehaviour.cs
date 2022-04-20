@@ -100,6 +100,7 @@ namespace RagnarsRokare.MobAI
                 .PermitDynamic(LookForItemTrigger.Trigger, () => SearchForItemsState)
                 .OnEntry(t =>
                 {
+                    aiBase.UpdateAiStatus(State.SearchForFood);
                     m_foodsearchtimer = 0f;
                     //Debug.Log($"{aiBase.Character.GetHoverName()}Searching for consumeItems{(aiBase.Instance as MonsterAI).m_consumeItems.Count}");
                     //Debug.Log($"{aiBase.Character.GetHoverName()}: {string.Join(",", (aiBase.Instance as MonsterAI).m_consumeItems.Select(c => c?.name ?? "null"))}");
@@ -135,9 +136,10 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.HaveNoFoodItem)
                 .SubstateOf(State.Hungry)
-                .PermitIf(Trigger.ItemNotFound, State.Hungry)
+                .Permit(Trigger.ItemNotFound, State.Hungry)
                 .OnEntry(t =>
                 {
+                    aiBase.UpdateAiStatus(State.HaveNoFoodItem);
                     FailedToFindFood += 1;
                     brain.Fire(Trigger.ItemNotFound);
                 });

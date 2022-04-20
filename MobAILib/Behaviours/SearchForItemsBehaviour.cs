@@ -115,7 +115,6 @@ namespace RagnarsRokare.MobAI
                 {
                     KnownContainers.Peek()?.SetInUse(inUse: false);
                     CenterPoint = Vector3.zero;
-                    m_aiBase.UpdateAiStatus(string.Empty);
                     aiBase.KnownContainers = KnownContainers;
                     //Debug.Log("Exit SearchForItemsBehaviour");
                 });
