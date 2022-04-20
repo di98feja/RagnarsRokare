@@ -10,36 +10,51 @@ namespace RagnarsRokare.MobAI
     {
         private const string Prefix = "RR_SFI";
 
-        private class State 
+
+        private StateDef State { get; set; }
+        private sealed class StateDef
         {
-            public const string Main = Prefix + "Main";
-            public const string SearchItemsOnGround = Prefix + "SearchItemsOnGround";
-            public const string SearchForPickable = Prefix + "SearchForPickable";
-            public const string MoveToGroundItem = Prefix + "MoveToGroundItem";
-            public const string SearchForRandomContainer = Prefix + "SearchForRandomContainer";
-            public const string MoveToContainer = Prefix + "MoveToContainer";
-            public const string OpenContainer = Prefix + "OpenContainer";
-            public const string SearchForItem = Prefix + "SearchForItem";
-            public const string PickUpItemFromGround = Prefix + "PickUpItemFromGround";
-            public const string AvoidFire = Prefix + "AvoidFire";
-            public const string MoveToPickable = Prefix + "MoveToPickable";
-            public const string WaitingForPickable = Prefix + "WaitingForPickable";
+            private readonly string prefix;
+
+            public string Main { get { return $"{prefix}Main"; } }
+            public string SearchItemsOnGround { get { return $"{prefix}SearchItemsOnGround"; } }
+            public string SearchForPickable { get { return $"{prefix}SearchForPickable"; } }
+            public string MoveToGroundItem { get { return $"{prefix}MoveToGroundItem"; } }
+            public string SearchForRandomContainer { get { return $"{prefix}SearchForRandomContainer"; } }
+            public string MoveToContainer { get { return $"{prefix}MoveToContainer"; } }
+            public string OpenContainer { get { return $"{prefix}OpenContainer"; } }
+            public string SearchForItem { get { return $"{prefix}SearchForItem"; } }
+            public string PickUpItemFromGround { get { return $"{prefix}PickUpItemFromGround"; } }
+            public string AvoidFire { get { return $"{prefix}AvoidFire"; } }
+            public string MoveToPickable { get { return $"{prefix}MoveToPickable"; } }
+            public string WaitingForPickable { get { return $"{prefix}WaitingForPickable"; } }
+            public StateDef(string prefix)
+            {
+                this.prefix = prefix;
+            }
         }
 
-        private class Trigger
+        private TriggerDef Trigger { get; set; }
+        private sealed class TriggerDef
         {
-            public const string ItemFound = Prefix + "ItemFound";
-            public const string ContainerFound = Prefix + "ContainerFound";
-            public const string ContainerNotFound = Prefix + "ContainerNotFound";
-            public const string ContainerIsClose = Prefix + "ContainerIsClose";
-            public const string Failed = Prefix + "Failed";
-            public const string ContainerOpened = Prefix + "ContainerOpened";
-            public const string Timeout = Prefix + "Timeout";
-            public const string GroundItemIsClose = Prefix + "GroundItemIsClose";
-            public const string FoundGroundItem = Prefix + "FoundGroundItem";
-            public const string FoundPickable = Prefix + "FoundPickable";
-            public const string WaitForPickable = Prefix + "WaitForPickable";
-            public const string Abort = Prefix + "Abort";
+            private readonly string prefix;
+
+            public string ItemFound { get { return $"{prefix}ItemFound"; } }
+            public string ContainerFound { get { return $"{prefix}ContainerFound"; } }
+            public string ContainerNotFound { get { return $"{prefix}ContainerNotFound"; } }
+            public string ContainerIsClose { get { return $"{prefix}ContainerIsClose"; } }
+            public string Failed { get { return $"{prefix}Failed"; } }
+            public string ContainerOpened { get { return $"{prefix}ContainerOpened"; } }
+            public string Timeout { get { return $"{prefix}Timeout"; } }
+            public string GroundItemIsClose { get { return $"{prefix}GroundItemIsClose"; } }
+            public string FoundGroundItem { get { return $"{prefix}FoundGroundItem"; } }
+            public string FoundPickable { get { return $"{prefix}FoundPickable"; } }
+            public string WaitForPickable { get { return $"{prefix}WaitForPickable"; } }
+            public string Abort { get { return $"{prefix}Abort"; } }
+            public TriggerDef(string prefix)
+            {
+                this.prefix = prefix;
+            }
         }
 
         StateMachine<string, string>.TriggerWithParameters<ItemDrop> FoundGroundItemTrigger;
@@ -78,6 +93,9 @@ namespace RagnarsRokare.MobAI
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
+            State = new StateDef(parentState + Prefix);
+            Trigger = new TriggerDef(parentState + Prefix);
+
             m_aiBase = aiBase;
             FoundGroundItemTrigger = brain.SetTriggerParameters<ItemDrop>(Trigger.FoundGroundItem + Postfix);
             m_searchRadius = aiBase.Awareness * 5;

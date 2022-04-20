@@ -11,22 +11,38 @@ namespace RagnarsRokare.MobAI
     {
         private const string Prefix = "RR_EAT";
 
-        private class State
+        private StateDef State { get; set; }
+        private sealed class StateDef
         {
-            public const string Hungry = Prefix + "Hungry";
-            public const string SearchForFood = Prefix + "SearchForFood";
-            public const string HaveFoodItem = Prefix + "HaveFoodItem";
-            public const string HaveNoFoodItem = Prefix + "HaveNoFoodItem";
+            private readonly string prefix;
+
+            public string Hungry { get { return $"{prefix}Hungry"; } }
+            public string SearchForFood { get { return $"{prefix}SearchForFood"; } }
+            public string HaveFoodItem { get { return $"{prefix}HaveFoodItem"; } }
+            public string HaveNoFoodItem { get { return $"{prefix}HaveNoFoodItem"; } }
+
+            public StateDef(string prefix)
+            {
+                this.prefix = prefix;
+            }
         }
 
-        private class Trigger
+        private TriggerDef Trigger { get; set; }
+        private sealed class TriggerDef
         {
-            public const string ConsumeItem = Prefix + "ConsumeItem";
-            public const string ItemFound = Prefix + "ItemFound";
-            public const string Update = Prefix + "Update";
-            public const string ItemNotFound = Prefix + "ItemNotFound";
-            public const string SearchForItems = Prefix + "SearchForItems";
-            public const string Abort = Prefix + "Abort";
+            private readonly string prefix;
+
+            public string ConsumeItem { get { return $"{prefix}ConsumeItem"; } }
+            public string ItemFound { get { return $"{prefix}ItemFound"; } }
+            public string Update { get { return $"{prefix}Update"; } }
+            public string ItemNotFound { get { return $"{prefix}ItemNotFound"; } }
+            public string SearchForItems { get { return $"{prefix}SearchForItems"; } }
+            public string Abort { get { return $"{prefix}Abort"; } }
+            public TriggerDef(string prefix)
+            {
+                this.prefix = prefix;
+            }
+
         }
 
         SearchForItemsBehaviour m_searchForItemsBehaviour;
@@ -79,6 +95,9 @@ namespace RagnarsRokare.MobAI
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
+            State = new StateDef(parentState + Prefix);
+            Trigger = new TriggerDef(parentState + Prefix);
+
             m_aiBase = aiBase;
             m_foodsearchtimer = 0f;
             if (LastKnownFoodPosition == Vector3.zero)
