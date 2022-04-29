@@ -6,60 +6,79 @@ using UnityEngine;
 
 namespace RagnarsRokare.MobAI
 {
-    public class ItemSortingBehaviour : IBehaviour
+    public class DynamicSortingBehaviour : IDynamicBehaviour
     {
-        private const string Prefix = "RR_ISB";
-        private class State
+        private const string Prefix = "RR_DYNISB";
+
+        private StateDef State { get; set; }
+
+        private sealed class StateDef
         {
-            public const string Main = Prefix + "Main";
-            public const string FindRandomTask = Prefix + "FindRandomTask";
-            public const string OpenContainer = Prefix + "OpenContainer";
-            public const string OpenStorageContainer = Prefix + "OpenStorageContainer";
-            public const string AddContainerItemsToItemDictionary = Prefix + "AddContainerItemsToItemDictionary";
-            public const string UnloadIntoStorageContainer = Prefix + "UnloadIntoStorageContainer";
-            public const string MoveToGroundItem = Prefix + "MoveToGroundItem";
-            public const string MoveToPickable = Prefix + "MoveToPickable";
-            public const string PickUpItemFromGround = Prefix + "PickUpItemFromGround";
-            public const string PickUpAnotherItemFromGround = Prefix + "PickUpItemAnotherFromGround";
-            public const string MoveToDumpContainer = Prefix + "MoveToDumpContainer";
-            public const string MoveToContainer = Prefix + "MoveToContainer";
-            public const string MoveToStorageContainer = Prefix + "MoveToStorageContainer";
-            public const string GetItemFromDumpContainer = Prefix + "GetItemFromDumpContainer";
-            public const string OpenDumpContainer = Prefix + "OpenDumpContainer";
-            public const string LookForNearbySign = Prefix + "LookForNearbySign";
-            public const string ReadNearbySign = Prefix + "ReadNearbySign";
-            public const string LookForNearbyStorageSign = Prefix + "LookForNearbyStorageSign";
-            public const string ReadNearbyStorageSign = Prefix + "ReadNearbyStorageSign";
-            public const string WaitingForPickable = Prefix + "WaitingForPickable";
-            public const string FindingExtractionTask = Prefix + "FindingExtractionTask";
-            public const string HarvestingCrop = Prefix + "HarvestingCrop";
-            public const string HarvestIngFailed = Prefix + "HarvestingFailed";
+            private readonly string prefix;
+
+            public string Main { get { return $"{prefix}Main"; } }
+            public string FindRandomTask { get { return $"{prefix}FindRandomTask"; } }
+            public string OpenContainer { get { return $"{prefix}OpenContainer"; } }
+            public string OpenStorageContainer { get { return $"{prefix}OpenStorageContainer"; } }
+            public string AddContainerItemsToItemDictionary { get { return $"{prefix}AddContainerItemsToItemDictionary"; } }
+            public string UnloadIntoStorageContainer { get { return $"{prefix}UnloadIntoStorageContainer"; } }
+            public string MoveToGroundItem { get { return $"{prefix}MoveToGroundItem"; } }
+            public string MoveToPickable { get { return $"{prefix}MoveToPickable"; } }
+            public string PickUpItemFromGround { get { return $"{prefix}PickUpItemFromGround"; } }
+            public string PickUpAnotherItemFromGround { get { return $"{prefix}PickUpAnotherItemFromGround"; } }
+            public string MoveToDumpContainer { get { return $"{prefix}MoveToDumpContainer"; } }
+            public string MoveToContainer { get { return $"{prefix}MoveToContainer"; } }
+            public string MoveToStorageContainer { get { return $"{prefix}MoveToStorageContainer"; } }
+            public string GetItemFromDumpContainer { get { return $"{prefix}GetItemFromDumpContainer"; } }
+            public string OpenDumpContainer { get { return $"{prefix}OpenDumpContainer"; } }
+            public string LookForNearbySign { get { return $"{prefix}LookForNearbySign"; } }
+            public string ReadNearbySign { get { return $"{prefix}ReadNearbySign"; } }
+            public string LookForNearbyStorageSign { get { return $"{prefix}LookForNearbyStorageSign"; } }
+            public string ReadNearbyStorageSign { get { return $"{prefix}ReadNearbyStorageSign"; } }
+            public string WaitingForPickable { get { return $"{prefix}WaitingForPickable"; } }
+            public string FindingExtractionTask { get { return $"{prefix}FindingExtractionTask"; } }
+            public string HarvestingCrop { get { return $"{prefix}HarvestingCrop"; } }
+            public string HarvestIngFailed { get { return $"{prefix}HarvestIngFailed"; } }
+
+            public StateDef(string prefix)
+            {
+                this.prefix = prefix;
+            }
         }
 
-        private class Trigger
+        private TriggerDef Trigger { get; set; }
+        private sealed class TriggerDef
         {
-            public const string ItemFound = Prefix + "ItemFound";
-            public const string ContainerFound = Prefix + "ContainerFound";
-            public const string ContainerNotFound = Prefix + "ContainerNotFound";
-            public const string ContainerIsClose = Prefix + "ContainerIsClose";
-            public const string Failed = Prefix + "Failed";
-            public const string ContainerOpened = Prefix + "ContainerOpened";
-            public const string ContainerSearched = Prefix + "ContainerSearched";
-            public const string Timeout = Prefix + "Timeout";
-            public const string GroundItemIsClose = Prefix + "GroundItemIsClose";
-            public const string FoundGroundItem = Prefix + "FoundGroundItem";
-            public const string FoundPickable = Prefix + "FoundPickable";
-            public const string GroundItemLost = Prefix + "GroundItemLost";
-            public const string ItemSorted = Prefix + "ItemSorted";
-            public const string SearchDumpContainer = Prefix + "SearchDumpChest";
-            public const string ItemNotFound = Prefix + "ItemNotFound";
-            public const string ContainerIsFull = Prefix + "ContainerIsFull";
-            public const string NearbySignFound = Prefix + "NearbySignFound";
-            public const string NearbySignNotFound = Prefix + "NearbySignNotFound";
-            public const string SignHasBeenRead = Prefix + "SignHasBeenRead";
-            public const string WaitForPickable = Prefix + "WaitForPickable";
-            public const string FindExtractionTask = Prefix + "FindExtractionTask";
-            public const string HarvestCrop = Prefix + "HarvestCrop";
+            private readonly string prefix;
+
+            public string Abort { get { return $"{prefix}Abort"; } }
+            public string ItemFound { get { return $"{prefix}ItemFound"; } }
+            public string ContainerFound { get { return $"{prefix}ContainerFound"; } }
+            public string ContainerNotFound { get { return $"{prefix}ContainerNotFound"; } }
+            public string ContainerIsClose { get { return $"{prefix}ContainerIsClose"; } }
+            public string Failed { get { return $"{prefix}Failed"; } }
+            public string ContainerOpened { get { return $"{prefix}ContainerOpened"; } }
+            public string ContainerSearched { get { return $"{prefix}ContainerSearched"; } }
+            public string Timeout { get { return $"{prefix}Timeout"; } }
+            public string GroundItemIsClose { get { return $"{prefix}GroundItemIsClose"; } }
+            public string FoundGroundItem { get { return $"{prefix}FoundGroundItem"; } }
+            public string FoundPickable { get { return $"{prefix}FoundPickable"; } }
+            public string GroundItemLost { get { return $"{prefix}GroundItemLost"; } }
+            public string ItemSorted { get { return $"{prefix}ItemSorted"; } }
+            public string SearchDumpContainer { get { return $"{prefix}SearchDumpContainer"; } }
+            public string ItemNotFound { get { return $"{prefix}ItemNotFound"; } }
+            public string ContainerIsFull { get { return $"{prefix}ContainerIsFull"; } }
+            public string NearbySignFound { get { return $"{prefix}NearbySignFound"; } }
+            public string NearbySignNotFound { get { return $"{prefix}NearbySignNotFound"; } }
+            public string SignHasBeenRead { get { return $"{prefix}SignHasBeenRead"; } }
+            public string WaitForPickable { get { return $"{prefix}WaitForPickable"; } }
+            public string FindExtractionTask { get { return $"{prefix}FindExtractionTask"; } }
+            public string HarvestCrop { get { return $"{prefix}HarvestCrop"; } }
+            public TriggerDef(string prefix)
+            {
+                this.prefix = prefix;
+
+            }
         }
 
         // Input
@@ -73,12 +92,15 @@ namespace RagnarsRokare.MobAI
         public string StartState { get { return State.Main; } }
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public string SearchForItemState { get; set; }
         public float OpenChestDelay { get; private set; } = 1;
         public float PutItemInChestFailedRetryTimeout { get; set; } = 120f;
         public float SearchDumpContainerRetryTimeout { get; set; } = 60f;
         public float SearchForExtractionTaskTimeout { get; set; } = 60f;
         public float FindRandomTaskDelay { get; set; } = 1.0f;
+
+        public void Abort()
+        {
+        }
 
         public StorageContainer DumpContainer 
         { 
@@ -163,6 +185,10 @@ namespace RagnarsRokare.MobAI
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
+            State = new StateDef(parentState + Prefix);
+            Trigger = new TriggerDef(parentState + Prefix);
+
+            AcceptedContainerNames = aiBase.AcceptedContainerNames;
             m_aiBase = aiBase;
             m_searchRadius = aiBase.Awareness * 5;
             m_knownContainers = new MaxStack<StorageContainer>(aiBase.Intelligence);
@@ -186,7 +212,6 @@ namespace RagnarsRokare.MobAI
             };
             m_basicFarmingBehaviour.Init();
             m_basicFarmingBehaviour.Configure(aiBase, aiBase.Brain, State.HarvestingCrop);
-            //m_basicFarmingBehaviour.SearchForItemsState = SearchForItemState;
 
             brain.Configure(State.Main)
                 .InitialTransition(State.FindRandomTask)

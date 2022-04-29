@@ -23,30 +23,49 @@ namespace RagnarsRokare.MobAI
     {
         private const string Prefix = "RR_BFARM";
 
-        private class State
+        private StateDef State { get; set; }
+
+        private sealed class StateDef
         {
-            public const string Main = Prefix + "Main";
-            public const string InitHarvest = Prefix + "InitHarvest";
-            public const string FindCropSeed = Prefix + "FindCropSeed";
-            public const string MoveToCrop = Prefix + "MoveToCrop";
-            public const string Harvest = Prefix + "Harvest";
-            public const string Plant = Prefix + "Plant";
-            public const string Abandon = Prefix + "Abandon";
-            public const string HarvestCompleted = Prefix + "HarvestCompleted";
+            private readonly string prefix;
+
+            public string Main { get { return $"{prefix}Main"; } }
+            public string InitHarvest { get { return $"{prefix}InitHarvest"; } }
+            public string FindCropSeed { get { return $"{prefix}FindCropSeed"; } }
+            public string MoveToCrop { get { return $"{prefix}MoveToCrop"; } }
+            public string Harvest { get { return $"{prefix}Harvest"; } }
+            public string Plant { get { return $"{prefix}Plant"; } }
+            public string Abandon { get { return $"{prefix}Abandon"; } }
+            public string HarvestCompleted { get { return $"{prefix}HarvestCompleted"; } }
+
+            public StateDef(string prefix)
+            {
+                this.prefix = prefix;
+            }
         }
-        private class Trigger
+
+        private TriggerDef Trigger { get; set; }
+        private sealed class TriggerDef
         {
-            public const string StartSearch = Prefix + "StartSearch";
-            public const string SeedFound = Prefix + "SeedFound";
-            public const string Failed = Prefix + "Failed";
-            public const string CropFound = Prefix + "CropFound";
-            public const string CropIsClose = Prefix + "CropIsClose";
-            public const string CropNotFound = Prefix + "CropNotFound";
-            public const string HarvestSucceeded = Prefix + "HarvestSucceeded";
-            public const string HarvestFailed = Prefix + "HarvestFailed";
-            public const string PlantSucceeded = Prefix + "PlantSucceeded";
-            public const string PlantFailed = Prefix + "PlantFailed";
-            public const string Completed = Prefix + "Completed";
+            private readonly string prefix;
+
+            public string Abort { get { return $"{prefix}Abort"; } }
+            public string StartSearch { get { return $"{prefix}StartSearch"; } }
+            public string SeedFound { get { return $"{prefix}SeedFound"; } }
+            public string Failed { get { return $"{prefix}Failed"; } }
+            public string CropFound { get { return $"{prefix}CropFound"; } }
+            public string CropIsClose { get { return $"{prefix}CropIsClose"; } }
+            public string CropNotFound { get { return $"{prefix}CropNotFound"; } }
+            public string HarvestSucceeded { get { return $"{prefix}HarvestSucceeded"; } }
+            public string HarvestFailed { get { return $"{prefix}HarvestFailed"; } }
+            public string PlantSucceeded { get { return $"{prefix}PlantSucceeded"; } }
+            public string PlantFailed { get { return $"{prefix}PlantFailed"; } }
+            public string Completed { get { return $"{prefix}Completed"; } }
+            public TriggerDef(string prefix)
+            {
+                this.prefix = prefix;
+
+            }
         }
 
         private class Crop
@@ -83,7 +102,6 @@ namespace RagnarsRokare.MobAI
         public string StartState => State.Main;
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public string SearchForItemsState;
         public float CloseEnoughTimeout { get; private set; } = 45;
         public Pickable PickableToHarvest { get; set; }
         public string[] AcceptedContainerNames { get; set; } = new string[] { };
@@ -147,6 +165,9 @@ namespace RagnarsRokare.MobAI
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
+            State = new StateDef(parentState + Prefix);
+            Trigger = new TriggerDef(parentState + Prefix);
+
             m_aiBase = aiBase;
             m_searchForItemsBehaviour = BehaviourFactory.Create<SearchForItemsBehaviour>(aiBase, brain, State.FindCropSeed) as SearchForItemsBehaviour;
             m_searchForItemsBehaviour.Postfix = Prefix;
