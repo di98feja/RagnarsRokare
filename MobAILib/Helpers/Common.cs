@@ -78,18 +78,18 @@ namespace RagnarsRokare.MobAI
 
         public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius, AssignmentType[] acceptedAssignmentTypes = null)
         {
-            //Common.Dbgl($"Enter {nameof(FindRandomNearbyAssignment)}", "Extraction");
             Vector3 position = instance.transform.position;
-            //Generate list of acceptable assignments
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, assignmentSearchRadius, pieceList);
-            //Common.Dbgl($"Pieces in readius: {pieceList.Select(n => n.name).Join()}", "Extraction");
-            //Common.Dbgl($"Trained assignments: {trainedAssignments.Join()}", "Extraction");
-            //Common.Dbgl($"Known assignments: {knownassignments.Select(a => a.TypeOfAssignment.Name).Join()}", "Extraction");
-            //Common.Dbgl($"Accepted assignments: {acceptedAssignmentTypes.Select(a => a.Name).Join()}", "Extraction");
-            //Common.Dbgl($"Can see:{pieceList.Select(p => $"{p.name}:{CanSeeTarget(instance, p.GetComponentInParent<StaticTarget>())}").Join()}", "Extraction");
-            var allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => Utils.GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(Utils.GetPrefabName(p.name)))); //&& CanSeeTarget(instance, p.gameObject)
-            //Common.Dbgl($"Assignments found 1: {allAssignablePieces.Select(n => n.name).Join()}", "Extraction");
+            IEnumerable<Piece> allAssignablePieces;
+            if (trainedAssignments != null)
+            {
+                allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => Utils.GetPrefabName(p.name) == a.PieceName && trainedAssignments.Contains(Utils.GetPrefabName(p.name)))); //&& CanSeeTarget(instance, p.gameObject)
+            }
+            else
+            {
+                allAssignablePieces = pieceList.Where(p => Assignment.AssignmentTypes.Any(a => Utils.GetPrefabName(p.name) == a.PieceName));
+            }
             if (acceptedAssignmentTypes != null)
             {
                 allAssignablePieces = allAssignablePieces.Where(p => acceptedAssignmentTypes.Any(a => a.PieceName == Utils.GetPrefabName(p.name)));
