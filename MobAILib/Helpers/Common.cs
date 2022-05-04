@@ -78,6 +78,11 @@ namespace RagnarsRokare.MobAI
 
         public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius, AssignmentType[] acceptedAssignmentTypes = null)
         {
+            return FindRandomNearbyAssignment(instance, trainedAssignments, knownassignments, assignmentSearchRadius, acceptedAssignmentTypes, true);
+        }
+
+        public static Assignment FindRandomNearbyAssignment(BaseAI instance, IEnumerable<string> trainedAssignments, IEnumerable<Assignment> knownassignments, float assignmentSearchRadius, AssignmentType[] acceptedAssignmentTypes, bool requireCanSee)
+        {
             Vector3 position = instance.transform.position;
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, assignmentSearchRadius, pieceList);
@@ -102,24 +107,35 @@ namespace RagnarsRokare.MobAI
             //Common.Dbgl($"Assignments found 2: {allAssignablePieces.Select(n => n.name).Join()}", "Extraction");
             // filter out assignments already in list
             var newAssignments = allAssignablePieces.Where(p => !knownassignments.Any(a => a.AssignmentObject == p.gameObject));
+            if (!newAssignments.Any())
+            {
+                return null;
+            }
             //Common.Dbgl($"Assignments after filter: {newAssignments.Select(n => n.name).Join()}", "Extraction");
 
             // filter out inaccessible assignments
             //newAssignments = newAssignments.Where(p => Pathfinding.instance.GetPath(greylingPosition, p.gameObject.transform.position, null, Pathfinding.AgentType.Humanoid, true, true));
             var visibleAssignments = new List<Piece>();
-            foreach (var assignment in newAssignments)
+            if (requireCanSee)
             {
-                Dbgl($"{instance.gameObject.GetComponent<Character>().GetHoverName()}:Looking for {assignment.name}", true);
-                var allColliders = assignment.GetComponentsInChildren<Collider>();
-                allColliders.AddRangeToArray(assignment.GetComponents<Collider>());
-                if (CanSeeTarget(instance, allColliders))
+                foreach (var assignment in newAssignments)
                 {
-                    visibleAssignments.Add(assignment);
+                    Dbgl($"{instance.gameObject.GetComponent<Character>().GetHoverName()}:Looking for {assignment.name}", true);
+                    var allColliders = assignment.GetComponentsInChildren<Collider>();
+                    allColliders.AddRangeToArray(assignment.GetComponents<Collider>());
+                    if (CanSeeTarget(instance, allColliders))
+                    {
+                        visibleAssignments.Add(assignment);
+                    }
+                }
+                if (!visibleAssignments.Any())
+                {
+                    return null;
                 }
             }
-            if (!visibleAssignments.Any())
+            else
             {
-                return null;
+                visibleAssignments.AddRange(newAssignments);
             }
 
             // select random piece

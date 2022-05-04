@@ -20,7 +20,6 @@ namespace RagnarsRokare.MobAI
             public string Main { get { return $"{prefix}Main"; } }
             public string Idle { get { return $"{prefix}Idle"; } }
             public string Assigned { get { return $"{prefix}Assigned"; } }
-            public string SearchForItems { get { return $"{prefix}SearchForItems"; } }
             public string HaveAssignmentItem { get { return $"{prefix}HaveAssignmentItem"; } }
             public string HaveNoAssignmentItem { get { return $"{prefix}HaveNoAssignmentItem"; } }
             public string MoveToAssignment { get { return $"{prefix}MoveToAssignment"; } }
@@ -63,7 +62,8 @@ namespace RagnarsRokare.MobAI
         public string StartState => State.Main;
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public float TimeLimitOnAssignment { get; set; }
+        public float TimeLimitOnAssignment { get; set; } = 120;
+        public bool RequireLineOfSightToDiscoverAssignment { get; set; } = false;
 
         // Member vars
         private LinkedList<Assignment> m_assignment;
@@ -79,6 +79,9 @@ namespace RagnarsRokare.MobAI
 
         public void Configure(MobAIBase aiBase, StateMachine<string, string> brain, string parentState)
         {
+            State = new StateDef(parentState + Prefix);
+            Trigger = new TriggerDef(parentState + Prefix);
+
             m_aiBase = aiBase;
             m_assignment = new LinkedList<Assignment>();
             m_carrying = null;
@@ -89,15 +92,18 @@ namespace RagnarsRokare.MobAI
             searchForItemsBehaviour.SuccessState = State.HaveAssignmentItem;
             searchForItemsBehaviour.FailState = State.HaveNoAssignmentItem;
             searchForItemsBehaviour.CenterPoint = aiBase.NView.transform.position;
-            searchForItemsBehaviour.Configure(aiBase, aiBase.Brain, State.SearchForItems);
+            searchForItemsBehaviour.KnownContainers = aiBase.KnownContainers;
+            searchForItemsBehaviour.Configure(aiBase, aiBase.Brain, State.Main);
 
             aiBase.Brain.Configure(State.Main)
-            .InitialTransition(State.Idle)
-            .Permit(Trigger.Abort, FailState)
-            .OnEntry(() =>
-            {
-                Common.Dbgl("Entering DynamicWorkerBehaviour", true);
-            });
+                .SubstateOf(parentState)
+                .InitialTransition(State.Idle)
+                .Permit(Trigger.Abort, FailState)
+                .Permit(Trigger.AssignmentTimedOut, State.DoneWithAssignment)
+                .OnEntry(() =>
+                {
+                    Common.Dbgl("Entering DynamicWorkerBehaviour", true);
+                });
 
             aiBase.Brain.Configure(State.Idle)
                 .SubstateOf(State.Main)
@@ -108,9 +114,8 @@ namespace RagnarsRokare.MobAI
                 });
 
             aiBase.Brain.Configure(State.Assigned)
-                .SubstateOf(State.Idle)
+                .SubstateOf(State.Main)
                 .InitialTransition(State.MoveToAssignment)
-                .Permit(Trigger.AssignmentTimedOut, State.DoneWithAssignment)
                 .OnEntry(t =>
                 {
                     aiBase.UpdateAiStatus(State.Assigned);
@@ -129,7 +134,7 @@ namespace RagnarsRokare.MobAI
             string nextState = State.Idle;
             aiBase.Brain.Configure(State.MoveToAssignment)
                 .SubstateOf(State.Assigned)
-                .Permit(Trigger.ReachedMoveTarget, nextState)
+                .PermitDynamic(Trigger.ReachedMoveTarget, () => nextState)
                 .Permit(Trigger.LeaveAssignment, State.Idle)
                 .OnEntry(t =>
                 {
@@ -282,8 +287,10 @@ namespace RagnarsRokare.MobAI
                 if ((m_searchForNewAssignmentTimer += dt) < 2) return;
                 m_searchForNewAssignmentTimer = 0f;
                 Common.Dbgl("Searching for new assignment", true, "Worker");
-                StartNewAssignment(instance, ref m_assignment);
-                instance.Brain.Fire(Trigger.StartAssignment);
+                if (StartNewAssignment(instance, ref m_assignment))
+                {
+                    instance.Brain.Fire(Trigger.StartAssignment);
+                }
                 return;
             }
 
@@ -306,7 +313,7 @@ namespace RagnarsRokare.MobAI
         public bool StartNewAssignment(MobAIBase aiBase, ref LinkedList<Assignment> KnownAssignments)
         {
             Debug.Log($"KnownAssignments:{string.Join(",", KnownAssignments.Select(a => a.TypeOfAssignment.Name))}");
-            Assignment newassignment = Common.FindRandomNearbyAssignment(aiBase.Instance, null, KnownAssignments, aiBase.Awareness * 5);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(aiBase.Instance, null, KnownAssignments, aiBase.Awareness * 5, null, RequireLineOfSightToDiscoverAssignment);
             Debug.Log($"Num assignments after:{KnownAssignments.Count()}");
             if (newassignment != null)
             {
@@ -355,7 +362,7 @@ namespace RagnarsRokare.MobAI
                 return false;
             }
             float distance = (m_closeEnoughTimer += dt) > CloseEnoughTimeout ? m_assignment.First().TypeOfAssignment.InteractDist : m_assignment.First().TypeOfAssignment.InteractDist + 1;
-            return instance.MoveAndAvoidFire(m_assignment.First().Position, dt, distance);
+            return instance.MoveAndAvoidFire(m_assignment.First().Position, dt, distance, false, true);
         }
 
         public void Abort()
