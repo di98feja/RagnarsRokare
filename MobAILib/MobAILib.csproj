@@ -76,9 +76,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BehaviourSettingsBase.cs" />
-    <Compile Include="Behaviours\BehaviourFactory.cs" />
     <Compile Include="Behaviours\DynamicEatingBehaviour.cs" />
     <Compile Include="Behaviours\DynamicWorkerBehaviour.cs" />
+    <Compile Include="Behaviours\DynamicRepairingBehaviour.cs" />
     <Compile Include="Behaviours\EatingBehaviour.cs" />
     <Compile Include="Behaviours\BasicFarmingBehaviour.cs" />
     <Compile Include="Behaviours\ExtractionBehaviour.cs" />

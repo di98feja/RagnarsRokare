@@ -468,7 +468,7 @@ namespace RagnarsRokare.MobAI
                     {
                         //Debug.LogWarning("resume store item task!");
                         m_carriedItem = m_item.m_itemData;
-                        (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
+                        Common.HoldRightHandItem(aiBase.Character as Humanoid, m_carriedItem);
                         m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
                         aiBase.Brain.Fire(Trigger.ItemFound);
                         return;
@@ -795,7 +795,7 @@ namespace RagnarsRokare.MobAI
                 if (m_container.Container.GetInventory().CanAddItem(itemToStore))
                 {
                     Common.Dbgl($"Putting {itemToStore.m_stack} {itemToStore.m_shared.m_name} in container", true, "Sorter");
-                    mob.UnequipItem(m_carriedItem);
+                    Common.HoldRightHandItem(aiBase.Character as Humanoid, null);
                     m_container.Container.GetInventory().MoveItemToThis(mob.GetInventory(), itemToStore);
                 }
                 else if (m_itemStorageStack.Count() > 1)
@@ -837,7 +837,7 @@ namespace RagnarsRokare.MobAI
                     {
                         m_carriedItem = item;
                         (aiBase.Character as Humanoid).GetInventory().MoveItemToThis(DumpContainer.Container.GetInventory(), item);
-                        (aiBase.Character as Humanoid).EquipItem(item);
+                        Common.HoldRightHandItem(aiBase.Character as Humanoid, item);
                         Utils.Invoke<Container>(DumpContainer.Container, "Save");
                         Utils.Invoke<Inventory>(DumpContainer.Container.GetInventory(), "Changed");
 
@@ -875,7 +875,7 @@ namespace RagnarsRokare.MobAI
                 m_itemStorageStack = new MaxStack<(StorageContainer container, int count)>(m_itemsDictionary[m_carriedItem.m_shared.m_name]);
                 Common.Dbgl($"Pickup {m_carriedItem.m_shared.m_name} exists in {m_itemStorageStack.Count()} containers", true, "Sorter");
                 m_item.Pickup(aiBase.Character as Humanoid);
-                (aiBase.Character as Humanoid).EquipItem(m_carriedItem);
+                Common.HoldRightHandItem(aiBase.Character as Humanoid, m_carriedItem);
                 m_lastPickupPosition = aiBase.Character.transform.position;
                 aiBase.Brain.Fire(Trigger.ItemFound);
             }

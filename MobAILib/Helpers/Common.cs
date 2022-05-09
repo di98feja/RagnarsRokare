@@ -354,5 +354,50 @@ namespace RagnarsRokare.MobAI
             }
             return (List<Character>)enemyCharactersInRange.OrderBy(c => Vector3.Distance(position, c.transform.position));
         }
+
+        public static void HoldRightHandItem(Humanoid self, ItemDrop.ItemData item)
+        {
+            var rightItem = typeof(Humanoid).GetField("m_rightItem", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(self);
+            if (rightItem == item) return;
+
+            typeof(Humanoid).GetField("m_rightItem", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(self, item);
+
+            var itemHash = item?.m_dropPrefab.name.GetStableHashCode() ?? 0;
+            var visEquipment = typeof(Humanoid).GetField("m_visEquipment", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(self) as VisEquipment;
+            string itemName = item?.m_dropPrefab.name ?? "";
+            visEquipment.SetRightItem(itemName);
+            typeof(VisEquipment).GetField("m_currentRightItemHash", BindingFlags.NonPublic|BindingFlags.Instance).SetValue(visEquipment, itemHash);
+            var rightItemInstance = typeof(VisEquipment).GetField("m_rightItemInstance", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(visEquipment) as GameObject;
+            if ((bool)rightItemInstance)
+            {
+                UnityEngine.Object.Destroy(rightItemInstance);
+                typeof(VisEquipment).GetField("m_rightItemInstance", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(visEquipment, null);
+            }
+            if (itemHash != 0)
+            {
+                GameObject itemPrefab = ObjectDB.instance.GetItemPrefab(itemHash);
+                if (itemPrefab == null)
+                {
+                    Debug.Log("Missing attach item: " + itemHash + "  ob:" + item.m_shared.m_name);
+                    return;
+                }
+
+                GameObject gameObject = itemPrefab.transform.childCount > 0 ? itemPrefab.transform.GetChild(0).gameObject : null;
+                if (gameObject != null)
+                {
+                    GameObject itemInstance = UnityEngine.Object.Instantiate(gameObject);
+                    itemInstance.SetActive(value: true);
+                    Utils.Invoke<VisEquipment>(visEquipment, "CleanupInstance", itemInstance);
+
+                    var rightHand = visEquipment.m_rightHand;
+                    itemInstance.transform.SetParent(rightHand);
+                    itemInstance.transform.localPosition = Vector3.zero;
+                    itemInstance.transform.localRotation = Quaternion.identity;
+                    typeof(VisEquipment).GetField("m_rightItemInstance", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(visEquipment, itemInstance);
+                }
+            }
+            typeof(VisEquipment).GetMethod("UpdateLodgroup", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Invoke(visEquipment, new object[] { });
+            //Utils.Invoke<VisEquipment>(visEquipment, "UpdateLodGroup");
+        }
     }
 }

@@ -169,7 +169,7 @@ namespace RagnarsRokare.MobAI
             Trigger = new TriggerDef(parentState + Prefix);
 
             m_aiBase = aiBase;
-            m_searchForItemsBehaviour = BehaviourFactory.Create<SearchForItemsBehaviour>(aiBase, brain, State.FindCropSeed) as SearchForItemsBehaviour;
+            m_searchForItemsBehaviour = new SearchForItemsBehaviour();
             m_searchForItemsBehaviour.Postfix = Prefix;
             m_searchForItemsBehaviour.IncludePickables = false;
             m_searchForItemsBehaviour.SuccessState = State.MoveToCrop;

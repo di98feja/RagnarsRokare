@@ -158,7 +158,7 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.UpdateAiStatus(State.HaveAssignmentItem, searchForItemsBehaviour.FoundItem.m_shared.m_name);
                     var pickedUpInstance = (aiBase.Character as Humanoid).PickupPrefab(searchForItemsBehaviour.FoundItem.m_dropPrefab);
-                    (aiBase.Character as Humanoid).EquipItem(pickedUpInstance);
+                    Common.HoldRightHandItem(aiBase.Character as Humanoid, pickedUpInstance);
                     m_carrying = pickedUpInstance;
                     aiBase.Brain.Fire(Trigger.ItemFound);
                 });
@@ -230,7 +230,7 @@ namespace RagnarsRokare.MobAI
                     {
                         (aiBase.Character as Humanoid).DropItem((aiBase.Character as Humanoid).GetInventory(), m_carrying, 1);
                     }
-                    (aiBase.Character as Humanoid).UnequipItem(m_carrying, false);
+                    Common.HoldRightHandItem(aiBase.Character as Humanoid, null);
                     m_carrying = null;
 
                     aiBase.Brain.Fire(Trigger.AssignmentFinished);
