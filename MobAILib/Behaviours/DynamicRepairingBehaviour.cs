@@ -20,7 +20,7 @@ namespace RagnarsRokare.MobAI
             public string Idle { get { return $"{prefix}Idle"; } }
             public string FindAssignment { get { return $"{prefix}FindAssignment"; } }
             public string MoveToAssignment { get { return $"{prefix}MoveToAssignment"; } }
-            public string TurnToFaceAssignment { get { return $"{prefix}TurnToFaceAssignment"; } }
+            public string TurningToFaceAssignment { get { return $"{prefix}TurningToFaceAssignment"; } }
             public string RepairAssignment { get { return $"{prefix}RepairAssignment"; } }
             public string DoneWithAssignment { get { return $"{prefix}DoneWithAssignment"; } }
 
@@ -37,6 +37,7 @@ namespace RagnarsRokare.MobAI
             public string Abort { get { return $"{prefix}Abort"; } }
             public string StartAssignment { get { return $"{prefix}StartAssignment"; } }
             public string IsCloseToAssignment { get { return $"{prefix}IsCloseToAssignment"; } }
+            public string FacingAssignment { get { return $"{prefix}FacingAssignment"; } }
             public string AssignmentTimedOut { get { return $"{prefix}AssignmentTimedOut"; } }
             public string AssignmentFinished { get { return $"{prefix}AssignmentFinished"; } }
             public string AssignmentFailed{ get { return $"{prefix}AssignmentFailed"; } }
@@ -126,7 +127,7 @@ namespace RagnarsRokare.MobAI
 
             brain.Configure(State.MoveToAssignment)
                 .SubstateOf(State.Main)
-                .Permit(Trigger.IsCloseToAssignment, State.RepairAssignment)
+                .Permit(Trigger.IsCloseToAssignment, State.TurningToFaceAssignment)
                 .OnEntry(t =>
                 {
                     aiBase.UpdateAiStatus(State.MoveToAssignment);
@@ -136,6 +137,9 @@ namespace RagnarsRokare.MobAI
                 {
                     aiBase.StopMoving();
                 });
+            brain.Configure(State.TurningToFaceAssignment)
+                .SubstateOf(State.Main)
+                .Permit(Trigger.FacingAssignment, State.RepairAssignment);
 
             brain.Configure(State.RepairAssignment)
                 .SubstateOf(State.Main)
@@ -188,6 +192,16 @@ namespace RagnarsRokare.MobAI
                 if (MoveToAssignment(instance, dt))
                 {
                     instance.Brain.Fire(Trigger.IsCloseToAssignment);
+                }
+                return;
+            }
+
+            if (instance.Brain.IsInState(State.TurningToFaceAssignment))
+            {
+                if (Common.TurnToFacePosition(instance, m_assignment.transform.position))
+                {
+                    instance.Brain.Fire(Trigger.FacingAssignment);
+                    return;
                 }
                 return;
             }
