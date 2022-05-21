@@ -208,10 +208,10 @@ namespace RagnarsRokare.MobAI
 
         public bool AvoidFire(float dt)
         {
-            EffectArea effectArea2 = EffectArea.IsPointInsideArea(Instance.transform.position, EffectArea.Type.Burning, 2f);
+            EffectArea effectArea2 = EffectArea.IsPointInsideArea(Instance.transform.position, EffectArea.Type.Burning, 1f);
             if ((bool)effectArea2)
             {
-                Invoke<BaseAI>(Instance, "RandomMovementArroundPoint", dt, effectArea2.transform.position, effectArea2.GetRadius() + 3f, true);
+                Invoke<BaseAI>(Instance, "RandomMovementArroundPoint", dt, effectArea2.transform.position, effectArea2.GetRadius() + 2f, true);
                 return true;
             }
             return false;

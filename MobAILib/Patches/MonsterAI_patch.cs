@@ -43,6 +43,12 @@ namespace RagnarsRokare.MobAI
                 ref float ___m_jumpInterval, ref float ___m_jumpTimer, ref float ___m_randomMoveUpdateTimer, ref bool ___m_alerted)
             {
                 if (!___m_nview.IsValid()) return true;
+                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_UniqueId);
+                if (string.IsNullOrEmpty(uniqueId)) return true;
+
+                MobAIBase mobAI = GetOrCreateMob(uniqueId, __instance, ___m_nview);
+                if (null == mobAI) return true;
+
                 if (!___m_nview.IsOwner()) return false;
                 if (!___m_nview.GetZDO().GetBool(Constants.Z_IsControlledByMobAILib)) return true;
                 if (__instance.IsSleeping())
@@ -51,12 +57,6 @@ namespace RagnarsRokare.MobAI
                     Common.Dbgl($"{___m_character.GetHoverName()}: Sleep updated", true);
                     return false;
                 }
-
-                var uniqueId = ___m_nview.GetZDO().GetString(Constants.Z_UniqueId);
-                if (string.IsNullOrEmpty(uniqueId)) return true;
-
-                MobAIBase mobAI = GetOrCreateMob(uniqueId, __instance, ___m_nview);
-                if (null == mobAI) return true;
 
                 BaseAI_UpdateAI_ReversePatch.UpdateAI(__instance, dt, ___m_nview, ref ___m_jumpInterval, ref ___m_jumpTimer, ref ___m_randomMoveUpdateTimer, ref ___m_timeSinceHurt, ref ___m_alerted);
                 mobAI.UpdateAI(dt);
