@@ -313,7 +313,7 @@ namespace RagnarsRokare.MobAI
         public bool StartNewAssignment(MobAIBase aiBase, ref LinkedList<Assignment> KnownAssignments)
         {
             Debug.Log($"KnownAssignments:{string.Join(",", KnownAssignments.Select(a => a.TypeOfAssignment.Name))}");
-            Assignment newassignment = Common.FindRandomNearbyAssignment(aiBase.Instance, null, KnownAssignments, aiBase.Awareness * 5, null, RequireLineOfSightToDiscoverAssignment);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(aiBase.Instance, aiBase.m_trainedAssignments, KnownAssignments, aiBase.Awareness * 5, null, RequireLineOfSightToDiscoverAssignment);
             Debug.Log($"Num assignments after:{KnownAssignments.Count()}");
             if (newassignment != null)
             {

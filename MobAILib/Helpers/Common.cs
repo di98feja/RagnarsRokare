@@ -160,7 +160,7 @@ namespace RagnarsRokare.MobAI
 
         public static Container FindRandomNearbyContainer(BaseAI instance, IEnumerable<Container> knownContainers, string[] m_acceptedContainerNames, float containerSearchRadius, Vector3 centerPoint)
         {
-            Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join(delimiter:":")} within {containerSearchRadius}", true, "Sorter");
+            Common.Dbgl($"Enter {nameof(FindRandomNearbyContainer)}, looking for {m_acceptedContainerNames.Join(delimiter: ":")} within {containerSearchRadius}", true, "Sorter");
             if (centerPoint == Vector3.zero)
             {
                 centerPoint = instance.transform.position;
@@ -193,7 +193,7 @@ namespace RagnarsRokare.MobAI
             return containers.OrderBy(c => Vector3.Distance(position, c.gameObject.transform.position)).FirstOrDefault();
         }
 
-        public static Sign FindClosestSign(Vector3 position, float searchRadius) 
+        public static Sign FindClosestSign(Vector3 position, float searchRadius)
         {
             var pieceList = new List<Piece>();
             Piece.GetAllPiecesInRadius(position, searchRadius, pieceList);
@@ -279,7 +279,7 @@ namespace RagnarsRokare.MobAI
                 rhs_temp = Quaternion.AngleAxis(step, Vector3.up) * rhs;
                 bool outsideBounds = Mathf.Asin(Mathf.Abs(Vector3.Angle(rhs, rhs_temp))) * rhs_temp.magnitude > Mathf.Max(bounds.extents.x, Mathf.Max(bounds.extents.y, bounds.extents.z));
                 //Debug.Log($"Angle:{Vector3.Angle(rhs, rhs_temp)}, side:{Mathf.Asin(Mathf.Abs(Vector3.Angle(rhs, rhs_temp))) * rhs_temp.magnitude}, extent:{Mathf.Max(bounds.extents.x, Mathf.Max(bounds.extents.y, bounds.extents.z))}");
-                if(outsideBounds)
+                if (outsideBounds)
                 {
                     //Debug.Log($"Can't see 1");
                     return false;
@@ -288,7 +288,7 @@ namespace RagnarsRokare.MobAI
                 {
                     beam = Quaternion.AngleAxis(rotation, rhs) * rhs_temp;
                     int numHits = Physics.RaycastNonAlloc(eyesPosition, beam.normalized, m_tempRaycastHits, rhs.magnitude, viewBlockMask);
-                    visible = true; 
+                    visible = true;
                     //Dbgl($"Step {step}, Rotation {rotation}: numColliders:{numHits}", true, "Sorter");
                     for (var i = 0; i < numHits; i++)
                     {
@@ -354,8 +354,12 @@ namespace RagnarsRokare.MobAI
             }
             return (List<Character>)enemyCharactersInRange.OrderBy(c => Vector3.Distance(position, c.transform.position));
         }
-
         public static void HoldRightHandItem(Humanoid self, ItemDrop.ItemData item)
+        {
+            HoldRightHandItem(self, item, Quaternion.identity);
+        }
+
+        public static void HoldRightHandItem(Humanoid self, ItemDrop.ItemData item, Quaternion itemRotation)
         {
             var rightItem = typeof(Humanoid).GetField("m_rightItem", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(self);
             if (rightItem == item) return;
@@ -366,7 +370,7 @@ namespace RagnarsRokare.MobAI
             var visEquipment = typeof(Humanoid).GetField("m_visEquipment", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(self) as VisEquipment;
             string itemName = item?.m_dropPrefab.name ?? "";
             visEquipment.SetRightItem(itemName);
-            typeof(VisEquipment).GetField("m_currentRightItemHash", BindingFlags.NonPublic|BindingFlags.Instance).SetValue(visEquipment, itemHash);
+            typeof(VisEquipment).GetField("m_currentRightItemHash", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(visEquipment, itemHash);
             var rightItemInstance = typeof(VisEquipment).GetField("m_rightItemInstance", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(visEquipment) as GameObject;
             if ((bool)rightItemInstance)
             {
@@ -392,7 +396,7 @@ namespace RagnarsRokare.MobAI
                     var rightHand = visEquipment.m_rightHand;
                     itemInstance.transform.SetParent(rightHand);
                     itemInstance.transform.localPosition = Vector3.zero;
-                    itemInstance.transform.localRotation = Quaternion.identity;
+                    itemInstance.transform.localRotation = itemRotation;
                     typeof(VisEquipment).GetField("m_rightItemInstance", BindingFlags.NonPublic | BindingFlags.Instance).SetValue(visEquipment, itemInstance);
                 }
             }

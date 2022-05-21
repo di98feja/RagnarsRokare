@@ -54,7 +54,7 @@ namespace RagnarsRokare.MobAI
         public string StartState => State.Main;
         public string SuccessState { get; set; }
         public string FailState { get; set; }
-        public float TimeLimitOnAssignment { get; set; } = 120;
+        public float TimeLimitOnAssignment { get; set; } = 40;
         public bool RequireLineOfSightToDiscoverAssignment { get; set; } = false;
         public float RepairStepTime { get; set; } = 1.0f;
         public float RepairStepImprovement { get; set; } = 0.02f;
@@ -81,7 +81,7 @@ namespace RagnarsRokare.MobAI
                 .SubstateOf(parentState)
                 .InitialTransition(State.FindAssignment)
                 .Permit(Trigger.Abort, FailState)
-                .Permit(Trigger.AssignmentTimedOut, State.DoneWithAssignment)
+                .PermitReentry(Trigger.AssignmentTimedOut)
                 .OnEntry(() =>
                 {
                     Inventory inventory = (aiBase.Character as Humanoid).GetInventory();
