@@ -82,6 +82,7 @@
     <Compile Include="Behaviours\EatingBehaviour.cs" />
     <Compile Include="Behaviours\BasicFarmingBehaviour.cs" />
     <Compile Include="Behaviours\ExtractionBehaviour.cs" />
+    <Compile Include="Behaviours\DynamicFightBehaviour.cs" />
     <Compile Include="Behaviours\IFightBehaviour.cs" />
     <Compile Include="Behaviours\ItemSortingBehaviour.cs" />
     <Compile Include="Behaviours\SquadFightBehaviour.cs" />
