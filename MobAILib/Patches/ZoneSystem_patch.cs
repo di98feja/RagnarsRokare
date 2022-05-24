@@ -13,7 +13,7 @@ namespace RagnarsRokare.MobAI
         {
             m_adoptedZones.Clear();
             if (string.IsNullOrEmpty(zones)) return;
-            
+
             var objectsBySector = typeof(ZDOMan).GetField("m_objectsBySector", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).GetValue(ZDOMan.instance) as List<ZDO>[];
 
             foreach (string z in zones.Split('|'))
@@ -63,13 +63,13 @@ namespace RagnarsRokare.MobAI
         {
             private static bool Prefix(ZNetScene __instance)
             {
-                    List<ZDO> m_tempCurrentObjects = new List<ZDO>();
+                List<ZDO> m_tempCurrentObjects = new List<ZDO>();
                 List<ZDO> m_tempCurrentDistantObjects = new List<ZDO>();
                 Vector2i playerZone = ZoneSystem.instance.GetZone(ZNet.instance.GetReferencePosition());
                 ZDOMan.instance.FindSectorObjects(playerZone, ZoneSystem.instance.m_activeArea, ZoneSystem.instance.m_activeDistantArea, m_tempCurrentObjects, m_tempCurrentDistantObjects);
                 var c = m_tempCurrentObjects.Count;
                 //var zdosInSectors = typeof(ZDOMan).GetField("m_objectsBySector", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic).GetValue(ZDOMan.instance) as List<ZDO>[];
-                if (!(Player.m_localPlayer != null && Player.m_localPlayer.IsTeleporting()))
+                if (!(Player.m_localPlayer != null && Player.m_localPlayer.IsTeleporting()) && ZNetScene.instance.IsAreaReady(ZNet.instance.GetReferencePosition()))
                 {
                     foreach (var zone in m_adoptedZones)
                     {
