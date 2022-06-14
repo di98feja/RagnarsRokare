@@ -284,9 +284,9 @@ namespace RagnarsRokare.MobAI
                     m_stuckInIdleTimer = 0f;
                 }
                 if (instance.Brain.IsInState(State.Assigned)) return;
-                if ((m_searchForNewAssignmentTimer += dt) < 2) return;
+                if ((m_searchForNewAssignmentTimer += dt) < 2.0f) return;
                 m_searchForNewAssignmentTimer = 0f;
-                Common.Dbgl("Searching for new assignment", true, "Worker");
+                Common.Dbgl("Searching for new assignment", true, "");
                 if (StartNewAssignment(instance, ref m_assignment))
                 {
                     instance.Brain.Fire(Trigger.StartAssignment);
@@ -313,7 +313,8 @@ namespace RagnarsRokare.MobAI
         public bool StartNewAssignment(MobAIBase aiBase, ref LinkedList<Assignment> KnownAssignments)
         {
             Debug.Log($"KnownAssignments:{string.Join(",", KnownAssignments.Select(a => a.TypeOfAssignment.Name))}");
-            Assignment newassignment = Common.FindRandomNearbyAssignment(aiBase.Instance, aiBase.m_trainedAssignments, KnownAssignments, aiBase.Awareness * 5, null, RequireLineOfSightToDiscoverAssignment);
+            var selectedAssignmentPieces = Assignment.AssignmentTypes.Where(a => aiBase.m_trainedAssignments.Contains(a.Name)).Select(a => a.PieceName);
+            Assignment newassignment = Common.FindRandomNearbyAssignment(aiBase.Instance, selectedAssignmentPieces, KnownAssignments, aiBase.Awareness * 5, null, RequireLineOfSightToDiscoverAssignment);
             Debug.Log($"Num assignments after:{KnownAssignments.Count()}");
             if (newassignment != null)
             {
