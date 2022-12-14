@@ -81,7 +81,7 @@ namespace RagnarsRokare.SlaveGreylings
                         __instance.m_petEffect.Create(___m_character.GetCenterPoint(), Quaternion.identity);
                         if (__instance.m_commandable)
                         {
-                            typeof(Tameable).GetMethod("Command", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(__instance, new object[] { user });
+                            __instance.Command(user, true);
                         }
                         else
                         {
