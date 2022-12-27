@@ -8,22 +8,18 @@ using UnityEngine.UI;
 
 namespace ServerPasswordHelper
 {
-    [BepInProcess("valheim.exe")]
     [BepInPlugin(ModId, ModName, ModVersion)]
     public class SlaveGreylings : BaseUnityPlugin
     {
         public const string ModId = "RagnarsRokare.ServerPasswordHelper";
         public const string ModName = "RagnarsRökare ServerPasswordHelper";
-        public const string ModVersion = "0.3";
+        public const string ModVersion = "0.4";
 
-        public static ConfigEntry<string> lastServerIPAddress;
         public static ConfigEntry<int> NexusID;
 
         private void Awake()
         {
-            lastServerIPAddress = Config.Bind<string>("General", "LastUsedServerIPAdress", "", "The last used IP adress of server");
             NexusID = Config.Bind<int>("General", "NexusID", 862, "Nexus mod ID for updates");
-
             Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
 
@@ -35,16 +31,18 @@ namespace ServerPasswordHelper
             private static ZRpc m_tempPasswordRPC;
             private static ZNet m_instance;
 
-            static void Postfix(ZNet __instance, ref ZNetPeer peer, ref RectTransform ___m_connectingDialog, ref RectTransform ___m_passwordDialog)
+            static void Postfix(ZNet __instance, ref ZNetPeer peer, ref RectTransform ___m_connectingDialog, ref RectTransform ___m_passwordDialog, ref string ___m_serverPasswordSalt)
             {
-                peer.m_rpc.Register<bool>("ClientHandshake", RPC_ClientHandshake);
+                peer.m_rpc.Register<bool, string>("ClientHandshake", RPC_ClientHandshake);
                 m_connectingDialog = ___m_connectingDialog;
                 m_passwordDialog = ___m_passwordDialog;
                 m_instance = __instance;
             }
-            private static void RPC_ClientHandshake(ZRpc rpc, bool needPassword)
+
+            private static void RPC_ClientHandshake(ZRpc rpc, bool needPassword, string salt)
             {
                 m_connectingDialog.gameObject.SetActive(value: false);
+                typeof(ZNet).GetField("m_serverPasswordSalt", BindingFlags.NonPublic | BindingFlags.Static)?.SetValue(m_instance, salt);
                 if (needPassword)
                 {
                     var args = Environment.GetCommandLineArgs();
@@ -58,6 +56,7 @@ namespace ServerPasswordHelper
                     }
                     if (string.IsNullOrEmpty(prefilledPassword))
                     {
+                        Debug.Log("No password");
                         m_passwordDialog.gameObject.SetActive(value: true);
                         InputField componentInChildren = m_passwordDialog.GetComponentInChildren<InputField>();
                         componentInChildren.ActivateInputField();
@@ -83,24 +82,6 @@ namespace ServerPasswordHelper
                 {
                     Traverse.Create(m_instance).Method("SendPeerInfo", new object[] { rpc }).GetValue();
                 }
-            }
-        }
-
-        [HarmonyPatch(typeof(FejdStartup), "OnJoinIPOpen")]
-        static class FejdStartup_OnJoinIPStartup_Patch
-        {
-            static void Postfix(FejdStartup __instance, ref InputField ___m_joinIPAddress)
-            {
-                ___m_joinIPAddress.text = lastServerIPAddress.Value;
-            }
-        }
-
-        [HarmonyPatch(typeof(FejdStartup), "OnJoinIPConnect")]
-        static class FejdStartup_OnJoinIPConnect_Patch
-        {
-            static void Prefix(FejdStartup __instance, ref InputField ___m_joinIPAddress)
-            {
-                lastServerIPAddress.Value = ___m_joinIPAddress.text;
             }
         }
     }

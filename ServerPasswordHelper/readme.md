@@ -21,8 +21,6 @@ You can also add other standard arguments like:
 "C:\Steam\steamapps\common\Valheim\valheim.exe" +connect <serveradress:port> +password <myPassw0rd>
 This will allow you connect to the server without any typing.
 
-Built in is also an autosave that remembers the last server IP-adress entered into the connect dialog.
-
 The code can be found at https://github.com/di98feja/RagnarsRokare
 
 We hope you find this little mod useful!
