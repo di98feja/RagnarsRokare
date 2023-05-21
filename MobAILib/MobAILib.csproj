@@ -125,8 +125,8 @@
   <Import Project="..\Shared\Shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>$(SolutionDir)pdb2mdb.exe "$(TargetPath)
-xcopy $(TargetDir)$(TargetName).* $(SolutionDir)Output\ /S /Y
+    <PostBuildEvent>"$(SolutionDir)pdb2mdb.exe" "$(TargetPath)"
+xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)Output\" /S /Y
 
 </PostBuildEvent>
   </PropertyGroup>

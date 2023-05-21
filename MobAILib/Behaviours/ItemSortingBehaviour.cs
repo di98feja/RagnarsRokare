@@ -523,7 +523,7 @@ namespace RagnarsRokare.MobAI
                         return;
                     }
                 }
-                Common.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition);
+                Common.Invoke<BaseAI>(aiBase.Instance, "RandomMovement", dt, m_startPosition, false);
                 return;
             }
 
