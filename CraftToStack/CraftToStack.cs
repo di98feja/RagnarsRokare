@@ -67,7 +67,7 @@ namespace RagnarsRokare.CraftToStack
             if (EAQS_ExtendedInventory != null)
             {
                 harmony.Patch(
-                    AccessTools.Method(EAQS_ExtendedInventory, "OverrideRemoveItem", new[] { typeof(string), typeof(int) }),
+                    AccessTools.Method(EAQS_ExtendedInventory, "OverrideRemoveItem", new[] { typeof(string), typeof(int), typeof(int), typeof(bool) }),
                     prefix: new HarmonyMethod(AccessTools.Method(typeof(CraftToStack), nameof(Inventory_RemoveItem_Prefix)))
                 );
             }
@@ -165,7 +165,7 @@ namespace RagnarsRokare.CraftToStack
             }
         }
 
-        [HarmonyPatch(typeof(Inventory), "AddItem", argumentTypes: new Type[] { typeof(string), typeof(int), typeof(int), typeof(int), typeof(long), typeof(string) })]
+        [HarmonyPatch(typeof(Inventory), "AddItem", argumentTypes: new Type[] { typeof(string), typeof(int), typeof(int), typeof(int), typeof(long), typeof(string), typeof(bool) })]
         class Inventory_AddItem_Patch
         {
             static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
