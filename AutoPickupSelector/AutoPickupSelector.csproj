@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Ragnarsrokare.AutoPickupSelector</RootNamespace>
     <AssemblyName>Ragnarsrokare_AutoPickupSelector</AssemblyName>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
@@ -30,18 +30,64 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+
+  <!-- thanks to [https://github.com/AzumattDev] for this snippet of code -->
+  <!-- It allows to choose the game path depending on the OS / different drives -->
+  <Choose>
+    <When Condition="($(OS) == 'Unix' OR $(OS) == 'OSX') AND $(GamePath) == ''">
+        <PropertyGroup>
+            <!--! If your game was not found then uncomment the line below and set it there -->
+            <!-- <GamePath>$(HOME)/.steam/steam/steamapps/common/Valheim</GamePath> -->
+
+            <GamePath Condition="!Exists('$(GamePath)')">$(HOME)/.steam/steam/steamapps/common/Valheim</GamePath>
+            <GamePath Condition="!Exists('$(GamePath)')">$(HOME)/Library/Application Support/Steam/steamapps/common/Valheim/Contents/MacOS</GamePath>
+            <CorlibPath Condition="!Exists('$(CorlibPath)')">$(GamePath)/unstripped_corelib</CorlibPath>
+        </PropertyGroup>
+    </When>
+    <When Condition="($(OS) == 'Windows_NT') AND $(GamePath) == ''">
+        <PropertyGroup>
+            <!--! If your game was not found then uncomment the line below and set it there -->
+            <!-- <GamePath>C:\Program Files (x86)\Steam\steamapps\common\Valheim</GamePath> -->
+
+            <GamePath Condition="!Exists('$(GamePath)')">$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\Steam App 892970', 'InstallLocation', null, RegistryView.Registry64, RegistryView.Registry32))</GamePath>
+            <_SteamLibraryPath>$([MSBuild]::GetRegistryValueFromView('HKEY_CURRENT_USER\SOFTWARE\Valve\Steam', 'SteamPath', null, RegistryView.Registry32))</_SteamLibraryPath>
+            <GamePath Condition="!Exists('$(GamePath)') AND '$(_SteamLibraryPath)' != ''">$(_SteamLibraryPath)\steamapps\common\Valheim</GamePath>
+            <GamePath Condition="!Exists('$(GamePath)') AND Exists('$(ValheimGamePath)')">$(ValheimGamePath)</GamePath>
+            <GamePath Condition="!Exists('$(GamePath)')">C:\Program Files (x86)\Steam\steamapps\common\Valheim</GamePath>
+            <GamePath Condition="!Exists('$(GamePath)')">D:\Program Files (x86)\Steam\steamapps\common\Valheim</GamePath>
+
+            <BepInExPath Condition="!Exists('$(BepInExPath)')AND Exists('$(GamePath)')">$(GamePath)\BepInEx</BepInExPath>
+            <CorlibPath Condition="!Exists('$(CorlibPath)') AND Exists('$(GamePath)')">$(GamePath)\unstripped_corlib</CorlibPath>
+            <CorlibPath Condition="!Exists('$(CorlibPath)') AND Exists('$(GamePath)')">$(GamePath)\valheim_Data\Managed</CorlibPath>
+            <PublicizedAssembliesPath Condition="!Exists('$(PublicizedAssembliesPath)') AND Exists('$(GamePath)')">$(GamePath)\valheim_Data\Managed\publicized_assemblies</PublicizedAssembliesPath>
+        </PropertyGroup>
+    </When>
+  </Choose>
+
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\Libs\0Harmony.dll</HintPath>
-    </Reference>
-    <Reference Include="assembly_guiutils">
-      <HintPath>..\Libs\assembly_guiutils.dll</HintPath>
-    </Reference>
-    <Reference Include="assembly_valheim">
-      <HintPath>..\Libs\assembly_valheim.dll</HintPath>
+      <HintPath>$(BepInExPath)\core\0Harmony.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx">
-      <HintPath>..\Libs\BepInEx.dll</HintPath>
+      <HintPath>$(BepInExPath)\core\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="assembly_valheim">
+      <HintPath>$(CorlibPath)\assembly_valheim.dll</HintPath>
+    </Reference>
+    <Reference Include="assembly_guiutils">
+      <HintPath>$(CorlibPath)\assembly_guiutils.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(CorlibPath)\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(CorlibPath)\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(CorlibPath)\UnityEngine.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(CorlibPath)\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -51,35 +97,21 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine">
-      <HintPath>..\Libs\UnityEngine.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\Libs\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UI">
-      <HintPath>..\libs\UnityEngine.UI.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AutoPickupSelector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="itemlist.txt" />
-    <Content Include="Misc\AutoPickupSelectorBanner.png" />
-    <Content Include="Misc\AutoPickupSelector_Screenshot.png" />
     <Content Include="Misc\icon.png" />
     <None Include="Misc\manifest.json" />
-    <None Include="Misc\README.md" />
-    <Content Include="PieceList.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Misc\AutoPickupSelector.pdn" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>"$(SolutionDir)pdb2mdb.exe" "$(TargetPath)"
-xcopy "$(TargetDir)$(TargetName).*" "$(SolutionDir)Output\" /S /Y</PostBuildEvent>
-  </PropertyGroup>
+
+  <!-- '&quot;' is the code for a quote '"' -->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="..\pdb2mdb.exe &quot;$(TargetPath)&quot;" />
+    <Exec Command="xcopy &quot;$(TargetDir)$(TargetName).*&quot; ..\Output\$(TargetName) /S /Y /i" />
+  </Target>
+
 </Project>
