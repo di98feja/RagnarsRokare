@@ -1,11 +1,12 @@
-﻿using BepInEx;
+﻿using System;
+using System.Linq;
+using System.Collections.Generic;
+using BepInEx;
 using BepInEx.Configuration;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 namespace RagnarsRokare_AutoPickupSelector
 {
@@ -13,26 +14,49 @@ namespace RagnarsRokare_AutoPickupSelector
     public class RagnarsRokare : BaseUnityPlugin
     {
         private readonly Harmony harmony = new Harmony("RagnarsRokare.AutoPickupSelector");
-        public static ConfigEntry<string> AutoPickupBlockList;
-        public static ConfigEntry<string> IncludedCategories;
         public static ConfigEntry<int> NexusID;
-        private static IEnumerable<ItemDrop.ItemData.ItemType> categories;
+        public static List<ConfigEntry<bool>> ItemCategories;
+        public static ConfigEntry<string> AutoPickupBlockList;
 
         void Awake()
         {
             AutoPickupBlockList = Config.Bind("General", "AutoPickupBlockList", string.Empty);
-            IncludedCategories = Config.Bind("General", "IncludedCategories", "Material;Trophie;Consumable;Torch;Tool", "Semicolon separated list of item types to include. Possible types are:None;Material;Consumable;OneHandedWeapon;Bow;Shield;Helmet;Chest;Ammo;Customization;Legs;Hands;Trophie;TwoHandedWeapon;Torch;Misc;Shoulder;Utility;Tool;Attach_Atgeir");
-            categories = BuildCategoryList();
             NexusID = Config.Bind<int>("General", "NexusID", 868, "Nexus mod ID for updates");
+            ItemCategories = GetAvailableCategories();
             harmony.PatchAll();
+        }
+
+        private List<ConfigEntry<bool>> GetAvailableCategories()
+        {
+            // https://stackoverflow.com/a/972323
+            var values = Enum.GetValues(typeof(ItemDrop.ItemData.ItemType));
+            var categories = new List<ConfigEntry<bool>>();
+
+            for (int i = 0; i < values.GetLength(0); i++)
+            {
+                categories.Add(Config.Bind("Available categories", values.GetValue(i).ToString(), IsCategoryDefault((ItemDrop.ItemData.ItemType)values.GetValue(i)), ""));
+            }
+
+            return categories;
+        }
+
+        private bool IsCategoryDefault(ItemDrop.ItemData.ItemType category)
+        {
+            var defaultCategories = new ItemDrop.ItemData.ItemType[] {
+                ItemDrop.ItemData.ItemType.Material ,ItemDrop.ItemData.ItemType.Consumable
+                ,ItemDrop.ItemData.ItemType.Trophy
+                ,ItemDrop.ItemData.ItemType.Misc
+                ,ItemDrop.ItemData.ItemType.Utility
+                ,ItemDrop.ItemData.ItemType.Fish };
+
+            return defaultCategories.Contains(category);
         }
 
         private static IEnumerable<ItemDrop.ItemData.ItemType> BuildCategoryList()
         {
-            var fromConfig = IncludedCategories.Value.Trim().Replace(" ", "").Split(';');
-            foreach (var c in fromConfig)
+            for (int i = 0; i < ItemCategories.Count; i++)
             {
-                if (Enum.TryParse<ItemDrop.ItemData.ItemType>(c, out var result))
+                if (ItemCategories[i].Value && Enum.TryParse<ItemDrop.ItemData.ItemType>(ItemCategories[i].Definition.Key, out var result))
                 {
                     yield return result;
                 }
@@ -41,11 +65,21 @@ namespace RagnarsRokare_AutoPickupSelector
 
         internal static IEnumerable<ItemDrop> GetFilteredItemList()
         {
-            return ObjectDB.instance.m_items
-                .Select(i => i.GetComponent<ItemDrop>())
-                .Where(i => categories.Contains(i.m_itemData.m_shared.m_itemType))
-                .Where(i => i.m_itemData.m_shared.m_icons.Length > 0)
-                .Where(i => IsKnownItem(i));
+            var categories = BuildCategoryList();
+            var filteredItemList = new List<ItemDrop>();
+            // a traditional for loop is x2 faster than linq here
+            for (int i = 0; i < ObjectDB.instance.m_items.Count; i++)
+            {
+                if (!categories.Contains(ObjectDB.instance.m_items[i].GetComponent<ItemDrop>().m_itemData.m_shared.m_itemType))
+                    continue;
+                if (!IsKnownItem(ObjectDB.instance.m_items[i].GetComponent<ItemDrop>()))
+                    continue;
+                if (ObjectDB.instance.m_items[i].GetComponent<ItemDrop>().m_itemData.m_shared.m_icons.Length < 1)
+                    continue;
+
+                filteredItemList.Add(ObjectDB.instance.m_items[i].GetComponent<ItemDrop>());
+            }
+            return filteredItemList;
         }
 
         private static bool IsKnownItem(ItemDrop i)
@@ -67,13 +101,14 @@ namespace RagnarsRokare_AutoPickupSelector
         {
             static void Postfix()
             {
-                if (ObjectDB.instance != null)
+                if (ObjectDB.instance is null)
+                    return;
+
+                var blockedItemNames = AutoPickupBlockList.Value.Split(';');
+                var items = GetFilteredItemList();
+                foreach (var item in items)
                 {
-                    var blockedItemNames = AutoPickupBlockList.Value.Split(';');
-                    foreach (var item in GetFilteredItemList())
-                    {
-                        item.m_autoPickup = !blockedItemNames.Any(v => v == item.name);
-                    }
+                    item.m_autoPickup = !blockedItemNames.Any(v => v == item.name);
                 }
             }
         }
@@ -86,14 +121,14 @@ namespace RagnarsRokare_AutoPickupSelector
                 AutoPickupBlockList.Value = GetFilteredItemList()
                     .Where(i => i.m_autoPickup == false)
                     .Select(i => i.name)
-                    .Join(delimiter:";");
+                    .Join(delimiter: ";");
             }
         }
 
         [HarmonyPatch(typeof(InventoryGui), nameof(InventoryGui.OnOpenTrophies))]
         class OnOpenTrophies_Patch
         {
-            static void Postfix(ref float ___m_trophieListSpace, ref float ___m_trophieListBaseSize, ref RectTransform ___m_trophieListRoot, ref List<GameObject> ___m_trophyList, ref GameObject ___m_trophieElementPrefab, ref UnityEngine.UI.Scrollbar ___m_trophyListScroll)
+            static void Postfix(ref GameObject ___m_trophiesPanel, ref float ___m_trophieListSpace, ref float ___m_trophieListBaseSize, ref RectTransform ___m_trophieListRoot, ref List<GameObject> ___m_trophyList, ref GameObject ___m_trophieElementPrefab, ref UnityEngine.UI.Scrollbar ___m_trophyListScroll)
             {
                 //m_trophieListSpace: 180
                 //m_trophieListBaseSize: 650
@@ -106,6 +141,11 @@ namespace RagnarsRokare_AutoPickupSelector
                 ___m_trophyList.Clear();
                 ___m_trophyList.AddRange(CreateItemTiles(___m_trophieElementPrefab, ___m_trophieListRoot, ___m_trophieListSpace, ___m_trophieListBaseSize));
                 ___m_trophyListScroll.value = 1f;
+
+                // modify the close button to say "save"
+                var trophiesFrame = ___m_trophiesPanel.transform.Find("TrophiesFrame");
+                var Closebutton = trophiesFrame.Find("Closebutton");
+                Closebutton.GetComponentInChildren<TMP_Text>().text = Localization.instance.Localize("save");
             }
 
             private static IEnumerable<GameObject> CreateItemTiles(GameObject elementPrefab, RectTransform itemListRoot, float tileWidth, float tileBaseSize)
@@ -115,11 +155,13 @@ namespace RagnarsRokare_AutoPickupSelector
                 {
                     return itemTiles;
                 }
+
                 float num = 0f;
                 int columnCount = 0;
                 int rowCount = 0;
                 int xMargin = 0;
                 int yMargin = -10;
+
                 foreach (var component in GetFilteredItemList().OrderBy(i => i.m_itemData.m_shared.m_itemType))
                 {
                     GameObject gameObject = Instantiate(elementPrefab, itemListRoot);
@@ -129,20 +171,23 @@ namespace RagnarsRokare_AutoPickupSelector
                     rectTransform.anchoredPosition = new Vector2(columnCount == 0 ? xMargin : (float)columnCount * tileWidth, rowCount == 0 ? yMargin : (float)rowCount * (0f - tileWidth));
                     num = Mathf.Min(num, rectTransform.anchoredPosition.y - tileWidth);
                     string text2 = Localization.instance.Localize(component.m_itemData.m_shared.m_name);
-                    if (text2.EndsWith(" trophy"))
-                    {
-                        text2 = text2.Remove(text2.Length - 7);
-                    }
+
+                    // this is useless
+                    // if (text2.EndsWith(" trophy"))
+                    // {
+                    //     text2 = text2.Remove(text2.Length - 7);
+                    // }
+
                     rectTransform.Find("icon_bkg/icon").GetComponent<Image>().sprite = component.m_itemData.GetIcon();
-                    rectTransform.Find("name").GetComponent<Text>().text = text2;
-                    rectTransform.Find("description").GetComponent<Text>().text = GetLootStateString(component);
+                    rectTransform.Find("name").GetComponent<TMP_Text>().text = text2;
+                    rectTransform.Find("description").GetComponent<TMP_Text>().text = GetLootStateString(component);
 
                     gameObject.AddComponent<UIInputHandler>();
                     UIInputHandler componentInChildren = gameObject.GetComponent<UIInputHandler>();
                     componentInChildren.m_onLeftDown = (Action<UIInputHandler>)Delegate.Combine(componentInChildren.m_onLeftDown, new Action<UIInputHandler>((handler) =>
                     {
                         component.m_autoPickup = !component.m_autoPickup;
-                        rectTransform.Find("description").GetComponent<Text>().text = GetLootStateString(component);
+                        rectTransform.Find("description").GetComponent<TMP_Text>().text = GetLootStateString(component);
                     }));
 
                     itemTiles.Add(gameObject);
