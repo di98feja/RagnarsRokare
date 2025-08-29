@@ -134,15 +134,15 @@ namespace RagnarsRokare_AutoPickupSelector
                         text2 = text2.Remove(text2.Length - 7);
                     }
                     rectTransform.Find("icon_bkg/icon").GetComponent<Image>().sprite = component.m_itemData.GetIcon();
-                    rectTransform.Find("name").GetComponent<Text>().text = text2;
-                    rectTransform.Find("description").GetComponent<Text>().text = GetLootStateString(component);
+                    rectTransform.Find("name").GetComponent<TextMeshProUGUI>().text = text2;
+                    rectTransform.Find("description").GetComponent<TextMeshProUGUI>().text = GetLootStateString(component);
 
                     gameObject.AddComponent<UIInputHandler>();
                     UIInputHandler componentInChildren = gameObject.GetComponent<UIInputHandler>();
                     componentInChildren.m_onLeftDown = (Action<UIInputHandler>)Delegate.Combine(componentInChildren.m_onLeftDown, new Action<UIInputHandler>((handler) =>
                     {
                         component.m_autoPickup = !component.m_autoPickup;
-                        rectTransform.Find("description").GetComponent<Text>().text = GetLootStateString(component);
+                        rectTransform.Find("description").GetComponent<TextMeshProUGUI>().text = GetLootStateString(component);
                     }));
 
                     itemTiles.Add(gameObject);
